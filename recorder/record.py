@@ -161,7 +161,11 @@ def main() -> None:
         for fid, s, seed, v in CAMPAIGN:
             if (LABELS / fid / VERSION / "label.json").exists():
                 continue
-            result = record_one(fid, s, seed, v)
+            try:
+                result = record_one(fid, s, seed, v)
+            except Exception as e:  # one broken fixture must not end an overnight campaign
+                result = {"fixture_id": fid, "recorded": False, "error": f"{type(e).__name__}: {e}"[:500]}
+                _log(event="fixture_failed", **result)
             log.write(json.dumps(result, default=str) + "\n")
             log.flush()
 

@@ -85,9 +85,14 @@ def _rows(result: Any) -> list[dict[str, Any]]:
 def read_ch(ch: Client, table: str, tenant: str, start: datetime, end: datetime) -> list[dict[str, Any]]:
     spec = TABLES[table]
     cols = ", ".join(spec["schema"].names)
+    # Dedup with LIMIT 1 BY the stable key, not FINAL: spans are ordered by trace_id, so a time filter
+    # cannot prune them and FINAL merges every part of the table while reading. It ran ClickHouse out
+    # of memory (code 241) on a 38M-row spans table. Redelivered copies are identical, so keeping
+    # any one of them is what FINAL would return.
     return _rows(ch.query(
-        f"SELECT {cols} FROM {table} FINAL WHERE tenant_id = {{t:String}} "
-        f"AND {spec['time']} >= {{s:DateTime64(3)}} AND {spec['time']} <= {{e:DateTime64(3)}} ORDER BY {spec['key']}",
+        f"SELECT {cols} FROM {table} WHERE tenant_id = {{t:String}} "
+        f"AND {spec['time']} >= {{s:DateTime64(3)}} AND {spec['time']} <= {{e:DateTime64(3)}} "
+        f"ORDER BY {spec['key']} LIMIT 1 BY {spec['key']}",
         parameters={"t": tenant, "s": start, "e": end},
     ))  # fmt: skip
 
