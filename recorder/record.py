@@ -87,23 +87,27 @@ def _incidents_since(pg: Any, since: datetime) -> list[dict[str, Any]]:
 def record_one(fixture_id: str, scenario: str, seed: int, variant: str | None) -> dict[str, Any]:
     pg, ch = db.postgres(), db.clickhouse()
     wait_quiet(pg, ch)
+    quiet_until = datetime.now(UTC)
     plan = scenarios.plan(scenario, seed, variant)
     _log(event="inject", fixture=fixture_id, delay_s=plan.delay_s)
     run = scenarios.run(plan, RUNS)
-    start = datetime.fromisoformat(run["injection_start"])
     fault_start = min(datetime.fromisoformat(a["at"]) for a in run["applied"] if a["kind"] != "plant_logs")
 
     deadline = time.monotonic() + 15 * 60  # wait until every incident from this run has resolved
     while time.monotonic() < deadline:
-        incs = _incidents_since(pg, start)
+        incs = _incidents_since(pg, quiet_until)
         if incs and all(i["status"] == "resolved" for i in incs):
             break
         time.sleep(15)
-    incs = _incidents_since(pg, start)
+    # Counted from the end of the quiet window, not the injection: an incident that opened during the
+    # random pre-injection delay would otherwise absorb this fault through dedup, unseen.
+    incs = _incidents_since(pg, quiet_until)
     summary: dict[str, Any] = {"fixture_id": fixture_id, "scenario": scenario, "variant": variant, "seed": seed,
                                "run_id": run["run_id"], "fault_start": fault_start, "incidents": incs}  # fmt: skip
-    if len(incs) != 1:
-        _log(event="fixture_failed", reason=f"{len(incs)} incidents opened", **summary)
+    early = [i for i in incs if i["first_anomaly_at"] < fault_start]
+    if len(incs) != 1 or early:
+        reason = f"{len(incs)} incidents opened" + (f", {len(early)} before the fault started" if early else "")
+        _log(event="fixture_failed", reason=reason, **summary)
         return summary
     inc = incs[0]
     summary["alert_latency_s"] = (inc["opened_at"] - fault_start).total_seconds()
