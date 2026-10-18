@@ -64,8 +64,11 @@ def pg(pg_dsn):
 
 def ch_client(c, database="default"):
     return clickhouse_connect.get_client(
-        host=c.get_container_host_ip(), port=int(c.get_exposed_port(8123)),
-        username="sentry", password="sentry", database=database,
+        host=c.get_container_host_ip(),
+        port=int(c.get_exposed_port(8123)),
+        username="sentry",
+        password="sentry",
+        database=database,
     )
 
 

@@ -1,6 +1,6 @@
 """Forward-only migrations for Postgres and ClickHouse; safe to re-run.
 
-    python -m common.migrate            # both stores, from env config
+python -m common.migrate            # both stores, from env config
 """
 
 from pathlib import Path
@@ -38,9 +38,7 @@ def migrate_postgres(conn: psycopg.Connection[tuple[object, ...]]) -> list[str]:
 
 
 def clickhouse_statements(f: Path) -> list[str]:
-    text = "\n".join(
-        line for line in f.read_text(encoding="utf-8").splitlines() if not line.lstrip().startswith("--")
-    )
+    text = "\n".join(line for line in f.read_text(encoding="utf-8").splitlines() if not line.lstrip().startswith("--"))
     return [s.strip() for s in text.split(";") if s.strip()]
 
 
