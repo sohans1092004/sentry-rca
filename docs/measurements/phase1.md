@@ -121,3 +121,111 @@ t	spans	traces
 ```
 
 No gap across the outage: the queue held ~60 s of telemetry in 12 % of its bound and drained within 15 s. Overflow (a longer outage) was not exercised; at the observed fill rate (240 trace batches/min) the 2,000-batch queue lasts ~8 min.
+
+## M5. Ingestion ceiling (SPEC §17, §1.2)
+
+Events = metric points + log records + spans, one third each, from `tools/ceiling.py` (8-16 Python sender processes on the Windows host). Lag = uncommitted messages in each processor's consumer group, summed over partitions. Each run's raw JSON (incl. full `docker stats` per step) is in `runs/ceiling*.json` (local).
+
+### Run A: through the Collector, 100 events/request (`uv run python tools/ceiling.py --start 1000 --step-s 60 --max 40000`)
+
+```
+target_eps  sent_eps  refused_eps  lag_mid(msgs)  lag_end(msgs)  growing
+1000 986 n/a 3 13 False
+2000 1974 n/a 31 2 False
+3000 2960 n/a 17 9 False
+4000 3947 n/a 10 19 False
+5000 4937 n/a 17 11 False
+6000 5907 n/a 18 29 False
+8000 7898 n/a 25 15 False
+10000 9883 n/a 0 25 False
+12500 12335 n/a 9 7 False
+15000 14055 n/a 18 38 False
+20000 15589 n/a 8 14 False
+25000 16936 n/a 30 29 False
+30000 16708 n/a 8 17 False
+40000 16936 n/a 29 29 False
+```
+Accepted throughput plateaus at ~16.9k events/s while lag stays bounded: the limit was the generator's per-request cost (one blocking POST at a time, through Docker Desktop's port proxy), not the pipeline. This run sampled `docker stats` after each step ended (a tool bug, since fixed), so it has no CPU attribution.
+
+### Run B: through the Collector, 500 events/request (`uv run python tools/ceiling.py --start 15000 --step-s 60 --procs 16 --batch 500`)
+
+```
+target_eps  sent_eps  refused_eps  lag_mid(msgs)  lag_end(msgs)  growing
+15000 14720 0 29 41 False
+20000 19631 0 44 30 False
+25000 24578 0 55 52 False
+30000 27435 2023 31 37 False
+40000 33904 5331 57 33 False
+50000 43453 5532 65 51 False
+60000 48855 9906 55 25 False
+80000 64756 13195 126 24 False
+-- target 60000, docker stats mid-step:
+sentry-rca-processor-logs-1	23.74%	75.22MiB / 192MiB
+sentry-rca-processor-metrics-1	29.99%	74.65MiB / 192MiB
+sentry-rca-processor-traces-1	21.84%	81.28MiB / 192MiB
+sentry-rca-otel-collector-1	22.96%	240.2MiB / 320MiB
+sentry-rca-clickhouse-1	18.87%	737.5MiB / 1.5GiB
+sentry-rca-redpanda-1	13.65%	335.5MiB / 768MiB
+-- target 80000, docker stats mid-step:
+sentry-rca-processor-logs-1	59.35%	111.7MiB / 192MiB
+sentry-rca-processor-metrics-1	79.14%	102.7MiB / 192MiB
+sentry-rca-processor-traces-1	42.93%	104.3MiB / 192MiB
+sentry-rca-otel-collector-1	33.32%	207.9MiB / 320MiB
+sentry-rca-clickhouse-1	37.56%	760.9MiB / 1.5GiB
+sentry-rca-redpanda-1	10.57%	335.8MiB / 768MiB
+```
+Lag never grows without bound through the Collector: above ~25k events/s offered, the Collector's `memory_limiter` (limit 200 MiB in a 320 MiB container) refuses requests (`otelcol_receiver_refused_*`), back-pressure that real SDKs retry. Highest accepted: 64,756 events/s at 80k offered (13,195/s refused).
+
+### Run C: direct into Redpanda, before the batch fix (`... --direct --start 20000 --procs 12 --batch 500`, stopped at 125k)
+
+```
+target_eps  sent_eps  refused_eps  lag_mid(msgs)  lag_end(msgs)  growing
+20000 19662 0 43 5 False
+25000 24592 0 54 20 False
+30000 29426 0 30 41 False
+40000 39128 0 81 54 False
+50000 48871 0 92 88 False
+60000 58791 0 120 107 False
+80000 78540 0 358 348 False
+100000 97733 0 875 2592 False
+125000 121455 0 7052 11597 False
+150000 145303 0 19152 27714 False
+
+$ docker events --since 15m --filter event=oom --filter event=die
+sentry-rca-processor-metrics-1 oom; die exit=137
+sentry-rca-processor-logs-1 oom; die exit=137   (restarts=2)
+```
+Bug: batches were bounded by message count (500); with 500-event messages that is ~250k rows of Python objects, over the 192 MiB limit. A restarted processor faced the same backlog and was killed again. Fix: batches bounded by payload bytes (`processors/runner.py` `take_batch`, 1 MiB). The fixed processors then drained the ~47.5k-message backlog this run left behind with 0 restarts.
+
+### Run D: direct into Redpanda, fixed processors (`uv run python tools/ceiling.py --direct --start 40000 --step-s 60 --procs 12 --batch 500`)
+
+```
+target_eps  sent_eps  refused_eps  lag_mid(msgs)  lag_end(msgs)  growing
+40000 39374 0 2126 57 False
+50000 49203 0 112 124 True
+60000 59011 0 99 76 False
+80000 78181 0 146 101 False
+100000 98204 0 159 177 False
+125000 121689 0 469 650 True
+150000 146677 0 2446 4029 True
+-- target 100000, docker stats mid-step:
+sentry-rca-processor-traces-1	54.49%	67.08MiB / 192MiB
+sentry-rca-processor-metrics-1	67.32%	81.28MiB / 192MiB
+sentry-rca-processor-logs-1	78.62%	65.08MiB / 192MiB
+sentry-rca-otel-collector-1	2.73%	153.8MiB / 320MiB
+sentry-rca-clickhouse-1	62.88%	774.1MiB / 1.5GiB
+sentry-rca-redpanda-1	23.60%	350.2MiB / 768MiB
+-- target 125000, docker stats mid-step:
+sentry-rca-processor-traces-1	51.18%	72.94MiB / 192MiB
+sentry-rca-processor-metrics-1	99.57%	85.37MiB / 192MiB
+sentry-rca-processor-logs-1	98.41%	68.09MiB / 192MiB
+sentry-rca-otel-collector-1	1.52%	155.1MiB / 320MiB
+sentry-rca-clickhouse-1	45.94%	799.5MiB / 1.5GiB
+sentry-rca-redpanda-1	15.42%	353MiB / 768MiB
+
+/sentry-rca-processor-metrics-1 restarts=0
+/sentry-rca-processor-logs-1 restarts=0
+/sentry-rca-processor-traces-1 restarts=0
+```
+
+**Ceiling: ~100,000 mixed events/s** sustained with bounded lag (177 messages ≈ 0.9 s at the end of the 100k step). Lag grows without bound from 125k (650 → 4,029 messages over two steps). **Bottleneck: CPU of the single-threaded Python processors** — metrics 99.6 % and logs 98.4 % of one core at 125k, ClickHouse ≤ 63 %, Redpanda ≤ 37 %, processor RSS ≤ 85 MiB, no restarts. The 50k step's `growing=True` is a false positive of the stop rule (124 messages of lag; the next step was clean). Upgrade path when it matters: more partitions and one processor replica per partition (consumer groups already allow it).

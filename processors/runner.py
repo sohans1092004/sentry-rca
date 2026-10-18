@@ -20,6 +20,11 @@ from common import config, db
 from processors.convert import SIGNALS, Converted
 
 INSERT_ATTEMPTS = 5
+# A batch is bounded by payload bytes, not message count: one OTLP message can carry thousands of
+# records, and a 500-message bound let a backlog build ~250k rows of Python objects and OOM-kill the
+# processor in a loop (found by the ingestion-ceiling run, docs/measurements/phase1.md M5).
+BATCH_BYTES = 1024 * 1024  # logs are densest: 2 MiB of them reached 175 of 192 MiB RSS while draining
+CHUNK_MESSAGES = 10  # the most a batch overshoots BATCH_BYTES by
 
 
 def _crash_point(name: str) -> None:
@@ -74,6 +79,23 @@ def process_batch(
     return rows, dlq
 
 
+def take_batch(consumer: Consumer, max_bytes: int, wait_s: float) -> list[Message]:
+    """Messages until max_bytes of (decompressed) payload is reached or wait_s elapses."""
+    msgs: list[Message] = []
+    size = 0
+    deadline = time.monotonic() + wait_s
+    while size < max_bytes:
+        left = deadline - time.monotonic()
+        if left <= 0:
+            break
+        got = consumer.consume(num_messages=CHUNK_MESSAGES, timeout=left)
+        if not got:
+            break
+        msgs.extend(got)
+        size += sum(len(m.value() or b"") for m in got)
+    return msgs
+
+
 def run(
     signal: str,
     consumer: Consumer,
@@ -82,7 +104,7 @@ def run(
     *,
     dlq_topic: str,
     stop: Callable[[], bool] = lambda: False,
-    batch_max: int = 500,
+    batch_bytes: int = BATCH_BYTES,
     batch_wait_s: float = 1.0,
 ) -> None:
     table, columns, convert = SIGNALS[signal]
@@ -93,7 +115,7 @@ def run(
             failed.append(str(err))
 
     while not stop():
-        msgs = consumer.consume(num_messages=batch_max, timeout=batch_wait_s)
+        msgs = take_batch(consumer, batch_bytes, batch_wait_s)
         if not msgs:
             continue
         rows, dlq = process_batch(msgs, convert)
