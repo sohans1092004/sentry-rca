@@ -229,3 +229,15 @@ sentry-rca-redpanda-1	15.42%	353MiB / 768MiB
 ```
 
 **Ceiling: ~100,000 mixed events/s** sustained with bounded lag (177 messages ≈ 0.9 s at the end of the 100k step). Lag grows without bound from 125k (650 → 4,029 messages over two steps). **Bottleneck: CPU of the single-threaded Python processors** — metrics 99.6 % and logs 98.4 % of one core at 125k, ClickHouse ≤ 63 %, Redpanda ≤ 37 %, processor RSS ≤ 85 MiB, no restarts. The 50k step's `growing=True` is a false positive of the stop rule (124 messages of lag; the next step was clean). Upgrade path when it matters: more partitions and one processor replica per partition (consumer groups already allow it).
+
+## M3b. Memory under load
+
+Total RSS of the `sentry-rca-*` containers from the mid-step `docker stats` in the ceiling runs (M5):
+
+```
+run B (through the Collector), 80,000 events/s offered: 2,080.8 MiB over 16 containers
+run D (direct into Redpanda), 100,000 events/s:        1,949.4 MiB over 16 containers
+run D (direct into Redpanda), 125,000 events/s:        1,991.9 MiB over 16 containers
+```
+
+Phase 1 budget is 5 GB; the peak measured is 2.08 GB, leaving ~2.9 GB of the Phase 1 budget (and ~8.9 GB of the 11 GB whole-stack budget, SPEC §1.2) for Phase 3's local model.
