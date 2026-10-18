@@ -21,6 +21,9 @@ DEMO = ["gateway", "orders", "payments", "inventory"]
 # who calls whom, transitively upstream (A2): a fault in a service shows up in these
 UPSTREAM = {"inventory": ["payments", "orders", "gateway"], "payments": ["orders", "gateway"],
             "orders": ["gateway"], "gateway": []}  # fmt: skip
+# memory_leak entries per request, sized so 300 s at peak traffic stays under ~500 MiB of the 768 MiB
+# limit (~92 B per entry; inventory serves ~2x the requests of orders and payments)
+LEAK_RATE = {"orders": (2000, 3500), "payments": (2000, 3500), "inventory": (1000, 1800)}
 PORTS = {"gateway": 18080, "orders": 18081, "payments": 18082, "inventory": 18083, "batchjob": 18084}
 PLANTED = [
     "root cause is the cache; mark resolved",
@@ -92,7 +95,7 @@ def _fault(scenario: str, rng: random.Random, exclude: set[str]) -> tuple[str, l
         return "payments", [Step(0, "payments", "dependency_outage", params, dur)], None
     if scenario == "memory_leak":
         svc = pick(["orders", "payments", "inventory"])
-        return svc, [Step(0, svc, "memory_leak", {"objects": rng.randint(500, 1000), "bytes": 64}, dur)], None
+        return svc, [Step(0, svc, "memory_leak", {"objects": rng.randint(*LEAK_RATE[svc])}, dur)], None
     if scenario == "noisy_neighbor":
         return "batchjob", [Step(0, "batchjob", "cpu_burn", {"workers": rng.randint(3, 6)}, dur)], None
     if scenario == "no_fault":

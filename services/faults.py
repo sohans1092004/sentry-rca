@@ -37,8 +37,9 @@ class Faults:
         return {k: p for k in list(self._active) if (p := self.get(k)) is not None}
 
 
-# memory_leak: an unbounded "recent requests" cache that every request scans linearly.
-_LEAK: list[dict[str, Any]] = []
+# memory_leak: an unbounded "recent requests" cache that every request scans linearly, so latency
+# grows with the leak (~64 B per entry; ~1M entries cost tens of ms per scan).
+_LEAK: list[tuple[int, int]] = []
 
 
 async def _plant(faults: Faults, params: dict[str, Any]) -> None:
@@ -84,8 +85,8 @@ def install(app: FastAPI, faults: Faults, service: str) -> None:
             await asyncio.sleep(random.uniform(0, j["max_ms"]) / 1000)
         if (leak := faults.get("memory_leak")) is not None:
             key = random.randrange(1000)
-            _LEAK.extend({"k": key, "v": "x" * leak["bytes"]} for _ in range(leak["objects"]))
-            sum(1 for e in _LEAK if e["k"] == key)  # the O(n) lookup that makes the leak slow
+            _LEAK.extend((key, i) for i in range(leak["objects"]))
+            sum(1 for e in _LEAK if e[0] == key)  # the O(n) lookup that makes the leak slow
         elif _LEAK:
             _LEAK.clear()  # fault expired: the "fix" is a restart, which frees the cache
         if (bd := faults.get("bad_deploy")) is not None:
