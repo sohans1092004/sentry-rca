@@ -120,13 +120,7 @@ def record_one(fixture_id: str, scenario: str, seed: int, variant: str | None) -
     tables = {t: read_ch(ch, t, config.DEMO_TENANT_ID, w0, w1) for t in ("metrics", "logs", "spans")}
     tables["deploys"] = read_deploys(pg, config.DEMO_TENANT_ID, w0 - timedelta(hours=1), w1)
 
-    claims = []
-    end = datetime.fromisoformat(run["injection_end"])
-    for a in run["applied"]:
-        if a["kind"] != "plant_logs":
-            at = datetime.fromisoformat(a["at"])
-            claims += gold.for_fault(a["kind"], a["service"], a["params"], at, min(end, at + timedelta(
-                seconds=a["duration_s"])), tables)  # fmt: skip
+    claims = gold.for_run(run, tables)
     label = {
         "fixture_id": fixture_id, "scenario": scenario, "root_cause": plan.root_cause,
         "acceptable_alternatives": plan.acceptable_alternatives, "symptom_services": plan.symptom_services,

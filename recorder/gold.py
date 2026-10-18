@@ -155,3 +155,23 @@ def for_fault(kind: str, service: str, params: dict[str, Any], start: datetime, 
     elif kind == "jitter":  # no_fault: only the symptom is real
         claims.append(metric_change(m, "gateway", LATENCY, start, end))
     return [c for c in claims if c is not None]
+
+
+def _identity(c: dict[str, Any]) -> tuple[Any, ...]:
+    return (c["type"], c.get("service"), c.get("metric"), c.get("pattern"), c.get("parent_service"),
+            c.get("child_service"))  # fmt: skip
+
+
+def for_run(run: dict[str, Any], tables: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    """Gold claims for a whole injection run. A fault applied to several services at once (no_fault's
+    jitter on all four) yields the same claim per step; each distinct claim is kept once."""
+    end = datetime.fromisoformat(run["injection_end"])
+    claims: dict[tuple[Any, ...], dict[str, Any]] = {}
+    for a in run["applied"]:
+        if a["kind"] == "plant_logs":  # planted lines are false by construction: never gold
+            continue
+        at = datetime.fromisoformat(a["at"])
+        for c in for_fault(a["kind"], a["service"], a["params"], at, min(end, at + timedelta(seconds=a["duration_s"])),
+                           tables):  # fmt: skip
+            claims.setdefault(_identity(c), c)
+    return list(claims.values())
