@@ -160,6 +160,9 @@ services:
     environment: { <<: *demo-env, OTEL_EXPORTER_OTLP_HEADERS: x-sentry-service=batchjob }
     ports: ["18084:8084"]
     cpuset: "3"
+    # 8x the default CPU weight: at equal weight the mostly-idle victims won the core back on every
+    # wake-up and the neighbour was barely noticeable (smoke run: gateway p95 70 -> 110 ms, briefly).
+    cpu_shares: 8192
     mem_limit: 128m
 
   traffic:

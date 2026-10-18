@@ -97,7 +97,7 @@ def _fault(scenario: str, rng: random.Random, exclude: set[str]) -> tuple[str, l
         svc = pick(["orders", "payments", "inventory"])
         return svc, [Step(0, svc, "memory_leak", {"objects": rng.randint(*LEAK_RATE[svc])}, dur)], None
     if scenario == "noisy_neighbor":
-        return "batchjob", [Step(0, "batchjob", "cpu_burn", {"workers": rng.randint(3, 6)}, dur)], None
+        return "batchjob", [Step(0, "batchjob", "cpu_burn", {"workers": rng.randint(6, 10)}, dur)], None
     if scenario == "no_fault":
         params = {"p": round(rng.uniform(0.25, 0.4), 2), "max_ms": round(rng.uniform(200, 350))}
         return "", [Step(0, s, "jitter", params, dur) for s in DEMO], None
