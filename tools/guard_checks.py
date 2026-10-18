@@ -69,7 +69,7 @@ GUARDS: dict[str, dict] = {
     "fixture_content_hash": {
         "property": "Fixture round trip: identical row counts and content hashes after load",
         "file": "recorder/load.py",
-        "edits": [("    verify_hashes(dataset, client)\n", "")],
+        "edits": [("    verify_hashes(dataset, ch, database)\n", "")],
         "tests": [T + "test_recorder.py::test_loader_rejects_tampered_dataset"],
     },
 }

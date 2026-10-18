@@ -110,6 +110,12 @@ services:
     command: ["python", "-m", "alerting.engine"]
     mem_limit: 160m
 
+  archiver: # cold retention, Amendment A5
+    <<: *app
+    command: ["python", "-m", "recorder.archive", "--loop"]
+    volumes: [archive:/app/data/archive]
+    mem_limit: 160m
+
   # --- demo system (SPEC §3) --------------------------------------------------------------------
   demo-postgres:
     image: postgres:16.10-alpine
@@ -161,4 +167,4 @@ services:
     mem_limit: 96m
     restart: unless-stopped
 
-volumes: { clickhouse: {}, redpanda: {}, postgres: {}, demo-postgres: {} }
+volumes: { clickhouse: {}, redpanda: {}, postgres: {}, demo-postgres: {}, archive: {} }
