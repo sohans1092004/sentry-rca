@@ -28,7 +28,7 @@ def check_metric_change(rows: list[dict[str, Any]], start: datetime, end: dateti
     if len(before) < 3 or len(inside) < 3:
         return False
     b, w = sum(before) / len(before), sum(inside) / len(inside)
-    return (w - b) / max(abs(b), EPS) >= min_magnitude
+    return bool((w - b) / max(abs(b), EPS) >= min_magnitude)
 
 
 def metric_change(metrics: list[dict[str, Any]], service: str, metric: str, start: datetime, end: datetime,
