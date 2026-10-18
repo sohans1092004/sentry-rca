@@ -1,0 +1,164 @@
+# Sentry-RCA Phase 1 stack. Every container has a memory limit (SPEC §13).
+#   docker compose -f deploy/compose.yaml up -d --build
+name: sentry-rca
+
+x-app: &app
+  image: sentry-rca:dev
+  build: { context: .., dockerfile: deploy/Dockerfile }
+  restart: unless-stopped
+  environment: &app-env
+    PG_DSN: postgresql://sentry:sentry@postgres:5432/sentry
+    CH_HOST: clickhouse
+    KAFKA_BOOTSTRAP: redpanda:9092
+  depends_on:
+    migrate: { condition: service_completed_successfully }
+
+x-demo: &demo
+  image: sentry-rca:dev
+  restart: unless-stopped
+  depends_on:
+    otel-collector: { condition: service_started }
+    demo-postgres: { condition: service_healthy }
+  mem_limit: 256m
+
+x-demo-env: &demo-env
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+  OTEL_SEMCONV_STABILITY_OPT_IN: http
+  DEMO_DB_DSN: postgresql://demo:demo@demo-postgres:5432/demo
+
+services:
+  # --- stores and transport ---------------------------------------------------------------
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.8.33.6
+    environment: { CLICKHOUSE_USER: sentry, CLICKHOUSE_PASSWORD: sentry, CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1 }
+    volumes: [clickhouse:/var/lib/clickhouse, ./clickhouse/memory.xml:/etc/clickhouse-server/config.d/memory.xml:ro]
+    ports: ["8123:8123"]
+    ulimits: { nofile: { soft: 262144, hard: 262144 } }
+    mem_limit: 1536m
+    healthcheck: { test: ["CMD", "wget", "-qO-", "http://localhost:8123/ping"], interval: 3s, retries: 40 }
+
+  redpanda:
+    image: redpandadata/redpanda:v25.2.1
+    command:
+      - redpanda start --mode dev-container --smp 1 --memory 512M --reserve-memory 0M --overprovisioned
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+    volumes: [redpanda:/var/lib/redpanda/data]
+    ports: ["19092:19092", "9644:9644"]
+    mem_limit: 768m
+    healthcheck: { test: ["CMD", "rpk", "cluster", "health", "--exit-when-healthy"], interval: 3s, retries: 40 }
+
+  redpanda-init:
+    image: redpandadata/redpanda:v25.2.1
+    depends_on: { redpanda: { condition: service_healthy } }
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -e
+        R="rpk -X brokers=redpanda:9092"
+        for s in metrics logs traces; do
+          $$R topic create otel.$$s.raw -p 3 -c retention.ms=86400000 || true
+          $$R topic create otel.$$s.dlq -p 1 -c retention.ms=604800000 || true
+        done
+        $$R topic create incidents.opened -p 3 -c retention.ms=604800000 || true
+        $$R topic list
+    restart: "no"
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.155.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes: [./otel-collector.yaml:/etc/otelcol/config.yaml:ro]
+    ports: ["4318:4318", "8888:8888"]
+    depends_on: { redpanda-init: { condition: service_completed_successfully } }
+    mem_limit: 320m
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16.10-alpine
+    environment: { POSTGRES_USER: sentry, POSTGRES_PASSWORD: sentry, POSTGRES_DB: sentry }
+    volumes: [postgres:/var/lib/postgresql/data]
+    ports: ["5434:5432"] # 5432 is often taken by other local stacks
+    mem_limit: 256m
+    healthcheck: { test: ["CMD", "pg_isready", "-U", "sentry"], interval: 2s, retries: 30 }
+
+  # --- platform -----------------------------------------------------------------------------
+  migrate:
+    image: sentry-rca:dev
+    build: { context: .., dockerfile: deploy/Dockerfile }
+    command: ["python", "-m", "common.migrate"]
+    environment: *app-env
+    depends_on:
+      postgres: { condition: service_healthy }
+      clickhouse: { condition: service_healthy }
+    restart: "no"
+
+  processor-metrics:
+    <<: *app
+    command: ["python", "-m", "processors.runner", "metrics"]
+    mem_limit: 192m
+  processor-logs:
+    <<: *app
+    command: ["python", "-m", "processors.runner", "logs"]
+    mem_limit: 192m
+  processor-traces:
+    <<: *app
+    command: ["python", "-m", "processors.runner", "traces"]
+    mem_limit: 192m
+
+  alerting:
+    <<: *app
+    command: ["python", "-m", "alerting.engine"]
+    mem_limit: 160m
+
+  # --- demo system (SPEC §3) --------------------------------------------------------------------
+  demo-postgres:
+    image: postgres:16.10-alpine
+    environment: { POSTGRES_USER: demo, POSTGRES_PASSWORD: demo, POSTGRES_DB: demo }
+    volumes: [demo-postgres:/var/lib/postgresql/data]
+    ports: ["5433:5432"]
+    mem_limit: 256m
+    healthcheck: { test: ["CMD", "pg_isready", "-U", "demo"], interval: 2s, retries: 30 }
+
+  gateway:
+    <<: *demo
+    command: ["uvicorn", "services.gateway:app", "--host", "0.0.0.0", "--port", "8080", "--no-access-log"]
+    environment: { <<: *demo-env, OTEL_EXPORTER_OTLP_HEADERS: x-sentry-service=gateway }
+    ports: ["18080:8080"]
+  orders:
+    <<: *demo
+    command: ["uvicorn", "services.orders:app", "--host", "0.0.0.0", "--port", "8081", "--no-access-log"]
+    environment: { <<: *demo-env, OTEL_EXPORTER_OTLP_HEADERS: x-sentry-service=orders }
+    ports: ["18081:8081"]
+    mem_limit: 768m # memory_leak target
+  # payments, inventory and batchjob share one core: the noisy_neighbor "host" (A3).
+  payments:
+    <<: *demo
+    command: ["uvicorn", "services.payments:app", "--host", "0.0.0.0", "--port", "8082", "--no-access-log"]
+    environment: { <<: *demo-env, OTEL_EXPORTER_OTLP_HEADERS: x-sentry-service=payments }
+    ports: ["18082:8082"]
+    cpuset: "3"
+    mem_limit: 768m
+  inventory:
+    <<: *demo
+    command: ["uvicorn", "services.inventory:app", "--host", "0.0.0.0", "--port", "8083", "--no-access-log"]
+    environment: { <<: *demo-env, OTEL_EXPORTER_OTLP_HEADERS: x-sentry-service=inventory }
+    ports: ["18083:8083"]
+    cpuset: "3"
+    mem_limit: 768m
+  batchjob:
+    <<: *demo
+    command: ["uvicorn", "services.batchjob:app", "--host", "0.0.0.0", "--port", "8084", "--no-access-log"]
+    environment: { <<: *demo-env, OTEL_EXPORTER_OTLP_HEADERS: x-sentry-service=batchjob }
+    ports: ["18084:8084"]
+    cpuset: "3"
+    mem_limit: 128m
+
+  traffic:
+    image: sentry-rca:dev
+    command: ["python", "-m", "services.traffic"]
+    environment: { GATEWAY_URL: "http://gateway:8080", BASE_RPS: "4" }
+    depends_on: [gateway, orders, payments, inventory]
+    mem_limit: 96m
+    restart: unless-stopped
+
+volumes: { clickhouse: {}, redpanda: {}, postgres: {}, demo-postgres: {} }

@@ -4,7 +4,7 @@ import os
 
 DEMO_TENANT_ID = "00000000-0000-4000-8000-000000000001"
 
-PG_DSN = os.environ.get("PG_DSN", "postgresql://sentry:sentry@localhost:5432/sentry")
+PG_DSN = os.environ.get("PG_DSN", "postgresql://sentry:sentry@localhost:5434/sentry")
 CH_HOST = os.environ.get("CH_HOST", "localhost")
 CH_PORT = int(os.environ.get("CH_PORT", "8123"))
 CH_USER = os.environ.get("CH_USER", "sentry")
