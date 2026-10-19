@@ -43,6 +43,7 @@ log = logging.getLogger("inventory")
 async def _start(s: Service) -> None:
     await db.start(SCHEMA, ["stock", "holds"])
     asyncio.get_running_loop().create_task(_invalidations())
+    asyncio.get_running_loop().create_task(_refresh_ahead())
     await maint.connect()
     asyncio.get_running_loop().create_task(_reconcile())
 
@@ -82,6 +83,23 @@ async def _reconcile() -> None:
                 await maint.run("maintenance", "SELECT 1", acquire_timeout_s=0.05)
         with contextlib.suppress(asyncpg.QueryCanceledError):
             await maint.run("reconcile", AVAILABILITY, f"sku-{random.randrange(SKUS)}")
+
+
+async def _refresh_ahead() -> None:
+    """Refresh keys in the background a minute before they expire, a few per second, so healthy
+    reservations do not miss. Without it, the keys filled together after a start expired together
+    ~15 min later, ~100 requests missed within minutes, and the refills synchronised the next wave
+    (dev campaign 20:21, 20:37, 20:54 UTC: gateway p95 2x for 5 min each). cache_stampede deletes
+    keys, which this does not bring back, so reservations miss as before."""
+    while True:
+        await asyncio.sleep(1)
+        now = time.monotonic()
+        due = sorted((exp, k) for k, (exp, _) in _cache.items() if exp - now < 60)
+        for _, k in due[:3]:
+            with contextlib.suppress(Exception):  # a failed refresh is retried; the request path still works
+                rows = await db.run("availability", AVAILABILITY, k)
+                if k in _cache:  # invalidated meanwhile: leave it out
+                    _cache[k] = (time.monotonic() + CACHE_TTL_S * random.uniform(0.8, 1.2), int(rows[0]["n"]))
 
 
 async def _available(sku: str) -> int:

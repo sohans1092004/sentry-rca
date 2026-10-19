@@ -180,6 +180,9 @@ def incident_in_baseline(pg: Any, now: datetime) -> str | None:
     return f"{row[0]} incidents in the alert baseline (last resolved {row[1]})" if row[0] else None
 
 
+PASSES = 3
+
+
 def wait_quiet(pg: Any, ch: Any) -> None:
     """The pre-margin must hold only background traffic: no open incident, no fault and no incident
     activity for PRE, at least PRE of telemetry in ClickHouse, and (A29) no incident period anywhere in
@@ -187,7 +190,12 @@ def wait_quiet(pg: Any, ch: Any) -> None:
     while True:
         now = datetime.now(UTC)
         last = _last_activity(pg)
-        oldest = ch.query("SELECT min(ts) FROM metrics").result_rows[0][0]
+        try:
+            oldest = ch.query("SELECT min(ts) FROM metrics").result_rows[0][0]
+        except Exception as e:  # localhost:8123 was reset (10054) at 20:49 UTC with ClickHouse healthy
+            _log(event="waiting_quiet", clickhouse_error=f"{type(e).__name__}: {e}"[:200])
+            time.sleep(30)
+            continue
         oldest = oldest.replace(tzinfo=UTC) if oldest and oldest.tzinfo is None else oldest
         dirty = incident_in_baseline(pg, now)
         quiet = dirty is None and (last is None or now - last >= PRE) and oldest and now - oldest >= PRE
@@ -285,16 +293,19 @@ def main() -> None:
         return
     split = sys.argv[2] if len(sys.argv) > 2 else "dev"
     with (RUNS / f"campaign-{VERSION}-{split}.jsonl").open("a") as log:
-        for entry in SPLITS[split]:
-            if (LABELS / entry[0] / VERSION / "label.json").exists():
-                continue
-            try:
-                result = record_one(entry)
-            except Exception as e:  # one broken fixture must not end an overnight campaign
-                result = {"fixture_id": entry[0], "recorded": False, "error": f"{type(e).__name__}: {e}"[:500]}
-                _log(event="fixture_failed", **result)
-            log.write(json.dumps(result, default=str) + "\n")
-            log.flush()
+        for attempt in range(PASSES):  # a failed fixture is retried on the next pass
+            todo = [e for e in SPLITS[split] if not (LABELS / e[0] / VERSION / "label.json").exists()]
+            if not todo:
+                break
+            _log(event="campaign_pass", attempt=attempt + 1, todo=[e[0] for e in todo])
+            for entry in todo:
+                try:
+                    result = record_one(entry)
+                except Exception as e:  # one broken fixture must not end an overnight campaign
+                    result = {"fixture_id": entry[0], "recorded": False, "error": f"{type(e).__name__}: {e}"[:500]}
+                    _log(event="fixture_failed", **result)
+                log.write(json.dumps(result, default=str) + "\n")
+                log.flush()
 
 
 if __name__ == "__main__":
