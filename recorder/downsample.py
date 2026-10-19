@@ -13,15 +13,19 @@ RAW_RETENTION = timedelta(days=7)
 
 HOUR_SQL = """
 INSERT INTO metrics_1h
-SELECT tenant_id, service, metric, cityHash64(mapKeys(labels), mapValues(labels)) AS labels_hash,
-       any(labels), toStartOfHour(ts) AS hour,
-       avg(value), min(value), max(value), sum(value), count(), now64(3)
+SELECT tenant_id, service, metric, cityHash64(mapKeys(l), mapValues(l)) AS labels_hash,
+       any(l), toStartOfHour(t) AS hour,
+       avg(v), min(v), max(v), sum(v), count(), now64(3)
 FROM (
-  SELECT tenant_id, service, metric, labels, ts, value FROM metrics
+  SELECT tenant_id, service, metric, any(labels) AS l, any(ts) AS t, any(value) AS v FROM metrics
   WHERE ts >= {h:DateTime64(3)} AND ts < {h:DateTime64(3)} + INTERVAL 1 HOUR
-  ORDER BY point_id LIMIT 1 BY point_id  -- one row per stable ID: a redelivered copy counts once
+  GROUP BY point_id, tenant_id, service, metric  -- one row per stable ID: a redelivered copy counts once
 )
 GROUP BY tenant_id, service, metric, labels_hash, hour
+-- Deduplicated by GROUP BY, not ORDER BY ... LIMIT 1 BY: an hour of the ingestion-ceiling test holds
+-- ~4M rows, and sorting it ran ClickHouse past its 1 GiB limit (code 241); grouping peaks at ~200 MiB
+-- and spills to disk past 100 MB.
+SETTINGS max_bytes_before_external_group_by = 100000000, max_threads = 2
 """
 
 
