@@ -1,10 +1,12 @@
 """get_incident_timeline (SPEC §5.1): deploys, anomaly onsets per service and signal, and call edges in
 the window, merged chronologically. Rows are computed, so their row_id is an ordinal (§4.3).
 
-Onset detection (Amendment A20), per service and signal, on 30 s buckets:
-- baseline = the buckets in the first BASELINE of the window (needs >= MIN_BASELINE of them);
-- a bucket is anomalous when value > median + max(4 x 1.4826 x MAD, RISE x |median|, FLOOR[signal]);
-- the onset is the first of two consecutive anomalous buckets after the baseline.
+Onset detection (Amendment A20), per service and signal, on the services' own metric export ticks
+(every 5 s; a tick's timestamp is the end of the interval it measures, so an onset is never stamped
+before the data that shows it):
+- baseline = the ticks in the first BASELINE of the window (needs >= MIN_BASELINE of them);
+- a tick is anomalous when value > median + max(4 x 1.4826 x MAD, RISE x |median|, FLOOR[signal]);
+- the onset is the first of two consecutive anomalous ticks (at most MAX_TICK_GAP apart).
 """
 
 import statistics
@@ -14,7 +16,7 @@ from typing import Any
 
 from investigation.backend import Backend, Row
 
-BUCKET = timedelta(seconds=30)
+MAX_TICK_GAP = timedelta(seconds=12)
 BASELINE = timedelta(minutes=10)
 MIN_BASELINE = 6
 RISE = 0.5
@@ -24,16 +26,12 @@ METRICS = ["http.server.request.duration.sum", "http.server.request.duration.cou
 FETCH_LIMIT = 1_000_000  # internal fetch; the result itself is capped when snapshotted
 
 
-def _bucket(t: datetime, start: datetime) -> datetime:
-    return start + BUCKET * int((t - start) / BUCKET)
-
-
 def signals(rows: list[Row], start: datetime) -> dict[tuple[str, str], dict[datetime, float]]:
-    """(service, signal) -> bucket -> value."""
+    """(service, signal) -> export tick -> value."""
     acc: dict[tuple[str, str, datetime], dict[str, float]] = defaultdict(lambda: defaultdict(float))
     gauges: dict[tuple[str, str, datetime], list[float]] = defaultdict(list)
     for r in rows:
-        b, svc, m = _bucket(r["ts"], start), r["service"], r["metric"]
+        b, svc, m = r["ts"], r["service"], r["metric"]
         if m.startswith("http.server.request.duration."):
             a = acc[(svc, "http", b)]
             a[m.rsplit(".", 1)[1]] += r["value"]
@@ -68,7 +66,7 @@ def onset(series: dict[datetime, float], signal: str, start: datetime) -> dict[s
     threshold = median + max(4 * 1.4826 * mad, RISE * abs(median), FLOOR[signal])
     after = [t for t in times if t >= start + BASELINE]
     for t0, t1 in zip(after, after[1:], strict=False):
-        if t1 - t0 == BUCKET and series[t0] > threshold and series[t1] > threshold:
+        if t1 - t0 <= MAX_TICK_GAP and series[t0] > threshold and series[t1] > threshold:
             peak = max(series[t] for t in after if t >= t0)
             return {"ts": t0, "baseline": round(median, 6), "threshold": round(threshold, 6), "peak": round(peak, 6)}
     return None
