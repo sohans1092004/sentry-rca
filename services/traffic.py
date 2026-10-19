@@ -1,5 +1,7 @@
 """Traffic generator: Poisson arrivals with a daily-shaped rate, plus harmless background noise
-(unknown order lookups -> 404, occasional invalid requests -> 422) so fixtures are never clean.
+(unknown order lookups -> 404, occasional invalid requests -> 422) so fixtures are never clean, and,
+rarely, malformed requests that break each service's parser for real (500s through the same error
+handling a bad deploy goes through, Amendment A21).
 
     python -m services.traffic
 """
@@ -34,8 +36,12 @@ async def one(client: httpx.AsyncClient, recent: list[str]) -> None:
         elif r < 0.97:
             oid = rng.choice(recent) if recent and rng.random() < 0.9 else "00000000-0000-0000-0000-000000000000"
             await client.get(f"/orders/{oid}")
-        else:
+        elif r < 0.997:
             await client.post("/checkout", json={"sku": "bogus", "qty": 0})
+        else:  # malformed: no qty (orders), a fractional qty (inventory), an unknown currency (payments)
+            sku = f"sku-{rng.randrange(100)}"
+            bad = rng.choice([{"sku": sku}, {"sku": sku, "qty": "2.5"}, {"sku": sku, "qty": 1, "currency": "XAU"}])
+            await client.post("/checkout", json=bad)
     except httpx.HTTPError:
         pass
 

@@ -1,9 +1,20 @@
-"""The demo Postgres, shared by orders and inventory, with the DB-level faults: slow_query (a
-pg_sleep before one named query) and pool_exhaustion (the pool shrunk and every query held)."""
+"""The demo Postgres, shared by orders and inventory.
+
+Faults reach it through normal code paths only (Amendment A21):
+- slow_query: a lock wait inside the database. A trigger on the target table sleeps while a row in
+  `lock_waits` says so; the injector writes that row over its own connection, so the application's
+  SQL text and spans are exactly what healthy traffic sends.
+- pool_exhaustion: a connection leak. With the fault on, some queries never return their connection
+  for a while; the pool (size 10) fills and acquires time out.
+
+Healthy traffic hits the same paths: the trigger also stalls every write for ~1.2 s during 2 s every 15 minutes
+(a checkpoint-like stall: slow statements, a few pool timeouts and 503s) and, rarely, one write for
+2.5 s, past the statement timeout."""
 
 import asyncio
 import logging
 import os
+import random
 import time
 from typing import Any
 
@@ -14,8 +25,33 @@ from services.faults import Faults
 
 DSN = os.environ.get("DEMO_DB_DSN", "postgresql://demo:demo@localhost:5433/demo")
 POOL_SIZE = 10
-ACQUIRE_TIMEOUT_S = 2.0
+ACQUIRE_TIMEOUT_S = 0.5
+STATEMENT_TIMEOUT_MS = 2000
+SLOW_STATEMENT_MS = 200  # like Postgres log_min_duration_statement
 log = logging.getLogger("db")
+
+LOCK_WAITS = """
+CREATE TABLE IF NOT EXISTS lock_waits (
+  tbl TEXT NOT NULL, op TEXT NOT NULL, delay_ms INT NOT NULL, until TIMESTAMPTZ NOT NULL,
+  PRIMARY KEY (tbl, op));
+CREATE OR REPLACE FUNCTION lock_wait() RETURNS trigger AS $$
+DECLARE d INT;
+BEGIN
+  SELECT delay_ms INTO d FROM lock_waits WHERE tbl = TG_TABLE_NAME AND op = TG_OP AND until > clock_timestamp();
+  IF d IS NULL AND extract(epoch FROM clock_timestamp())::bigint % 900 < 2 THEN
+    d := 1200;  -- checkpoint-like stall: every write for two seconds in fifteen minutes
+  ELSIF d IS NULL AND random() < 0.0001 THEN
+    d := 2500;  -- a rare long lock wait, past statement_timeout
+  END IF;
+  IF d IS NOT NULL THEN PERFORM pg_sleep(d / 1000.0); END IF;
+  RETURN NEW;
+END $$ LANGUAGE plpgsql;
+"""
+
+
+def lock_wait_trigger(table: str) -> str:
+    return f"CREATE OR REPLACE TRIGGER {table}_lock_wait BEFORE INSERT OR UPDATE ON {table} " \
+           "FOR EACH ROW EXECUTE FUNCTION lock_wait();"  # fmt: skip
 
 
 class PoolTimeout(Exception):
@@ -27,6 +63,7 @@ class Db:
         self.faults = faults
         self.pool: asyncpg.Pool | None = None
         self.size = POOL_SIZE
+        self.statement_timeout_ms = STATEMENT_TIMEOUT_MS
         meter = metrics.get_meter("sentry.demo")
         self.wait_ms = meter.create_histogram("db.pool.wait", unit="ms", description="time to acquire a connection")
         self.in_use = 0
@@ -34,10 +71,14 @@ class Db:
             "db.pool.in_use", [lambda _o: [metrics.Observation(self.in_use, {"pool.size": str(self.size)})]]
         )
 
-    async def start(self, schema: str) -> None:
+    async def _pool(self) -> asyncpg.Pool:
+        settings = {"statement_timeout": str(self.statement_timeout_ms)}
+        return await asyncpg.create_pool(DSN, min_size=2, max_size=self.size, server_settings=settings)
+
+    async def start(self, schema: str, tables: list[str]) -> None:
         for attempt in range(30):
             try:
-                self.pool = await asyncpg.create_pool(DSN, min_size=2, max_size=self.size)
+                self.pool = await self._pool()
                 break
             except (OSError, asyncpg.PostgresError):
                 await asyncio.sleep(1 + attempt * 0.2)
@@ -45,40 +86,51 @@ class Db:
         async with self.pool.acquire() as conn:
             await conn.execute("SELECT pg_advisory_lock(42)")
             try:
-                await conn.execute(schema)
+                await conn.execute(schema + LOCK_WAITS + "".join(lock_wait_trigger(t) for t in tables))
             finally:
                 await conn.execute("SELECT pg_advisory_unlock(42)")
 
-    async def _right_size(self, want: int) -> None:
-        if want != self.size and self.pool is not None:
-            old, self.size = self.pool, want
-            self.pool = await asyncpg.create_pool(DSN, min_size=1, max_size=want)
+    async def set_statement_timeout(self, ms: int) -> None:
+        """New connections get the new setting; the old pool drains in the background."""
+        if ms != self.statement_timeout_ms and self.pool is not None:
+            old, self.statement_timeout_ms = self.pool, ms
+            self.pool = await self._pool()
             asyncio.get_running_loop().create_task(old.close())
-            log.warning("connection pool resized to %d", want)
 
     async def run(self, name: str, sql: str, *args: Any, fetch: bool = True) -> Any:
-        pe = self.faults.get("pool_exhaustion")
-        await self._right_size(pe["pool_size"] if pe else POOL_SIZE)
-        pool = self.pool  # release to the pool we acquired from, even if it is resized meanwhile
+        pool = self.pool  # release to the pool we acquired from, even if it is replaced meanwhile
         assert pool is not None
-        timeout = pe["acquire_timeout_s"] if pe else ACQUIRE_TIMEOUT_S
         t0 = time.monotonic()
         try:
-            conn = await pool.acquire(timeout=timeout)
+            conn = await pool.acquire(timeout=ACQUIRE_TIMEOUT_S)
         except TimeoutError as e:
             self.wait_ms.record((time.monotonic() - t0) * 1000, {"query": name})
-            log.error("pool acquire timeout after %.1fs for query %s (pool size %d)", timeout, name, self.size)
+            log.error("QueuePool limit of size %d overflow 0 reached, connection timed out, timeout %.2f",
+                      self.size, ACQUIRE_TIMEOUT_S)  # fmt: skip
             raise PoolTimeout(name) from e
         self.wait_ms.record((time.monotonic() - t0) * 1000, {"query": name})
         self.in_use += 1
+        held_s = 0.0
+        if (leak := self.faults.get("conn_leak")) is not None and random.random() < leak["p"]:
+            held_s = leak["hold_s"]  # this code path forgets the connection until a sweep reclaims it
         try:
-            sq = self.faults.get("slow_query")
-            delay_ms = (sq["delay_ms"] if sq and sq["query"] == name else 0) + (pe["query_delay_ms"] if pe else 0)
-            if delay_ms:
-                await conn.execute("SELECT pg_sleep($1)", delay_ms / 1000)
-                if sq and sq["query"] == name and delay_ms >= 200:
-                    log.warning("slow query %s took over %d ms", name, delay_ms)
-            return await (conn.fetch(sql, *args) if fetch else conn.execute(sql, *args))
+            q0 = time.monotonic()
+            try:
+                result = await (conn.fetch(sql, *args) if fetch else conn.execute(sql, *args))
+            except asyncpg.PostgresError as e:
+                log.error("query %s failed: %s: %s", name, type(e).__name__, e)
+                raise
+            if (ms := (time.monotonic() - q0) * 1000) >= SLOW_STATEMENT_MS:
+                log.warning("duration: %.3f ms  statement: %s", ms, " ".join(sql.split()))
+            return result
         finally:
-            self.in_use -= 1
-            await pool.release(conn)
+            if held_s:
+                asyncio.get_running_loop().create_task(self._release_later(pool, conn, held_s))
+            else:
+                self.in_use -= 1
+                await pool.release(conn)
+
+    async def _release_later(self, pool: asyncpg.Pool, conn: Any, after_s: float) -> None:
+        await asyncio.sleep(after_s)
+        self.in_use -= 1
+        await pool.release(conn)

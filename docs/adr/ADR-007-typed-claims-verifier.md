@@ -43,3 +43,12 @@ Each check is one `_require(condition, reason)`, so each is tested, and guard-ch
 - **Expressiveness is the price:** a cause the five claim types cannot describe cannot be verified.
   New claim types need a spec amendment, a check, adversarial tests and a guard.
 - Rejected hypotheses are stored for audit (append-only), never shown as live results.
+- **Verified is not weighted.** The two Phase 2 ambiguous misses are a ranking failure, not a
+  verification one: both causes' claims passed in every run. The verifier accepts or rejects claims;
+  how much a verified error-mode fault counts against a verified latency fault is the ranker's
+  heuristic (ADR-006, "Why trace-dominated scores underweight error-mode faults"). Making the verifier
+  "prefer" one would mix proof with judgement.
+- **Phase 2.5 (A24): `log_pattern` proves a rise.** With healthy traffic emitting the same vocabulary
+  as faults (A21), "the line exists" proves nothing; the claim now carries `min_ratio` (>= 2.0) and the
+  verifier counts the pattern in the window and in the equal-length window before it, over the cited
+  queries' full, untruncated snapshots.

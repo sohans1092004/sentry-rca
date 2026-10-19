@@ -43,6 +43,28 @@ def _cgroup_cpu_usec() -> float:
     return (t.user + t.system) * 1e6
 
 
+def _cgroup_cpu_stat() -> dict[str, float]:
+    try:
+        return {k: float(v) for k, v in (ln.split() for ln in (CGROUP / "cpu.stat").read_text().splitlines())}
+    except OSError:
+        return {}
+
+
+class _Throttled:
+    """Share of CFS periods in which the container was throttled since the previous export (0 with
+    no CPU quota), like cAdvisor's container_cpu_cfs_throttled_periods_total / periods_total."""
+
+    def __init__(self) -> None:
+        self.last = _cgroup_cpu_stat()
+
+    def __call__(self, _o: CallbackOptions) -> Iterable[Observation]:
+        now = _cgroup_cpu_stat()
+        periods = now.get("nr_periods", 0) - self.last.get("nr_periods", 0)
+        throttled = now.get("nr_throttled", 0) - self.last.get("nr_throttled", 0)
+        self.last = now
+        yield Observation(throttled / periods if periods > 0 else 0.0)
+
+
 def _cgroup_memory_bytes() -> float:
     try:
         return float((CGROUP / "memory.current").read_text())
@@ -75,6 +97,7 @@ def setup(service: str) -> None:
     metrics.set_meter_provider(MeterProvider(resource=resource, metric_readers=[reader]))
     meter = metrics.get_meter("sentry.demo")
     meter.create_observable_gauge("container.cpu.utilization", [_Cpu()], unit="1")
+    meter.create_observable_gauge("container.cpu.throttled", [_Throttled()], unit="1")
     meter.create_observable_gauge(
         "container.memory.usage", [lambda _o: [Observation(_cgroup_memory_bytes())]], unit="By"
     )  # fmt: skip

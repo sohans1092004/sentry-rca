@@ -49,9 +49,21 @@ def test_trace_dependency_requires_descendant_and_share():
     assert c["cites"][0]["row_ids"] == ["g3", "i3"]
 
 
-def test_log_pattern_cites_matching_rows_only():
-    logs = [{"service": "inventory", "ts": T0 + timedelta(seconds=i), "body": b, "log_id": uuid.uuid4()}
-            for i, b in enumerate(["Pool acquire TIMEOUT after 0.5s", "ok", "pool acquire timeout x"])]  # fmt: skip
-    c = gold.log_pattern(logs, "inventory", "pool acquire timeout", W0, W1)
-    assert c["min_count"] == 2 and len(c["cites"][0]["row_ids"]) == 2
-    assert gold.log_pattern(logs, "orders", "pool acquire timeout", W0, W1) is None
+def _lines(bodies, start):
+    return [{"service": "inventory", "ts": start + timedelta(seconds=i), "body": b, "log_id": uuid.uuid4()}
+            for i, b in enumerate(bodies)]  # fmt: skip
+
+
+def test_log_pattern_cites_matching_rows_only_and_needs_a_rise():
+    inside = _lines(["QueuePool LIMIT reached", "ok", "queuepool limit reached", "QueuePool limit x"], W0)
+    c = gold.log_pattern(inside, "inventory", "queuepool limit", W0, W1)
+    assert c["min_count"] == 3 and len(c["cites"][0]["row_ids"]) == 3 and c["min_ratio"] == 2.4  # 3 / max(0, 1) x 0.8
+    assert c["cites"][0]["args"]["start"] == "2026-10-18T09:57:00.000Z"  # the equal-length window before W
+    assert gold.log_pattern(inside, "orders", "queuepool limit", W0, W1) is None
+    # the same three lines, with as many just before the window: present, but not elevated
+    before = _lines(["QueuePool limit"] * 3, W0 - timedelta(seconds=60))
+    assert gold.log_pattern(inside + before, "inventory", "queuepool limit", W0, W1) is None
+
+
+def test_log_ratio_pins_an_empty_pre_window_to_one():
+    assert gold.log_ratio(2, 0) == 2.0 and gold.log_ratio(1, 0) == 1.0 and gold.log_ratio(6, 3) == 2.0

@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
 
+from common.kinds import CAUSE_KINDS
 from investigation.scope import parse
 from investigation.tools import CallRecord
 
@@ -17,6 +18,7 @@ BASELINE = timedelta(minutes=15)
 MAX_DEPLOY_GAP = timedelta(minutes=30)
 ONSET_MATCH = timedelta(minutes=1)
 RUNBOOK_MIN_SIMILARITY = 0.75
+MIN_LOG_RATIO = 2.0  # A24: a log_pattern proves a rise of at least 2x against the window before it
 MAX_HOPS = 64
 CLAIM_TOOLS = {
     "metric_change": {"query_metrics"},
@@ -118,17 +120,38 @@ def _metric_change(claim: dict[str, Any], rows: list[dict[str, Any]]) -> None:
         _require(ratio <= -mm, f"changed by {ratio:.6g}, claimed a fall of at least {mm}")
 
 
-def _log_pattern(claim: dict[str, Any], rows: list[dict[str, Any]]) -> None:
+def _log_pattern(claim: dict[str, Any], rows: list[dict[str, Any]],
+                 citations: list[tuple[CallRecord, list[str]]]) -> None:  # fmt: skip
+    """A24: the cited lines exist, and the pattern rose: its count over the whole window, divided by
+    its count over the equal-length window just before (an empty one counts as 1), is >= min_ratio.
+    Both counts come from the cited queries' snapshots, which must cover both windows, untruncated."""
     start, end = _window(claim)
-    pattern, n = claim.get("pattern"), claim.get("min_count")
+    pattern, n, mr = claim.get("pattern"), claim.get("min_count"), claim.get("min_ratio")
     _require(isinstance(pattern, str) and pattern != "", "pattern must be a non-empty string")
     _require(isinstance(n, int) and not isinstance(n, bool) and n >= 1, "min_count must be a positive integer")
-    assert isinstance(pattern, str) and isinstance(n, int)
+    _require(isinstance(mr, (int, float)) and not isinstance(mr, bool) and mr >= MIN_LOG_RATIO,
+             f"min_ratio must be a number >= {MIN_LOG_RATIO}")  # fmt: skip
+    assert isinstance(pattern, str) and isinstance(n, int) and isinstance(mr, (int, float))
     for r in rows:
         _require(r.get("service") == claim.get("service"), f"cited row {r['row_id']} is from another service")
         _require(start <= _ts(r["ts"]) <= end, f"cited row {r['row_id']} is outside the window")
     hits = sum(1 for r in rows if pattern.lower() in str(r.get("body", "")).lower())
     _require(hits >= n, f"{hits} cited rows contain {pattern!r}, claimed {n}")
+    pre_start = start - (end - start)
+    seen: dict[str, dict[str, Any]] = {}
+    for call, _ in citations:
+        ex = call.executed or {}
+        _require(ex.get("service") == claim.get("service"), f"tool call {call.seq} queried another service")
+        _require(not ex.get("trace_id"), f"tool call {call.seq} is filtered to one trace and cannot count a rise")
+        _require("start" in ex and "end" in ex and _ts(ex["start"]) <= pre_start and _ts(ex["end"]) >= end,
+                 f"tool call {call.seq} does not cover the window and the equal-length window before it")  # fmt: skip
+        _require(not call.truncated, f"tool call {call.seq} was truncated, so its counts are incomplete")
+        seen.update({str(r["row_id"]): r for r in call.rows})
+    match = [_ts(r["ts"]) for r in seen.values() if pattern.lower() in str(r.get("body", "")).lower()]
+    n_win, n_pre = sum(1 for t in match if start <= t <= end), sum(1 for t in match if pre_start <= t < start)
+    ratio = n_win / max(n_pre, 1)
+    _require(ratio >= mr, f"{n_win} matching lines in the window, {n_pre} in the window before: "
+                          f"ratio {ratio:.6g}, claimed at least {mr} (present but not elevated)")  # fmt: skip
 
 
 def _descends(child: dict[str, Any], ancestor: str, spans: dict[str, dict[str, Any]]) -> bool:
@@ -177,7 +200,7 @@ def _deploy_precedes_onset(claim: dict[str, Any], rows: list[dict[str, Any]]) ->
              f"no cited anomaly onset of {svc} within 1 minute of {onset.isoformat()}")  # fmt: skip
 
 
-def _runbook_match(claim: dict[str, Any], rows: list[dict[str, Any]], excluded_fixture: str | None) -> None:
+def _runbook_match(claim: dict[str, Any], rows: list[dict[str, Any]], excluded: tuple[str, ...]) -> None:
     sim = claim.get("similarity")
     _require(isinstance(sim, (int, float)) and not isinstance(sim, bool), "similarity must be a number")
     assert isinstance(sim, (int, float))
@@ -187,12 +210,16 @@ def _runbook_match(claim: dict[str, Any], rows: list[dict[str, Any]], excluded_f
     _require(float(d["similarity"]) >= sim, f"similarity {d['similarity']:.6g} is below the claimed {sim}")
     _require(float(d["similarity"]) >= RUNBOOK_MIN_SIMILARITY,
              f"similarity {d['similarity']:.6g} is below runbook_min_similarity {RUNBOOK_MIN_SIMILARITY}")  # fmt: skip
-    own = d.get("kind") == "postmortem" and d.get("fixture_id") is not None and d.get("fixture_id") == excluded_fixture
-    _require(not own, "cites the evaluated fixture's own postmortem")
+    own = d.get("kind") == "postmortem" and d.get("fixture_id") is not None and d.get("fixture_id") in excluded
+    _require(not own, "cites the evaluated fixture's own postmortem, or one of the same scenario (A25)")
+
+
+def _as_excluded(excluded: str | tuple[str, ...] | None) -> tuple[str, ...]:
+    return (excluded,) if isinstance(excluded, str) else tuple(excluded or ())
 
 
 def verify_claim(ordinal: int, claim: dict[str, Any], calls: dict[int, CallRecord], ranker: str,
-                 excluded_fixture: str | None = None) -> ClaimResult:  # fmt: skip
+                 excluded: str | tuple[str, ...] | None = None) -> ClaimResult:  # fmt: skip
     kind = str(claim.get("type"))
     try:
         _require(kind in CLAIM_TOOLS, f"unknown claim type {kind}")
@@ -200,13 +227,13 @@ def verify_claim(ordinal: int, claim: dict[str, Any], calls: dict[int, CallRecor
         if kind == "metric_change":
             _metric_change(claim, rows)
         elif kind == "log_pattern":
-            _log_pattern(claim, rows)
+            _log_pattern(claim, rows, citations)
         elif kind == "trace_dependency":
             _trace_dependency(claim, rows, context)
         elif kind == "deploy_precedes_onset":
             _deploy_precedes_onset(claim, rows)
         else:
-            _runbook_match(claim, rows, excluded_fixture)
+            _runbook_match(claim, rows, _as_excluded(excluded))
     except Failed as e:
         return ClaimResult(ordinal, kind, False, str(e))
     except (KeyError, TypeError, ValueError) as e:
@@ -215,13 +242,16 @@ def verify_claim(ordinal: int, claim: dict[str, Any], calls: dict[int, CallRecor
 
 
 def verify(hypothesis: dict[str, Any], calls: dict[int, CallRecord], ranker: str,
-           excluded_fixture: str | None = None) -> HypothesisResult:  # fmt: skip
+           excluded: str | tuple[str, ...] | None = None) -> HypothesisResult:  # fmt: skip
     claims = hypothesis.get("claims")
     if not isinstance(claims, list) or not claims:
         return HypothesisResult(False, "a hypothesis needs at least one claim", [])
-    results = [verify_claim(i, c, calls, ranker, excluded_fixture) for i, c in enumerate(claims)]
+    results = [verify_claim(i, c, calls, ranker, excluded) for i, c in enumerate(claims)]
     if hypothesis.get("causal_role") not in ROLES:
         return HypothesisResult(False, f"unknown causal_role {hypothesis.get('causal_role')}", results)
+    if hypothesis.get("cause_kind") not in CAUSE_KINDS:
+        return HypothesisResult(False, f"cause_kind {hypothesis.get('cause_kind')!r} is not in the closed list",
+                                results)  # fmt: skip
     if hypothesis["causal_role"] == "candidate_root_cause" and all(c.get("type") == "runbook_match" for c in claims):
         return HypothesisResult(False, "a root cause needs evidence beyond a similar past incident", results)
     failed = [r for r in results if not r.passed]

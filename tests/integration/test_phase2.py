@@ -13,7 +13,7 @@ import psycopg
 import pytest
 
 from common.config import DEMO_TENANT_ID
-from investigation import orchestrator
+from investigation import baseline, orchestrator
 from investigation.backend import ClickHouseBackend
 from investigation.embeddings import Cassette, _pack
 from investigation.runbooks import Doc, PgRunbookIndex, load, query_text
@@ -155,10 +155,13 @@ def _vec(seed):
     return [((h[i % 32] / 255.0) - 0.5) for i in range(768)]
 
 
-def test_fixtures_own_postmortem_is_not_returned_by_search_runbooks(pg, pg_dsn, tmp_path):
+def test_same_scenario_postmortems_are_not_returned_by_search_runbooks(pg, pg_dsn, tmp_path):
+    """A25: while pool_exhaustion_001 is evaluated, neither its own postmortem nor a sibling's (same
+    scenario, same answer) is returned; a generic runbook still is."""
     docs = [
         Doc(str(uuid.uuid4()), "Postmortem: pool_exhaustion_001", "postmortem", "pool_exhaustion_001", "inventory"),
         Doc(str(uuid.uuid4()), "Pool exhaustion", "runbook", None, "pools"),
+        Doc(str(uuid.uuid4()), "Postmortem: pool_exhaustion_002", "postmortem", "pool_exhaustion_002", "inventory 2"),
     ]
     cassette = Cassette(tmp_path / "c.json")
     for d in docs:
@@ -167,9 +170,12 @@ def test_fixtures_own_postmortem_is_not_returned_by_search_runbooks(pg, pg_dsn, 
     load(pg, cassette, DEMO_TENANT_ID, docs)
     with app_conn(pg_dsn) as app:
         index = PgRunbookIndex(app, cassette)
-        hits = index.search(DEMO_TENANT_ID, "pool", 5, "pool_exhaustion_001")
-        everything = index.search(DEMO_TENANT_ID, "pool", 5, None)
-    assert docs[0].id not in [h["doc_id"] for h in hits], "the evaluated fixture's own postmortem was returned"
+        hits = index.search(DEMO_TENANT_ID, "pool", 5, ("pool_exhaustion_001", "pool_exhaustion_002"))
+        everything = index.search(DEMO_TENANT_ID, "pool", 5, ())
+    returned = [h["doc_id"] for h in hits]
+    assert docs[0].id not in returned, "the evaluated fixture's own postmortem was returned"
+    assert docs[2].id not in returned, "a postmortem of the same scenario was returned"
+    assert docs[1].id in returned  # generic runbooks stay
     assert everything[0]["doc_id"] == docs[0].id and everything[0]["similarity"] == pytest.approx(1.0, abs=1e-6)
 
 
@@ -238,9 +244,8 @@ def test_eval_user_cannot_write(ch_db, ch_container):
     assert ro.query("SELECT count() FROM metrics").result_rows[0][0] == 0
 
 
-def test_eval_fails_when_the_database_changes(pg_dsn, ch_container, tmp_path):
-    """Guard check: with write access granted and a tool that writes, the content hash must fail the eval."""
-    from evals.harness import EvalFailed, eval_fixture
+def _eval_dataset(pg_dsn, ch_container, tmp_path):
+    """A small recorded dataset (seeded telemetry around `now`), labelled as a no_fault fixture."""
     from tests.integration.test_recorder import _record, _seed
 
     admin = ch_client(ch_container)
@@ -283,6 +288,14 @@ def test_eval_fails_when_the_database_changes(pg_dsn, ch_container, tmp_path):
     )
     manifest = json.loads((dataset / "manifest.json").read_text())
     (dataset / "manifest.json").write_text(json.dumps({**manifest, "window": window}))
+    return admin, dataset, (ch_container.get_container_host_ip(), int(ch_container.get_exposed_port(8123)))
+
+
+def test_eval_fails_when_the_database_changes(pg_dsn, ch_container, tmp_path):
+    """Guard check: with write access granted and a tool that writes, the content hash must fail the eval."""
+    from evals.harness import EvalFailed, eval_fixture
+
+    admin, dataset, addr = _eval_dataset(pg_dsn, ch_container, tmp_path)
 
     def writing_ranker(scope, call, runbook_search=True):
         call(
@@ -303,9 +316,62 @@ def test_eval_fails_when_the_database_changes(pg_dsn, ch_container, tmp_path):
         return c
 
     harness.readonly_client = capture
-    addr = (ch_container.get_container_host_ip(), int(ch_container.get_exposed_port(8123)))
     try:
         with app_conn(pg_dsn) as app, pytest.raises(EvalFailed, match="database changed"):
             eval_fixture(dataset, app, admin, addr, str(uuid.uuid4()), 1, rank=writing_ranker, grant_write=True)
     finally:
         harness.readonly_client = original
+
+
+# --- backend agreement: Parquet and ClickHouse give the same rows for every tool call (A26) ---------
+
+
+def test_backend_agreement_holds_and_catches_a_difference(pg_dsn, ch_container, tmp_path):
+    """Every tool call of a real baseline eval, re-executed on the Parquet backend, gives the same
+    snapshot. Then the Parquet copy loses half its logs and spans: the check must report the calls whose
+    rows changed, not pass them."""
+    import shutil
+
+    from evals.harness import FixtureResult, backend_agreement, eval_fixture
+    from recorder.dataset import read_parquet, write_parquet
+
+    admin, dataset, addr = _eval_dataset(pg_dsn, ch_container, tmp_path)
+
+    def reading_ranker(scope, call, runbook_search=True):  # the baseline, plus reads that return rows
+        for svc in scope.services:
+            call("query_logs", {"service": svc, "start": iso(scope.start), "end": iso(scope.end), "limit": 500})
+        call("query_traces", {"start": iso(scope.start), "end": iso(scope.end), "limit": 500})
+        return baseline.rank(scope, call, runbook_search)
+
+    with app_conn(pg_dsn) as app:
+        res = eval_fixture(dataset, app, admin, addr, str(uuid.uuid4()), 1, rank=reading_ranker)
+        assert res.tool_calls_checked > 2 and res.backend_mismatches == [], res.backend_mismatches
+        changed = tmp_path / "changed"
+        shutil.copytree(dataset, changed)
+        for table in ("logs", "spans"):
+            rows = read_parquet(changed / f"{table}.parquet")
+            assert len(rows) > 1, f"the seeded dataset has no {table} to compare"
+            write_parquet(changed / f"{table}.parquet", table, rows[::2])
+        check = FixtureResult("fx", res.label)
+        backend_agreement(app, [r.investigation_id for r in res.runs], changed, check)
+    assert check.tool_calls_checked == res.tool_calls_checked
+    assert check.backend_mismatches, "Parquet lost half its logs and spans and the agreement check did not notice"
+
+
+# --- the closed cause-kind list in the schema (A23) -------------------------------------------------
+
+
+def test_schema_rejects_a_cause_kind_outside_the_closed_list(pg, pg_dsn):
+    inc = incident(pg)
+    with app_conn(pg_dsn) as app:
+        inv, _ = orchestrator.trigger(app, {"incident_id": inc, "trigger_id": "kinds"})
+        insert = (
+            "INSERT INTO hypotheses (id, investigation_id, ranker, rank, causal_role, cause_service, cause_kind, "
+            "score, "
+            "verifier_status) VALUES (%s, %s, 'baseline', %s, 'candidate_root_cause', 'inventory', %s, 0.5, 'passed')"
+        )
+        app.execute(insert, (str(uuid.uuid4()), inv, 1, "pool_exhaustion"))
+        with pytest.raises(psycopg.errors.CheckViolation):
+            app.execute(insert, (str(uuid.uuid4()), inv, 2, "latency"))
+    kinds = pg.execute("SELECT cause_kind FROM hypotheses WHERE investigation_id = %s", (inv,)).fetchall()
+    assert kinds == [("pool_exhaustion",)], f"a kind outside the closed list was stored: {kinds}"

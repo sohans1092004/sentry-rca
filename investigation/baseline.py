@@ -296,7 +296,7 @@ def rank(scope: Scope, call: Call, runbook_search: bool = True) -> list[dict[str
                 {
                     "causal_role": "downstream_symptom",
                     "cause_service": svc,
-                    "cause_kind": "latency",
+                    "cause_kind": "other",  # a symptom has no cause kind (A23)
                     "score": round(score, 6),
                     "claims": support,
                     "narrative": f"{svc} slowed with no cause of its own in the evidence.",

@@ -6,6 +6,7 @@ import hashlib
 import logging
 import os
 import random
+import time
 
 import httpx
 from fastapi import HTTPException
@@ -14,6 +15,7 @@ from opentelemetry import metrics, trace
 from services.base import Service, url
 
 RETRIES = 3
+RATES = {"USD": 1.0, "EUR": 1.08, "GBP": 1.27}
 svc = Service("payments")
 app = svc.app
 log = logging.getLogger("payments")
@@ -42,8 +44,17 @@ async def _with_retries(what: str, call: object) -> None:
             await asyncio.sleep(0.05 * 2**attempt)
 
 
+def _provider_down() -> bool:
+    """The provider blips for two seconds every ten minutes; dependency_outage makes it fail for real."""
+    if (outage := svc.faults.get("dependency_outage")) is not None:
+        return bool(random.random() < outage["error_rate"])
+    return time.time() % 600 < 2.0
+
+
 @app.post("/charge")
 async def charge(body: dict[str, object]) -> dict[str, object]:
+    amount = float(str(body["amount"])) * RATES[str(body.get("currency", "USD"))]
+
     async def confirm_hold() -> None:
         _sign(str(body))
         r = await svc.http.post(url("inventory") + "/holds/confirm", json={"hold_id": body["hold_id"]})
@@ -57,16 +68,13 @@ async def charge(body: dict[str, object]) -> dict[str, object]:
         with tracer.start_as_current_span(
             "provider.charge", kind=trace.SpanKind.CLIENT, attributes={"peer.service": "provider"}
         ) as span:  # fmt: skip
-            outage = svc.faults.get("dependency_outage")
-            if outage and random.random() < outage["error_rate"]:
-                await asyncio.sleep(outage["timeout_ms"] / 1000)
-                span.set_status(trace.StatusCode.ERROR, "provider timeout")
-                raise TimeoutError("payment provider timed out")
+            if _provider_down():
+                outage = svc.faults.get("dependency_outage")
+                await asyncio.sleep((outage["timeout_ms"] if outage else 200) / 1000)
+                span.set_status(trace.StatusCode.ERROR, "timed out")
+                raise httpx.ReadTimeout("timed out")
             await asyncio.sleep(max(0.005, random.gauss(0.015, 0.004)))
 
-    try:
-        await _with_retries("hold confirmation", confirm_hold)
-        await _with_retries("provider charge", provider_charge)
-    except httpx.HTTPError as e:
-        raise HTTPException(502, "upstream error") from e
-    return {"charged": body["amount"], "provider_ref": os.urandom(6).hex()}
+    await _with_retries("hold confirmation", confirm_hold)
+    await _with_retries("provider charge", provider_charge)
+    return {"charged": round(amount, 2), "provider_ref": os.urandom(6).hex()}

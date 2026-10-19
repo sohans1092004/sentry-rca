@@ -9,9 +9,16 @@ T0 = datetime(2026, 10, 18, 10, 0, tzinfo=UTC)
 W = [iso(T0), iso(T0 + timedelta(minutes=5))]
 
 
-def call(seq, tool, rows, ranker="baseline", decision="allowed", snapshot="snap"):
-    return CallRecord(f"id{seq}", seq, ranker, tool, decision, {"tool": tool}, {} if decision != "rejected" else None,
-                      None, snapshot, rows, False)  # fmt: skip
+PRE = iso(T0 - timedelta(minutes=5))  # start of the equal-length window before W
+
+
+def call(seq, tool, rows, ranker="baseline", decision="allowed", snapshot="snap", executed=None,
+         truncated=False):  # fmt: skip
+    if executed is None and tool == "query_logs":  # a log query over W and the window before it
+        executed = {"service": rows[0]["service"] if rows else "inventory", "start": PRE, "end": W[1]}
+    return CallRecord(f"id{seq}", seq, ranker, tool, decision, {"tool": tool},
+                      (executed or {}) if decision != "rejected" else None, None, snapshot, rows,
+                      truncated)  # fmt: skip
 
 
 def points(service="inventory", metric="latency", before=50.0, inside=150.0, n=5):
@@ -27,14 +34,18 @@ def metric_claim(rows, seq=1, mm=1.0, direction="up", service="inventory", metri
             "min_magnitude": mm, "cites": [{"tool_call_seq": seq, "row_ids": [r["row_id"] for r in rows]}]}  # fmt: skip
 
 
-def logs(service="inventory", n=4, body="pool acquire timeout after 0.5s"):
-    return [{"row_id": f"l{i}", "service": service, "ts": iso(T0 + timedelta(seconds=10 * i)), "body": body}
+def logs(service="inventory", n=4, body="QueuePool limit of size 10 overflow 0 reached", before=0):
+    """n matching lines in W, plus `before` matching lines in the 5 minutes before it."""
+    rows = [{"row_id": f"l{i}", "service": service, "ts": iso(T0 + timedelta(seconds=10 * i)), "body": body}
             for i in range(n)]  # fmt: skip
+    return rows + [{"row_id": f"p{i}", "service": service, "ts": iso(T0 - timedelta(seconds=10 * (i + 1))),
+                    "body": body} for i in range(before)]  # fmt: skip
 
 
-def log_claim(rows, seq=1, pattern="pool acquire timeout", min_count=4, service="inventory"):
+def log_claim(rows, seq=1, pattern="QueuePool limit", min_count=4, service="inventory", min_ratio=2.0):
+    cited = [r["row_id"] for r in rows if r["row_id"].startswith("l")]
     return {"type": "log_pattern", "service": service, "window": W, "pattern": pattern, "min_count": min_count,
-            "cites": [{"tool_call_seq": seq, "row_ids": [r["row_id"] for r in rows]}]}  # fmt: skip
+            "min_ratio": min_ratio, "cites": [{"tool_call_seq": seq, "row_ids": cited}]}  # fmt: skip
 
 
 def trace(tid="t1", parent_ms=1000.0, child_ms=700.0):
