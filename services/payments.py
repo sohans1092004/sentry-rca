@@ -45,10 +45,12 @@ async def _with_retries(what: str, call: object) -> None:
 
 
 def _provider_down() -> bool:
-    """The provider blips for two seconds every ten minutes; dependency_outage makes it fail for real."""
+    """The provider blips for a second every ten minutes, failing fast (a 2 s blip with 200 ms timeouts
+    doubled gateway p95 for a minute and opened incidents on healthy traffic); dependency_outage makes it
+    fail for real."""
     if (outage := svc.faults.get("dependency_outage")) is not None:
         return bool(random.random() < outage["error_rate"])
-    return time.time() % 600 < 2.0
+    return time.time() % 600 < 1.0
 
 
 @app.post("/charge")
@@ -70,7 +72,7 @@ async def charge(body: dict[str, object]) -> dict[str, object]:
         ) as span:  # fmt: skip
             if _provider_down():
                 outage = svc.faults.get("dependency_outage")
-                await asyncio.sleep((outage["timeout_ms"] if outage else 200) / 1000)
+                await asyncio.sleep((outage["timeout_ms"] if outage else 50) / 1000)
                 span.set_status(trace.StatusCode.ERROR, "timed out")
                 raise httpx.ReadTimeout("timed out")
             await asyncio.sleep(max(0.005, random.gauss(0.015, 0.004)))

@@ -87,7 +87,8 @@ def read_ch(ch: Client, table: str, tenant: str, start: datetime, end: datetime)
     return _rows(ch.query(
         f"SELECT {cols} FROM {table} WHERE tenant_id = {{t:String}} "
         f"AND {spec['time']} >= {{s:DateTime64(3)}} AND {spec['time']} <= {{e:DateTime64(3)}} "
-        f"ORDER BY {spec['key']} LIMIT 1 BY {spec['key']}",
+        f"ORDER BY {spec['key']} LIMIT 1 BY {spec['key']} "
+        "SETTINGS max_threads = 2",  # an export must not slow the live services enough to alert (A22)
         parameters={"t": tenant, "s": start, "e": end},
     ))  # fmt: skip
 
