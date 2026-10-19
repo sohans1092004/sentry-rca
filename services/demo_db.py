@@ -12,6 +12,7 @@ fills the pool now and then and its own fail-fast acquires time out (pool timeou
 and, rarely, one write waits 2.5 s on a lock, past the statement timeout."""
 
 import asyncio
+import contextlib
 import logging
 import os
 import random
@@ -127,6 +128,21 @@ class Db:
                 asyncio.get_running_loop().create_task(self._release_later(pool, conn, held_s))
             else:
                 self.in_use -= 1
+                await pool.release(conn)
+
+    async def maintenance(self, hold_s: float) -> None:
+        """Hold every connection idle for hold_s while two fail-fast checks run: they time out on the
+        full pool (the same QueuePool line requests would log) and nothing touches the database."""
+        pool = self.pool
+        assert pool is not None
+        held = [await pool.acquire() for _ in range(self.size)]
+        try:
+            for _ in range(2):
+                with contextlib.suppress(PoolTimeout):
+                    await self.run("maintenance", "SELECT 1", acquire_timeout_s=0.05)
+            await asyncio.sleep(hold_s)
+        finally:
+            for conn in held:
                 await pool.release(conn)
 
     async def _release_later(self, pool: asyncpg.Pool, conn: Any, after_s: float) -> None:

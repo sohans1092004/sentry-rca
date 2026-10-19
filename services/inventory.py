@@ -1,11 +1,12 @@
 """inventory: reads and writes stock in the demo Postgres; confirms holds for payments (A2).
 
 Reservations first check an availability figure kept in an in-process cache (TTL ~15 min, staggered);
-a miss runs a reconciliation query that costs ~100-150 ms. A stock import invalidates a few keys now
+a miss runs a reconciliation query that costs ~100-150 ms. A stock import invalidates 1-3 keys now
 and then; cache_stampede invalidates all of them every few seconds, so every reservation misses.
-Every 5-10 minutes a reconciliation job runs that query for 12 SKUs at once on the 10-connection pool;
-its fail-fast acquires (50 ms) time out when the pool is full, which is how healthy traffic meets
-pool timeouts without users waiting."""
+Every 5-10 minutes a maintenance task holds the whole pool idle for 150 ms and its own fail-fast
+acquires (50 ms) time out: healthy traffic meets pool timeouts without load on the database or users
+waiting more than 150 ms. (Measured 14:17 and 14:51 UTC: 12 concurrent reconciliation queries, and
+12 invalidated keys, each raised gateway p95 2x for ~30 s and opened an incident.)"""
 
 import asyncio
 import logging
@@ -63,17 +64,14 @@ async def _invalidations() -> None:
         if storm:
             invalidate(list(_cache))
         elif time.monotonic() >= next_import:
-            invalidate(random.sample(sorted(_cache), min(len(_cache), random.randint(5, 15))))
+            invalidate(random.sample(sorted(_cache), min(len(_cache), random.randint(1, 3))))
             next_import = time.monotonic() + random.uniform(600, 900)
 
 
 async def _reconcile() -> None:
     while True:
         await asyncio.sleep(random.uniform(300, 600))
-        skus = [f"sku-{random.randrange(SKUS)}" for _ in range(12)]
-        await asyncio.gather(
-            *(db.run("reconcile", AVAILABILITY, s, acquire_timeout_s=0.05) for s in skus), return_exceptions=True
-        )  # a skipped SKU is reconciled next time
+        await db.maintenance(hold_s=0.15)
 
 
 async def _available(sku: str) -> int:
