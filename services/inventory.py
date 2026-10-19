@@ -1,8 +1,11 @@
 """inventory: reads and writes stock in the demo Postgres; confirms holds for payments (A2).
 
 Reservations first check an availability figure kept in an in-process cache (TTL ~15 min, staggered);
-a miss runs a reconciliation query that costs ~100-150 ms. The cache is invalidated wholesale now and
-then (a stock import); cache_stampede invalidates it every few seconds, so every reservation misses."""
+a miss runs a reconciliation query that costs ~100-150 ms. A stock import invalidates a few keys now
+and then; cache_stampede invalidates all of them every few seconds, so every reservation misses.
+Every 5-10 minutes a reconciliation job runs that query for 12 SKUs at once on the 10-connection pool;
+its fail-fast acquires (50 ms) time out when the pool is full, which is how healthy traffic meets
+pool timeouts without users waiting."""
 
 import asyncio
 import logging
@@ -36,6 +39,7 @@ log = logging.getLogger("inventory")
 async def _start(s: Service) -> None:
     await db.start(SCHEMA, ["stock", "holds"])
     asyncio.get_running_loop().create_task(_invalidations())
+    asyncio.get_running_loop().create_task(_reconcile())
 
 
 svc = Service("inventory", _start)
@@ -45,9 +49,10 @@ _cache: dict[str, tuple[float, int]] = {}
 cache_requests = metrics.get_meter("sentry.demo").create_counter("cache.requests", description="lookups by result")
 
 
-def invalidate() -> None:
-    log.info("availability cache invalidated: %d keys", len(_cache))
-    _cache.clear()
+def invalidate(keys: list[str]) -> None:
+    log.info("availability cache invalidated: %d keys", len(keys))
+    for k in keys:
+        _cache.pop(k, None)
 
 
 async def _invalidations() -> None:
@@ -55,9 +60,20 @@ async def _invalidations() -> None:
     while True:
         storm = svc.faults.get("cache_stampede")
         await asyncio.sleep(storm["interval_s"] if storm else 1)
-        if storm or time.monotonic() >= next_import:
-            invalidate()
+        if storm:
+            invalidate(list(_cache))
+        elif time.monotonic() >= next_import:
+            invalidate(random.sample(sorted(_cache), min(len(_cache), random.randint(5, 15))))
             next_import = time.monotonic() + random.uniform(600, 900)
+
+
+async def _reconcile() -> None:
+    while True:
+        await asyncio.sleep(random.uniform(300, 600))
+        skus = [f"sku-{random.randrange(SKUS)}" for _ in range(12)]
+        await asyncio.gather(
+            *(db.run("reconcile", AVAILABILITY, s, acquire_timeout_s=0.05) for s in skus), return_exceptions=True
+        )  # a skipped SKU is reconciled next time
 
 
 async def _available(sku: str) -> int:

@@ -1,7 +1,8 @@
 """orders: calls inventory then payments; writes to the demo Postgres (SPEC §3).
 
 Runtime configuration is reloaded every second and each change is logged; a feature flag flips now
-and then. config_change sets the database statement timeout to 2 (ms, where 2000 was meant)."""
+and then. config_change sets the timeout of calls to payments to 0.005 (s, where 5.0 was meant), so
+every charge times out."""
 
 import asyncio
 import logging
@@ -28,14 +29,18 @@ async def _start(s: Service) -> None:
     asyncio.get_running_loop().create_task(_config())
 
 
+CONFIG: dict[str, object] = {"db.statement_timeout_ms": STATEMENT_TIMEOUT_MS, "payments.timeout_s": 5.0,
+                              "feature.recommendations": "on"}  # fmt: skip
+
+
 async def _config() -> None:
-    current: dict[str, object] = {"db.statement_timeout_ms": STATEMENT_TIMEOUT_MS, "feature.recommendations": "on"}
+    current = dict(CONFIG)
     next_flip = time.monotonic() + random.uniform(300, 600)
     while True:
         await asyncio.sleep(1)
         want = dict(current)
         cc = svc.faults.get("config_change")
-        want["db.statement_timeout_ms"] = cc["statement_timeout_ms"] if cc else STATEMENT_TIMEOUT_MS
+        want["payments.timeout_s"] = cc["payments_timeout_s"] if cc else 5.0
         if time.monotonic() >= next_flip:
             want["feature.recommendations"] = "off" if current["feature.recommendations"] == "on" else "on"
             next_flip = time.monotonic() + random.uniform(300, 600)
@@ -43,6 +48,7 @@ async def _config() -> None:
         if changed:
             log.info("configuration reloaded: %s", ", ".join(changed))
             current = want
+            CONFIG.update(current)
             await db.set_statement_timeout(int(str(current["db.statement_timeout_ms"])))
 
 
@@ -53,7 +59,8 @@ db = Db(svc.faults)
 
 async def _call(service: str, path: str, body: dict[str, object]) -> dict[str, object]:
     try:
-        r = await svc.http.post(url(service) + path, json=body)
+        timeout = float(str(CONFIG["payments.timeout_s"])) if service == "payments" else 5.0
+        r = await svc.http.post(url(service) + path, json=body, timeout=timeout)
     except httpx.HTTPError as e:
         log.error("%s call failed: %s", service, type(e).__name__)
         raise HTTPException(502, f"{service} unavailable") from e

@@ -182,7 +182,7 @@ def for_fault(kind: str, service: str, params: dict[str, Any], start: datetime, 
     elif kind == "dependency_outage":
         claims.append(log_pattern(lg, service, "provider charge failed", start, end))
     elif kind == "config_change":
-        claims.append(log_pattern(lg, service, "canceling statement due to statement timeout", start, end))
+        claims.append(log_pattern(lg, service, "payments call failed", start, end))
     elif kind == "cache_stampede":
         claims.append(metric_change(m, service, "cache.requests", start, end))
     elif kind == "refused":  # applied to the callers; the logs are theirs

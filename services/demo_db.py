@@ -7,9 +7,9 @@ Faults reach it through normal code paths only (Amendment A21):
 - pool_exhaustion: a connection leak. With the fault on, some queries never return their connection
   for a while; the pool (size 10) fills and acquires time out.
 
-Healthy traffic hits the same paths: the trigger also stalls every write for ~1.2 s during 2 s every 15 minutes
-(a checkpoint-like stall: slow statements, a few pool timeouts and 503s) and, rarely, one write for
-2.5 s, past the statement timeout."""
+Healthy traffic hits the same paths without moving user latency: inventory's reconciliation job
+fills the pool now and then and its own fail-fast acquires time out (pool timeouts, slow statements),
+and, rarely, one write waits 2.5 s on a lock, past the statement timeout."""
 
 import asyncio
 import logging
@@ -38,9 +38,7 @@ CREATE OR REPLACE FUNCTION lock_wait() RETURNS trigger AS $$
 DECLARE d INT;
 BEGIN
   SELECT delay_ms INTO d FROM lock_waits WHERE tbl = TG_TABLE_NAME AND op = TG_OP AND until > clock_timestamp();
-  IF d IS NULL AND extract(epoch FROM clock_timestamp())::bigint % 900 < 2 THEN
-    d := 1200;  -- checkpoint-like stall: every write for two seconds in fifteen minutes
-  ELSIF d IS NULL AND random() < 0.0001 THEN
+  IF d IS NULL AND random() < 0.0001 THEN
     d := 2500;  -- a rare long lock wait, past statement_timeout
   END IF;
   IF d IS NOT NULL THEN PERFORM pg_sleep(d / 1000.0); END IF;
@@ -97,16 +95,17 @@ class Db:
             self.pool = await self._pool()
             asyncio.get_running_loop().create_task(old.close())
 
-    async def run(self, name: str, sql: str, *args: Any, fetch: bool = True) -> Any:
+    async def run(self, name: str, sql: str, *args: Any, fetch: bool = True,
+                  acquire_timeout_s: float = ACQUIRE_TIMEOUT_S) -> Any:  # fmt: skip
         pool = self.pool  # release to the pool we acquired from, even if it is replaced meanwhile
         assert pool is not None
         t0 = time.monotonic()
         try:
-            conn = await pool.acquire(timeout=ACQUIRE_TIMEOUT_S)
+            conn = await pool.acquire(timeout=acquire_timeout_s)
         except TimeoutError as e:
             self.wait_ms.record((time.monotonic() - t0) * 1000, {"query": name})
             log.error("QueuePool limit of size %d overflow 0 reached, connection timed out, timeout %.2f",
-                      self.size, ACQUIRE_TIMEOUT_S)  # fmt: skip
+                      self.size, acquire_timeout_s)  # fmt: skip
             raise PoolTimeout(name) from e
         self.wait_ms.record((time.monotonic() - t0) * 1000, {"query": name})
         self.in_use += 1

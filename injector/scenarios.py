@@ -135,8 +135,8 @@ def _fault(scenario: str, rng: random.Random, exclude: set[str], equal: bool = F
     if scenario == "no_fault":
         params = {"p": round(rng.uniform(0.25, 0.4), 2), "max_ms": round(rng.uniform(200, 350))}
         return "", [Step(0, s, "jitter", params, dur) for s in DEMO], None
-    if scenario == "config_change":  # orders' statement timeout set to 2 (ms) instead of 2000
-        return "orders", [Step(0, "orders", "config_change", {"statement_timeout_ms": 2}, dur)], None
+    if scenario == "config_change":  # orders' timeout for payments set to 0.005 (s) instead of 5.0
+        return "orders", [Step(0, "orders", "config_change", {"payments_timeout_s": 0.005}, dur)], None
     if scenario == "cache_stampede":
         params = {"interval_s": round(rng.uniform(2, 4), 1)}
         return "inventory", [Step(0, "inventory", "cache_stampede", params, dur)], None
