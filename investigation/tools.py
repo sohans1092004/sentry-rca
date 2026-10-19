@@ -92,8 +92,8 @@ def _clean_log(r: Row) -> Row:
     return {**r, "body": body, "row_id": r["log_id"]}
 
 
-def execute(backend: Backend, runbooks: RunbookIndex | None, scope: Scope, tool: str, args: dict[str, Any]) -> Decision:
-    """Apply scope to the requested call and run it. Never raises for a bad request: it is rejected."""
+def prepare(scope: Scope, tool: str, args: dict[str, Any], has_runbooks: bool = True) -> Decision:
+    """Scope enforcement only: validate, reject or clamp, and return the request that will run."""
     clamps: list[str] = []
     try:
         if tool not in TOOLS:
@@ -107,85 +107,95 @@ def execute(backend: Backend, runbooks: RunbookIndex | None, scope: Scope, tool:
         for k in TENANT_ARGS & set(args):
             if str(args[k]) != scope.tenant_id:
                 raise Rejected(f"tenant {args[k]} is not this investigation's tenant")
-        t = scope.tenant_id
         if tool == "search_runbooks":
-            if runbooks is None:
+            if not has_runbooks:
                 raise Rejected("no runbook index")
             top_k = _limit(scope, args, "top_k", MAX_TOP_K, clamps)
             executed: dict[str, Any] = {"query": str(args["query"]), "top_k": top_k}
-            rows = runbooks.search(t, executed["query"], top_k, scope.excluded_fixture)
-            return Decision("clamped" if clamps else "allowed", None, executed, rows)
+            return Decision("clamped" if clamps else "allowed", None, executed)
         start, end = _window(scope, args, clamps)
         executed = {"start": iso(start), "end": iso(end)}
-        cap = scope.max_rows
         if tool == "get_incident_timeline":
             services = sorted(set(args["services"])) if isinstance(args["services"], list) else []
             if not services:
                 raise Rejected("services must be a non-empty list")
             _check_services(scope, services)
             executed["services"] = services
-            rows = timeline.build(backend, t, services, start, end)
-            limit = cap
         elif tool == "query_metrics":
             _check_services(scope, [args["service"]])
             labels = args.get("labels") or {}
             if not isinstance(labels, dict):
                 raise Rejected("labels must be an object")
             executed |= {"service": args["service"], "metric": args["metric"], "labels": dict(sorted(labels.items()))}
-            limit = cap
-            rows = [
-                {**r, "row_id": r["point_id"]}
-                for r in backend.metrics(t, [args["service"]], [args["metric"]], start, end, labels, limit + 1)
-            ]
         elif tool == "query_logs":
             _check_services(scope, [args["service"]])
-            limit = _limit(scope, args, "limit", cap, clamps)
             executed |= {
                 "service": args["service"],
-                "limit": limit,
+                "limit": _limit(scope, args, "limit", scope.max_rows, clamps),
                 **{k: args[k] for k in ("severity", "contains", "trace_id") if args.get(k)},
             }
-            rows = [
-                _clean_log(r)
-                for r in backend.logs(
-                    t,
-                    args["service"],
-                    start,
-                    end,
-                    args.get("severity"),
-                    args.get("contains"),
-                    args.get("trace_id"),
-                    limit + 1,
-                )
-            ]
         elif tool == "query_traces":
             services = list(scope.services)
             if args.get("service"):
                 _check_services(scope, [args["service"]])
                 services = [args["service"]]
-            limit = _limit(scope, args, "limit", cap, clamps)
             executed |= {
                 "services": services,
-                "limit": limit,
+                "limit": _limit(scope, args, "limit", scope.max_rows, clamps),
                 **{k: args[k] for k in ("trace_id", "min_duration_ms") if args.get(k) is not None},
             }
-            rows = [
-                {**r, "row_id": r["span_id"]}
-                for r in backend.spans(
-                    t, services, args.get("trace_id"), start, end, args.get("min_duration_ms"), limit + 1
-                )
-            ]
         else:  # get_recent_deploys
             _check_services(scope, [args["service"]])
             executed["service"] = args["service"]
-            limit = cap
-            rows = [{**r, "row_id": r["id"]} for r in backend.deploys(t, args["service"], start, end)]
-        truncated = len(rows) > limit
-        return Decision("clamped" if clamps else "allowed", None, executed, rows[:limit], truncated)
+        return Decision("clamped" if clamps else "allowed", None, executed)
     except Rejected as e:
         return Decision("rejected", str(e), None)
     except (KeyError, TypeError) as e:
         return Decision("rejected", f"bad argument: {e}", None)
+
+
+def fetch(
+    backend: Backend, runbooks: RunbookIndex | None, scope: Scope, tool: str, ex: dict[str, Any]
+) -> tuple[list[Row], bool]:
+    """Run an already-prepared request: (rows with row_id, truncated). The tenant is always the scope's."""
+    t = scope.tenant_id
+    if tool == "search_runbooks":
+        assert runbooks is not None
+        return runbooks.search(t, ex["query"], ex["top_k"], scope.excluded_fixture), False
+    start, end = parse(ex["start"]), parse(ex["end"])
+    limit = ex.get("limit", scope.max_rows)
+    if tool == "get_incident_timeline":
+        rows = timeline.build(backend, t, ex["services"], start, end)
+    elif tool == "query_metrics":
+        rows = [
+            {**r, "row_id": r["point_id"]}
+            for r in backend.metrics(t, [ex["service"]], [ex["metric"]], start, end, ex["labels"], limit + 1)
+        ]
+    elif tool == "query_logs":
+        rows = [
+            _clean_log(r)
+            for r in backend.logs(
+                t, ex["service"], start, end, ex.get("severity"), ex.get("contains"), ex.get("trace_id"), limit + 1
+            )
+        ]
+    elif tool == "query_traces":
+        rows = [
+            {**r, "row_id": r["span_id"]}
+            for r in backend.spans(
+                t, ex["services"], ex.get("trace_id"), start, end, ex.get("min_duration_ms"), limit + 1
+            )
+        ]
+    else:
+        rows = [{**r, "row_id": r["id"]} for r in backend.deploys(t, ex["service"], start, end)]
+    return rows[:limit], len(rows) > limit
+
+
+def execute(backend: Backend, runbooks: RunbookIndex | None, scope: Scope, tool: str, args: dict[str, Any]) -> Decision:
+    """prepare + fetch. Never raises for a bad request: it is rejected."""
+    d = prepare(scope, tool, args, runbooks is not None)
+    if d.executed is not None:
+        d.rows, d.truncated = fetch(backend, runbooks, scope, tool, d.executed)
+    return d
 
 
 # --- persistence -------------------------------------------------------------------------------
@@ -289,13 +299,14 @@ class ToolLayer:
             return rec
         self.issued += 1
         t0 = time.monotonic()
-        d = execute(self.backend, self.runbooks, self.scope, tool, args)
+        d = prepare(self.scope, tool, args, self.runbooks is not None)
         snap: snapshots.Snapshot | None = None
         snapshot_id, rows, truncated = None, [], False
         key = snapshots.canonical({"tool": tool, **d.executed}) if d.executed is not None else b""
         if d.executed is not None and (hit := self.cache.get(key)) is not None:
             snapshot_id, rows, truncated = hit.snapshot_id, hit.rows, hit.truncated  # already stored
         elif d.executed is not None:
+            d.rows, d.truncated = fetch(self.backend, self.runbooks, self.scope, tool, d.executed)
             snap = snapshots.build(self.scope.tenant_id, d.rows, truncated=d.truncated)
             snapshot_id, rows, truncated = snap.id, json.loads(snap.content)["rows"], snap.truncated
         rec = CallRecord(str(uuid.uuid4()), self.next_seq, self.ranker, tool, d.decision,
