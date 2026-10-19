@@ -14,13 +14,31 @@ import time
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
+import pyarrow.parquet as pq
 from clickhouse_connect.driver.client import Client
 
 from common import config, db
-from recorder.dataset import read_ch, write_parquet
+from recorder.dataset import TABLES, arrow_table, read_ch
 
 ARCHIVE = Path(__file__).resolve().parent.parent / "data" / "archive"
 KEEP_DAYS = 90
+
+
+def _archive_day(ch: Client, table: str, tenant: str, start: datetime, out: Path) -> int:
+    """One day, read an hour at a time into one Parquet file. A whole day in one deduplicating query
+    (~13M spans at demo traffic) exceeded ClickHouse's memory cap and crash-looped the archiver.
+    Written to a temporary name first, so a crash never leaves a partial day that looks complete."""
+    tmp = out.with_suffix(".parquet.tmp")
+    n = 0
+    with pq.ParquetWriter(tmp, TABLES[table]["schema"], compression="zstd") as writer:
+        for h in range(24):
+            hour = start + timedelta(hours=h)
+            rows = read_ch(ch, table, tenant, hour, hour + timedelta(hours=1) - timedelta(milliseconds=1))
+            if rows:
+                writer.write_table(arrow_table(table, rows))
+                n += len(rows)
+    tmp.replace(out)
+    return n
 
 
 def archive(ch: Client, today: date, root: Path = ARCHIVE, tenant: str = config.DEMO_TENANT_ID) -> list[str]:
@@ -28,15 +46,13 @@ def archive(ch: Client, today: date, root: Path = ARCHIVE, tenant: str = config.
     for age, partial in ((6, False), (7, True)):
         day = today - timedelta(days=age)
         start = datetime(day.year, day.month, day.day, tzinfo=UTC)
-        end = start + timedelta(days=1) - timedelta(milliseconds=1)
         for table in ("logs", "spans"):
             out = root / table / f"dt={day.isoformat()}.parquet"
             if out.exists():
                 continue  # idempotent: a day is archived once
-            rows = read_ch(ch, table, tenant, start, end)
             out.parent.mkdir(parents=True, exist_ok=True)
-            write_parquet(out, table, rows)
-            meta = {"table": table, "day": day.isoformat(), "rows": len(rows), "archived_at": datetime.now(UTC),
+            n = _archive_day(ch, table, tenant, start, out)
+            meta = {"table": table, "day": day.isoformat(), "rows": n, "archived_at": datetime.now(UTC),
                     "possibly_partial": partial}  # fmt: skip
             out.with_suffix(".json").write_text(json.dumps(meta, default=str))
             done.append(str(out))

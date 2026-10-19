@@ -241,3 +241,76 @@ run D (direct into Redpanda), 125,000 events/s:        1,991.9 MiB over 16 conta
 ```
 
 Phase 1 budget is 5 GB; the peak measured is 2.08 GB, leaving ~2.9 GB of the Phase 1 budget (and ~8.9 GB of the 11 GB whole-stack budget, SPEC §1.2) for Phase 3's local model.
+
+## M3c. Memory with the other deploy-* stack stopped (2026-10-19, Phase 1 close-out)
+
+Commands: `docker stop` on the 8 `deploy-*` containers; `tools/memory.sh` at idle (traffic stopped 90 s) and with demo traffic (120 s); under load from the mid-step `docker stats` of `uv run python tools/ceiling.py --direct --start 80000 --max 100000 --step-s 60 --procs 12 --batch 500`; then `docker start` on the same 8 containers.
+
+```
+## memory: idle, deploy-* stopped @ 2026-10-19T05:32:05Z
+$ docker stats --no-stream (sentry-rca-*)
+sentry-rca-alerting-1	32.4MiB / 160MiB	0.02%
+sentry-rca-batchjob-1	45.73MiB / 128MiB	0.59%
+sentry-rca-clickhouse-1	574.9MiB / 1.5GiB	11.15%
+sentry-rca-demo-postgres-1	54.94MiB / 256MiB	0.11%
+sentry-rca-gateway-1	53.96MiB / 256MiB	0.22%
+sentry-rca-inventory-1	93.68MiB / 768MiB	0.58%
+sentry-rca-orders-1	54.33MiB / 768MiB	0.25%
+sentry-rca-otel-collector-1	129.4MiB / 320MiB	0.52%
+sentry-rca-payments-1	50.67MiB / 768MiB	0.28%
+sentry-rca-postgres-1	29.25MiB / 256MiB	0.00%
+sentry-rca-processor-logs-1	50.94MiB / 192MiB	0.09%
+sentry-rca-processor-metrics-1	38.95MiB / 192MiB	0.39%
+sentry-rca-processor-traces-1	37.65MiB / 192MiB	0.10%
+sentry-rca-redpanda-1	391.7MiB / 768MiB	0.87%
+TOTAL	1717.2 MiB (15 containers)
+$ docker run --rm alpine:3.20 free -m   (the Docker Desktop WSL2 VM)
+              total        used        free      shared  buff/cache   available
+Mem:           7751        2941        2460          62        2351        4557
+Swap:          2048         273        1775
+$ powershell (Get-CimInstance Win32_OperatingSystem) free/total physical memory (host)
+host free 1,460 MiB of 16,004 MiB
+
+## memory: normal demo traffic, deploy-* stopped @ 2026-10-19T05:34:14Z
+$ docker stats --no-stream (sentry-rca-*)
+sentry-rca-alerting-1	32.4MiB / 160MiB	0.01%
+sentry-rca-archiver-1	0B / 0B	0.00%
+sentry-rca-batchjob-1	45.73MiB / 128MiB	0.17%
+sentry-rca-clickhouse-1	655.5MiB / 1.5GiB	21.38%
+sentry-rca-demo-postgres-1	55.41MiB / 256MiB	5.34%
+sentry-rca-gateway-1	54.79MiB / 256MiB	2.63%
+sentry-rca-inventory-1	92.89MiB / 768MiB	2.52%
+sentry-rca-orders-1	54.44MiB / 768MiB	3.43%
+sentry-rca-otel-collector-1	121.1MiB / 320MiB	1.82%
+sentry-rca-payments-1	50.67MiB / 768MiB	2.36%
+sentry-rca-postgres-1	29.25MiB / 256MiB	4.94%
+sentry-rca-processor-logs-1	50.95MiB / 192MiB	0.44%
+sentry-rca-processor-metrics-1	38.95MiB / 192MiB	0.91%
+sentry-rca-processor-traces-1	37.88MiB / 192MiB	0.79%
+sentry-rca-redpanda-1	392.5MiB / 768MiB	10.47%
+sentry-rca-traffic-1	21.87MiB / 96MiB	1.05%
+TOTAL	1652.3 MiB (16 containers)
+$ docker run --rm alpine:3.20 free -m   (the Docker Desktop WSL2 VM)
+              total        used        free      shared  buff/cache   available
+Mem:           7751        2970        2387          62        2394        4528
+Swap:          2048         273        1775
+$ powershell (Get-CimInstance Win32_OperatingSystem) free/total physical memory (host)
+host free 1,577 MiB of 16,004 MiB
+
+under load (sentry-rca-* RSS from mid-step docker stats):
+  80,000 events/s (sent 78,612/s, lag end 86 msgs):  1,758.2 MiB over 16 containers
+  100,000 events/s (sent 97,930/s, lag end 142 msgs): 1,802.9 MiB over 16 containers
+  VM after the run: 
+```
+
+This stack: 1.65-1.72 GB at idle/normal, 1.80 GB under 100k events/s. With deploy-* stopped the Docker VM has 4.5 GB available (vs 3.0 GB with it running) and VM swap fell from 679 MB to 273 MB.
+
+## M6. Overnight stall, 02:53-04:17 UTC (no fixture recorded for 84 minutes)
+
+Three spurious incidents (02:58-03:12, 03:20-03:22, 03:33-03:35, 03:41) restarted the recorder's 15-minute quiet window repeatedly. No fixture was contaminated: the recorder refuses to inject until it has 15 quiet minutes. Measured contributors, all on the same laptop:
+
+1. **Archiver crash loop from 01:11** (found at close-out): the running image predated the export fix and archived a whole day of spans with `FINAL`; ClickHouse killed it at its memory cap (code 241), Docker restarted it, it retried at once: 270 restarts, 57-59 failed queries per hour at 720-800 MiB each (`system.query_log`, exception_code 241). Fixed: days archived hour by hour (`recorder/archive.py`).
+2. **My Phase 2 development runs** from ~02:52 (fixture-scale Python holding ~300k-row datasets in memory) while host free memory was ~600 MiB.
+3. **OneDrive syncing** the new worktree and its .venv (0.9 cores sustained) until paused at ~03:35.
+
+Together they pushed Windows to trim the Docker VM (vmmemWSL working set 5.3 -> 4.0 GB; VM swap 316 -> 679 MB), and every service slowed ~40% uniformly (gateway p95 71 -> ~100 ms) with stalls up to 1.5 s. It recovered after OneDrive was paused and apps closed (host free 0.8 -> 1.9-3.2 GB); the campaign resumed at 04:17 and finished at 05:19 with 19/19 fixtures, 0 failures.
