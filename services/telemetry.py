@@ -19,6 +19,7 @@ from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler  # noqa: E402
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor  # noqa: E402
 from opentelemetry.sdk.metrics import Counter, Histogram, MeterProvider, ObservableGauge, UpDownCounter  # noqa: E402
 from opentelemetry.sdk.metrics.export import AggregationTemporality, PeriodicExportingMetricReader  # noqa: E402
+from opentelemetry.sdk.metrics.view import ExplicitBucketHistogramAggregation, View  # noqa: E402
 from opentelemetry.sdk.resources import Resource  # noqa: E402
 from opentelemetry.sdk.trace import TracerProvider  # noqa: E402
 from opentelemetry.sdk.trace.export import BatchSpanProcessor  # noqa: E402
@@ -30,6 +31,13 @@ DELTA: dict[type, AggregationTemporality] = {
     ObservableGauge: AggregationTemporality.CUMULATIVE,
 }
 CGROUP = Path("/sys/fs/cgroup")
+# A30: request latency buckets (s). The SDK default jumps from 0.1 to 0.25, and healthy gateway p95
+# (~95 ms) sits on that edge: a handful of slightly slow requests moved the interpolated p95 to ~150 ms
+# and the latency alert fired on healthy traffic. Boundaries every 25-100 ms up to 0.5 s measure it.
+LATENCY_BUCKETS = [0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.75, 1.0, 2.5,
+                   5.0, 7.5, 10.0]  # fmt: skip
+LATENCY_VIEW = View(instrument_name="http.server.request.duration",
+                    aggregation=ExplicitBucketHistogramAggregation(boundaries=LATENCY_BUCKETS))  # fmt: skip
 
 
 def _cgroup_cpu_usec() -> float:
@@ -94,7 +102,7 @@ def setup(service: str) -> None:
     reader = PeriodicExportingMetricReader(
         OTLPMetricExporter(preferred_temporality=DELTA), export_interval_millis=5000
     )  # fmt: skip
-    metrics.set_meter_provider(MeterProvider(resource=resource, metric_readers=[reader]))
+    metrics.set_meter_provider(MeterProvider(resource=resource, metric_readers=[reader], views=[LATENCY_VIEW]))
     meter = metrics.get_meter("sentry.demo")
     meter.create_observable_gauge("container.cpu.utilization", [_Cpu()], unit="1")
     meter.create_observable_gauge("container.cpu.throttled", [_Throttled()], unit="1")
