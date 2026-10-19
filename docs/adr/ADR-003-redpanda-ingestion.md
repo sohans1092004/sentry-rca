@@ -39,8 +39,15 @@ flag — it matters on a laptop budget. Same client API, so the choice is revers
 - **Bad payloads are kept, not dropped.** Undecodable messages and invalid records go to
   `otel.<signal>.dlq` with a reason and source offset; the processor keeps consuming (`validation`
   guard check).
-- **A spike becomes lag, not loss.** The ingestion-ceiling test (SPEC §17) measures where lag
-  stops being bounded and what saturates first. See `docs/measurements/phase1.md` M3.
+- **A spike becomes lag, not loss.** Measured (`docs/measurements/phase1.md` M5): straight into
+  Redpanda, lag stays bounded to ~100k mixed events/s and grows from 125k, when the single-threaded
+  metrics and logs processors reach one core each. Through the Collector, its memory limiter pushes
+  back first (refusals above ~25k events/s offered, ~65k/s still accepted).
+- **Backlogs need byte-bounded batches.** The ceiling run found processors OOM-killed while draining
+  a backlog: a 500-message batch of 500-event messages is ~250k Python rows. Batches are now bounded
+  at 1 MiB of payload; the same backlog then drained with zero restarts.
+- **Scaling out** is a consumer-group property: more partitions and one processor replica per
+  partition. Not needed at 20x the SPEC §1.2 target.
 - **Redpanda down** (§15 row 17): the Collector's bounded `sending_queue` (2,000 batches) holds
   data and retries; overflow is counted in `otelcol_exporter_enqueue_failed_*`.
   TODO: chaos run with Redpanda stopped and the queue overflowing, Phase 4.

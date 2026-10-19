@@ -55,12 +55,14 @@ attrs           {span.kind: SERVER, http.route: /checkout, ...}
 
 ### 1.3 The processor consumes, validates and writes it
 
-`processors/runner.py`, the loop in `run()` (`:77`):
+`processors/runner.py`, the loop in `run()` (`:99`):
 
-1. `:96` `consumer.consume(...)` takes up to 500 messages. Auto-commit is off
-   (`:121`).
-2. `:99` `process_batch` (`:55`) decodes each message. A protobuf decode error sends the whole
-   message to the DLQ with its raw bytes (`:69`, envelope at `:31`).
+1. `:118` `take_batch` (`:82`) collects messages until 1 MiB of payload or 1 s. The bound is in
+   bytes, not message count, because one OTLP message can hold thousands of records: a
+   500-message bound let a backlog OOM-kill the processor (measurement M5). Auto-commit is off
+   (`:143`).
+2. `:121` `process_batch` (`:60`) decodes each message. A protobuf decode error sends the whole
+   message to the DLQ with its raw bytes (`:74`, envelope at `:36`).
 3. Decoding calls `convert_traces` (`processors/convert.py:231`):
    - `_identity` (`processors/convert.py:89`) requires `service.name` and the Collector-set
      `sentry.tenant_id` (`processors/convert.py:24`). A resource without them is rejected whole.
@@ -69,9 +71,9 @@ attrs           {span.kind: SERVER, http.route: /checkout, ...}
      (`processors/convert.py:46`), and a failure rejects only that span
      (`processors/convert.py:102`). It records `span.kind` (`processors/convert.py:220`) because the
      `spans` table has no kind column.
-4. `:101` `_insert` writes the batch to ClickHouse, with retries (`:43`).
-5. `:103` invalid records are produced to `otel.traces.dlq` with their reason, then flushed.
-6. `:109` **only now** are offsets committed. A kill at `:108` (the test crash point) redelivers
+4. `processors/runner.py:123` `_insert` writes the batch to ClickHouse, with retries (`:48`).
+5. `:125` invalid records are produced to `otel.traces.dlq` with their reason, then flushed.
+6. `:131` **only now** are offsets committed. A kill at `:130` (the test crash point) redelivers
    the batch on restart. `test_kill_between_insert_and_commit_loses_nothing` proves no span goes
    missing, and the `commit_after_insert` guard check proves the test fails if the order is
    swapped.
@@ -170,8 +172,11 @@ copies arrive: `test_incidents_opened_redelivery_is_one_event_downstream`. The
   exactly one, starting after the fault;
 - exports `first_anomaly_at − 15 min … last_seen + 5 min` (Amendment A7) to Parquet
   (`recorder/dataset.py`);
-- builds gold claims from those rows and checks each against the SPEC §8.2 rule before writing
-  it (`recorder/gold.py`);
+- builds gold claims from those rows, one per distinct claim, and checks each against the SPEC §8.2
+  rule before writing it (`recorder/gold.py`, `for_run`). `python -m recorder.regold` rebuilds them
+  from a fixture's own Parquet files;
+- deduplicates each window's rows with `LIMIT 1 BY` the stable key rather than `FINAL`, which ran
+  ClickHouse out of memory on a large spans table (`recorder/dataset.py`);
 - writes `label.json`, `injection.json` and `manifest.json` (row counts and content hashes), and
   registers the fixture in Postgres.
 

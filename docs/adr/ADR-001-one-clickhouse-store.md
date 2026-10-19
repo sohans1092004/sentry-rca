@@ -29,6 +29,11 @@ downsample, 90 days).
 - **Dedup is a read-time cost.** Redelivered rows collapse only at merge time, so exact reads use
   `FINAL`. Measured so far: the alert engine queries with `FINAL` every 5 s.
   TODO (§19 decision 7): measure `FINAL` vs `argMax` per tool on fixture-sized data in Phase 2.
+  Measured in Phase 1: `FINAL` over `spans` with a time filter cannot prune (the sorting key starts
+  with `trace_id`), so it merges every part while reading. On a 38M-row table that ran the server out
+  of memory (code 241, 843 MiB of a 1.02 GiB cap). Deduplicating only the window's rows with
+  `LIMIT 1 BY <stable key>` needed ~130 MiB. The recorder uses that, and Phase 2 tools on `spans`
+  should too, or a time-ordered projection should be added.
 - **Insert-time optimisation is a trap in tests.** `optimize_on_insert` collapses duplicates inside
   one insert block, so "both copies physically stored" is false for a single batch; the dedup test
   delivers copies in separate batches too (bug log, Phase 1 report).

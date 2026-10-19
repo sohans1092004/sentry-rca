@@ -5,7 +5,9 @@ is checked against real telemetry by deterministic code, and its accuracy is mea
 non-AI baseline. Specification: [`docs/SPEC.md`](docs/SPEC.md) (v3, with an Amendments log).
 
 **Status: Phase 1** (telemetry pipeline, alerting, failure injector, fixture recorder). There is no
-AI, no LLM and no investigation code yet; those are Phases 2–3.
+AI, no LLM and no investigation code yet; those are Phases 2–3. Measured so far: ingestion ceiling
+~100k events/s, alert-to-incident 12–20 s for step faults, 1.8 GB RSS with demo traffic
+([`docs/measurements/phase1.md`](docs/measurements/phase1.md)).
 
 ## What runs
 
