@@ -82,3 +82,29 @@ def test_baseline_is_byte_identical_across_runs(fixture):
     assert snapshots.canonical(ra.hypotheses) == snapshots.canonical(rb.hypotheses)
     assert [c.requested for c in a.calls("inv").values()] == [c.requested for c in b.calls("inv").values()]
     assert ra.outcome == rb.outcome
+
+
+@pytest.mark.parametrize("fid", ["bad_deploy_ambiguous_001"])
+def test_ambiguous_fixture_reports_conflicting_evidence(fid):
+    """Two injected causes, close scores: the conflict margin (§7.5) must not pick one."""
+    import json
+
+    d = DATA / fid / "v1"
+    assert d.exists(), f"{fid} not present"
+    tables = {t: read_parquet(d / f"{t}.parquet") for t in TABLES}
+    inc = json.loads((d / "injection.json").read_text())["incident"]
+    manifest = json.loads((d / "manifest.json").read_text())
+    incident = {
+        "tenant_id": DEMO_TENANT_ID,
+        "service": inc["service"],
+        "first_anomaly_at": datetime.fromisoformat(inc["first_anomaly_at"]),
+        "last_seen": datetime.fromisoformat(inc["last_seen"]),
+    }
+    window = (datetime.fromisoformat(manifest["window"][0]), datetime.fromisoformat(manifest["window"][1]))
+    backend = OfflineBackend(tables)
+    sc = scope_mod.compute(backend, incident, clamp=window, excluded_fixture=fid)
+    result = run_ranker(MemoryStore(), backend, None, "inv", sc)
+    roots = [
+        (h["cause_service"], h["cause_kind"]) for h in result.verified if h["causal_role"] == "candidate_root_cause"
+    ]
+    assert len(set(roots)) >= 2 and result.outcome == "CONFLICTING_EVIDENCE", (roots, result.outcome)

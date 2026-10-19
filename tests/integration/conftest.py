@@ -13,7 +13,7 @@ from testcontainers.community.postgres import PostgresContainer
 from common.migrate import migrate_clickhouse, migrate_postgres
 
 # Same images as deploy/compose.yaml.
-PG_IMAGE = "postgres:16.10-alpine"
+PG_IMAGE = "pgvector/pgvector:0.8.1-pg16"  # runbooks need pgvector
 CH_IMAGE = "clickhouse/clickhouse-server:25.8.33.6"
 RP_IMAGE = "redpandadata/redpanda:v25.2.1"
 
@@ -28,7 +28,9 @@ def pg_container():
 
 @pytest.fixture(scope="session")
 def ch_container():
-    with ClickHouseContainer(CH_IMAGE, username="sentry", password="sentry", dbname="sentry") as c:
+    ch = ClickHouseContainer(CH_IMAGE, username="sentry", password="sentry", dbname="sentry")
+    ch.with_env("CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT", "1")  # the eval harness creates a read-only user
+    with ch as c:
         yield c
 
 

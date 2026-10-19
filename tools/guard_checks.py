@@ -104,6 +104,27 @@ GUARDS: dict[str, dict] = {
 }
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guards_phase2 import GUARDS_PHASE2  # noqa: E402
+
+GUARDS.update(GUARDS_PHASE2)
+
+
+def _apply(text: str, edit: tuple, where: str) -> str:
+    """An edit is (old, new), or ("require", reason fragment, n): disable the n-th verifier check whose
+    line contains the fragment, by turning `_require(cond, ...)` into `_require(True or cond, ...)`."""
+    if edit[0] == "require":
+        _, fragment, nth = edit
+        lines = text.splitlines(keepends=True)
+        hits = [i for i, ln in enumerate(lines) if "_require(" in ln and fragment in ln]
+        assert len(hits) > nth, f"{where}: no _require line #{nth} containing {fragment!r}"
+        lines[hits[nth]] = lines[hits[nth]].replace("_require(", "_require(True or ", 1)
+        return "".join(lines)
+    old, new = edit
+    assert text.count(old) == 1, f"{where}: guard text not found exactly once"
+    return text.replace(old, new)
+
+
 def pytest(tests: list[str]) -> tuple[int, str]:
     cmd = ["uv", "run", "pytest", "-vv", "-p", "no:cacheprovider", *tests]
     p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
@@ -115,12 +136,11 @@ def pytest(tests: list[str]) -> tuple[int, str]:
 
 def check(name: str) -> bool:
     g = GUARDS[name]
-    changes = [(g["file"], old, new) for old, new in g["edits"]] + list(g.get("extra", []))
-    originals = {f: (ROOT / f).read_bytes() for f, _, _ in changes}
+    changes = [(g["file"], *e) for e in g["edits"]] + list(g.get("extra", []))
+    originals = {f: (ROOT / f).read_bytes() for f, *_ in changes}
     texts = {f: b.decode() for f, b in originals.items()}
-    for f, old, new in changes:
-        assert texts[f].count(old) == 1, f"{name}: guard text not found exactly once in {f}"
-        texts[f] = texts[f].replace(old, new)
+    for f, *edit in changes:
+        texts[f] = _apply(texts[f], tuple(edit), f"{name} in {f}")
     try:
         for f, t in texts.items():
             (ROOT / f).write_bytes(t.encode())

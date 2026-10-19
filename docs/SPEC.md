@@ -287,7 +287,7 @@ CREATE TABLE investigations (
   trigger_id TEXT NOT NULL,                  -- event id of the trigger, for idempotency
   trigger_kind TEXT NOT NULL CHECK (trigger_kind IN ('auto','reinvestigate','follow_up')),
   follow_up_question TEXT,
-  ranker TEXT NOT NULL CHECK (ranker IN ('agent','baseline')),
+  ranker TEXT NOT NULL CHECK (ranker IN ('agent','baseline')),   -- the result shown to the human (A15)
   status TEXT NOT NULL CHECK (status IN ('running','complete','failed','degraded_baseline')),
   outcome TEXT CHECK (outcome IN ('ROOT_CAUSE_IDENTIFIED','INSUFFICIENT_EVIDENCE','CONFLICTING_EVIDENCE')),
   scope JSONB NOT NULL,                      -- tenant, allowed services, window, caps
@@ -307,9 +307,18 @@ CREATE TABLE evidence_snapshots (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE investigation_results (        -- each ranker's own outcome (A15)
+  investigation_id UUID NOT NULL REFERENCES investigations(id),
+  ranker TEXT NOT NULL CHECK (ranker IN ('agent','baseline')),
+  outcome TEXT NOT NULL CHECK (outcome IN ('ROOT_CAUSE_IDENTIFIED','INSUFFICIENT_EVIDENCE','CONFLICTING_EVIDENCE')),
+  completed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (investigation_id, ranker)
+);
+
 CREATE TABLE tool_calls (                    -- append-only audit trail
   id UUID PRIMARY KEY,
   investigation_id UUID NOT NULL REFERENCES investigations(id),
+  ranker TEXT NOT NULL CHECK (ranker IN ('agent','baseline')),   -- A15
   seq INT NOT NULL,
   tool_name TEXT NOT NULL,
   request_requested JSONB NOT NULL,          -- as the ranker asked
@@ -325,6 +334,7 @@ CREATE TABLE tool_calls (                    -- append-only audit trail
 CREATE TABLE hypotheses (
   id UUID PRIMARY KEY,
   investigation_id UUID NOT NULL REFERENCES investigations(id),
+  ranker TEXT NOT NULL CHECK (ranker IN ('agent','baseline')),   -- A15
   rank INT NOT NULL,
   causal_role TEXT NOT NULL CHECK (causal_role IN ('candidate_root_cause','downstream_symptom')),
   cause_service TEXT NOT NULL,
@@ -332,7 +342,8 @@ CREATE TABLE hypotheses (
   score DOUBLE PRECISION NOT NULL,           -- ranker's score, for the tie rule (§7.5)
   narrative TEXT,                            -- shown as "unverified explanation"
   verifier_status TEXT NOT NULL CHECK (verifier_status IN ('passed','rejected')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (investigation_id, ranker, rank)
 );
 
 CREATE TABLE claims (
@@ -602,6 +613,8 @@ Authentication: a per-tenant API key (stored hashed) for API calls; the UI signs
 
 At least 15 fixtures by the end of Phase 1 and at least 30 by the end of Phase 4, spanning every scenario, with at least 3 multi-hop, 3 ambiguous, 3 no-signal, 3 noisy-neighbour and 5 injection fixtures. Fixtures are versioned datasets; adding one never changes another.
 
+Gold claims must be citable inside the fixture's own investigation scope (A14). Evidence that is true but out of scope by design (e.g. `noisy_neighbor`'s batch-job CPU, which has no trace edge to the incident service) is kept in `label.json` as `out_of_scope_evidence` with its reason, and a scope test asserts that each such citation is rejected during that fixture's investigation. Every fixture keeps at least one in-scope gold claim.
+
 ### 12.2 Contamination rule
 
 Postmortems written about a fixture carry its `fixture_id` and are excluded from `search_runbooks` while that fixture is evaluated. The corpus may contain generic runbooks and postmortems of *other* incidents.
@@ -766,3 +779,10 @@ Decisions taken while building, each landed in the same commit as the code it go
 | A11 | 1 | §8.2 | Numeric rules pinned (window closed, baseline half-open, arithmetic mean of cited rows, ε = 1e-6, inclusive comparisons, case-insensitive substring, descent via `parent_span_id`, gold-claim threshold margins), exactly as `recorder/gold.py` implements them. | Gold claims are generated before the Phase 2 verifier exists; both must apply identical arithmetic or a true gold claim is rejected (a verifier false negative). |
 | A12 | 1 | §1.2 | Alert-to-incident target `< 30 s` applies to fast-onset faults; slow-onset faults (`memory_leak`) are measured and reported separately with no target. | A leak has no onset instant to detect: latency rises gradually, and the alert fires when it crosses the rule's floors (47.2 s in `memory_leak_001`). Tuning the leak until it alerts like a step change would test nothing. |
 | A13 | 1 | §3, §12.1 | `label.json` may carry an optional `notes` string explaining a label that is not obvious. `noisy_neighbor` labels state that `batchjob` has no trace edges, is outside every scope by design, and that `INSUFFICIENT_EVIDENCE` is the expected, honest outcome (ADR-006). | Without it, a reader of the fixture sees a named root cause with an outcome that says no cause was found, and may "fix" one of them. |
+| A14 | 2 | §3, §12.1 | `label.json` v2: `gold_claims` holds only claims whose every citation is allowed by the fixture's own scope; the others move to `out_of_scope_evidence` (`{claim, reason}`). Scope tests assert each out-of-scope citation is rejected; every fixture keeps at least one in-scope gold claim. Fixture datasets become version v2 (same Parquet, new label). | A3 puts `batchjob` outside every scope, so a gold claim about its CPU could never be cited; the false-negative metric would count a scope rejection as a verifier error. |
+| A15 | 2 | §4.2, §8.2 | `hypotheses.ranker` and `tool_calls.ranker` (`agent`/`baseline`); rank unique per `(investigation_id, ranker)`; `investigation_results (investigation_id, ranker, outcome, completed_at)` holds each ranker's own outcome; `investigations.ranker/outcome` mean "the result shown to the human" (baseline when degraded). Verifier common check: every cited tool call has the hypothesis's ranker. Tool-call `seq` stays unique per investigation. | §7.1 runs both rankers in one investigation, but §4.2 could not record which ranker produced a hypothesis or a tool call, and the agent could have cited the baseline's queries. |
+| A16 | 2 | §12.3 | Each fixture is loaded once per eval into a fresh isolated database; the ranker runs N times against it through a ClickHouse user with SELECT only on that database. A content hash (table list, and row count + `sum(cityHash64(*))` per telemetry table) is taken after loading and after the N runs; any difference fails the eval. | Reloading per run cost ~15-20 min per eval for no benefit; read-only is enforced (user grants) and checked (hash), not assumed. |
+| A17 | 2 | §5.1, §19 #2 | Embeddings: `nomic-embed-text` (768 dimensions) through Ollama (open decision 2). Vectors are recorded in a committed cassette keyed by `sha256(model + model digest + text)`, stored as exact float32; replay everywhere (CI), record locally with `--live`; `rca runbooks verify-embeddings` re-embeds and reports drift before an official eval. | CI cannot run Ollama cheaply; a changed model must be a loud miss, never silently stale vectors; replayed similarities must be bit-identical. |
+| A18 | 2 | §8.2 | Verifier refinements: (1) a claim may cite only its type's tools (`metric_change`→`query_metrics`, `log_pattern`→`query_logs`, `trace_dependency`→`query_traces`, `deploy_precedes_onset`→`get_recent_deploys`/`get_incident_timeline`, `runbook_match`→`search_runbooks`); (2) `metric_change` cited rows must lie in `[start − 15 min, end]` (baseline plus window), not only in the window; (3) `trace_dependency` descent is followed through all rows of the cited calls' snapshots, while the parent and child spans themselves must be cited; (4) the onset row matching `deploy_precedes_onset` must be for the claim's service. | §8.2 required cited rows to "fall inside its window", which no `metric_change` baseline row can; descent through uncited intermediate spans was unstated; an onset of another service proves nothing about this deploy. |
+| A19 | 2 | §3, §12.4 | Injection fixtures' labels carry `planted_row_ids` (the planted log rows); injection influence compares each run with a run on the same dataset minus those rows. | §12.4 needs "with and without the planted lines"; the label must say which rows they are. |
+| A20 | 2 | §5.1 | `get_incident_timeline` onset detection: per service and signal (latency, error rate, CPU, memory, pool wait) on the services' own 5 s metric export ticks; baseline = first 10 min of the window (≥ 6 ticks); anomalous when value > median + max(4·1.4826·MAD, 0.5·|median|, a per-signal floor); onset = first of two consecutive anomalous ticks ≤ 12 s apart. Computed rows carry ordinal `row_id`s (`t0`, `t1`, ...). | §5.1 named "anomaly onsets" without a rule. 30 s buckets stamped onsets up to 30 s before the fault and made a true deploy-before-onset claim fail (found on `bad_deploy_001`). |
