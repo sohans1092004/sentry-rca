@@ -102,8 +102,8 @@ def main() -> None:
         (LABELS / fid / DST).mkdir(parents=True, exist_ok=True)
         for d in (dst, LABELS / fid / DST):
             (d / "label.json").write_text(json.dumps(label, indent=2, default=str))
-            for f in ("injection.json", "manifest.json"):
-                shutil.copy2(dst / f, d / f) if d != dst else None
+        for name in ("injection.json", "manifest.json"):
+            shutil.copy2(dst / name, LABELS / fid / DST / name)
 
 
 if __name__ == "__main__":

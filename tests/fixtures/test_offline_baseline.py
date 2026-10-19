@@ -3,6 +3,7 @@
 - every out_of_scope_evidence citation is rejected by scope (A14);
 - the baseline is deterministic: two runs give byte-identical hypotheses and tool requests."""
 
+import json
 import os
 from datetime import datetime
 from pathlib import Path
@@ -16,18 +17,19 @@ from investigation.backend import OfflineBackend
 from investigation.run import run_ranker
 from investigation.tools import MemoryStore, ToolLayer
 from recorder.dataset import TABLES, read_parquet
-from recorder.relabel import build
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = Path(os.environ.get("SENTRY_FIXTURES", ROOT / "data" / "fixtures"))
-FIXTURES = sorted(p.name for p in DATA.iterdir() if (p / "v1" / "label.json").exists()) if DATA.exists() else []
+# the version each fixture is published at (fixtures/index.json); CI fetches exactly these
+VERSIONS = {
+    a["fixture_id"]: a["version"] for a in json.loads((ROOT / "fixtures" / "index.json").read_text())["fixtures"]
+}
+FIXTURES = sorted(f for f, v in VERSIONS.items() if (DATA / f / v / "label.json").exists())
 
 
 @pytest.fixture(scope="module", params=FIXTURES)
 def fixture(request):
-    d = DATA / request.param / "v1"
-    import json
-
+    d = DATA / request.param / VERSIONS[request.param]
     tables = {t: read_parquet(d / f"{t}.parquet") for t in TABLES}
     inj = json.loads((d / "injection.json").read_text())
     manifest = json.loads((d / "manifest.json").read_text())
@@ -41,7 +43,7 @@ def fixture(request):
     window = (datetime.fromisoformat(manifest["window"][0]), datetime.fromisoformat(manifest["window"][1]))
     backend = OfflineBackend(tables)
     sc = scope_mod.compute(backend, incident, clamp=window, excluded_fixture=request.param)
-    label, _ = build(d, request.param)
+    label = json.loads((d / "label.json").read_text())
     return request.param, backend, sc, label
 
 
@@ -87,9 +89,7 @@ def test_baseline_is_byte_identical_across_runs(fixture):
 @pytest.mark.parametrize("fid", ["bad_deploy_ambiguous_001"])
 def test_ambiguous_fixture_reports_conflicting_evidence(fid):
     """Two injected causes, close scores: the conflict margin (§7.5) must not pick one."""
-    import json
-
-    d = DATA / fid / "v1"
+    d = DATA / fid / VERSIONS[fid]
     assert d.exists(), f"{fid} not present"
     tables = {t: read_parquet(d / f"{t}.parquet") for t in TABLES}
     inc = json.loads((d / "injection.json").read_text())["incident"]

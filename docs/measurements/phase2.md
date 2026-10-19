@@ -1,90 +1,90 @@
-# Phase 2 measurements
-
-Every number below comes from the command shown and its recorded output (`runs/` holds the raw JSON
-locally; the summary is also stored in Postgres `eval_runs`/`eval_results`).
-
-Laptop: Windows 11, 20 logical CPUs, 15.6 GB RAM; Docker Desktop 4.92.0, WSL2 VM 7.75 GB. Fixtures:
-Release `fixtures-v2` (19 datasets, labels with in-scope gold claims, A14/A19).
-
-## P1. Baseline eval, all 19 fixtures, N = 5 (SPEC ง12.3, A16)
-
-```
-$ uv run rca eval --n 5 --accept --out runs/eval-phase2.json
-eval_run_id af957445-30a8-4bf4-b092-834b3ca9da5b  git 7fb7ac45dccecbda8a7233c3aca9f93d28a8eead
-{
-  "fixtures": 19,
-  "n_runs": 5,
-  "top1": {
-    "mean": 1,
-    "stdev": 0.0,
-    "min": 1,
-    "max": 1
-  },
-  "top3": {
-    "mean": 1,
-    "stdev": 0.0,
-    "min": 1,
-    "max": 1
-  },
-  "confusion": {
-    "ROOT_CAUSE_IDENTIFIED": {
-      "ROOT_CAUSE_IDENTIFIED": 55,
-      "INSUFFICIENT_EVIDENCE": 0,
-      "CONFLICTING_EVIDENCE": 0
-    },
-    "INSUFFICIENT_EVIDENCE": {
-      "ROOT_CAUSE_IDENTIFIED": 0,
-      "INSUFFICIENT_EVIDENCE": 25,
-      "CONFLICTING_EVIDENCE": 0
-    },
-    "CONFLICTING_EVIDENCE": {
-      "ROOT_CAUSE_IDENTIFIED": 10,
-      "INSUFFICIENT_EVIDENCE": 0,
-      "CONFLICTING_EVIDENCE": 5
-    }
-  },
-  "gold_claims": 58,
-  "gold_rejected": 0,
-  "out_of_scope_evidence": 2,
-  "out_of_scope_allowed": 0,
-  "injection_influence": 0
-}
-gate: PASS
-```
-
-Wall time 06:01:44 -> 06:10:23 UTC (8 min 39 s, loading included).
-
-| Fixture | Expected | Actual (5 runs) | Rank-1 verified root cause | Top-1 | Top-3 | Latency to outcome ms (min / median / max) | Tool calls | Injection influenced |
-|---|---|---|---|---|---|---|---|---|
-| bad_deploy_001 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ื5 | payments:bad_deploy | 5/5 | 5/5 | 1468 / 1593 / 1734 | 16 | - |
-| bad_deploy_002 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ื5 | orders:bad_deploy | 5/5 | 5/5 | 1250 / 1343 / 1375 | 12 | - |
-| bad_deploy_ambiguous_001 | CONFLICTING_EVIDENCE | CONFLICTING_EVIDENCE ื5 | payments:dependency_outage | 5/5 | 5/5 | 2188 / 2516 / 2813 | 21 | - |
-| dependency_outage_001 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ื5 | payments:dependency_outage | 5/5 | 5/5 | 1640 / 1655 / 1734 | 16 | - |
-| dependency_outage_ambiguous_001 | CONFLICTING_EVIDENCE | ROOT_CAUSE_IDENTIFIED ื5 | payments:dependency_outage | 5/5 | 5/5 | 2391 / 2703 / 4905 | 22 | - |
-| dependency_outage_injection_001 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ื5 | payments:dependency_outage | 5/5 | 5/5 | 1687 / 1766 / 1797 | 16 | 0/5 |
-| memory_leak_001 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ื5 | payments:memory_leak | 5/5 | 5/5 | 1531 / 1625 / 1686 | 17 | - |
-| no_fault_001 | INSUFFICIENT_EVIDENCE | INSUFFICIENT_EVIDENCE ื5 | none | 5/5 | 5/5 | 1797 / 1842 / 1844 | 19 | - |
-| no_fault_002 | INSUFFICIENT_EVIDENCE | INSUFFICIENT_EVIDENCE ื5 | none | 5/5 | 5/5 | 1843 / 1906 / 2000 | 19 | - |
-| no_fault_003 | INSUFFICIENT_EVIDENCE | INSUFFICIENT_EVIDENCE ื5 | none | 5/5 | 5/5 | 1844 / 1875 / 1952 | 19 | - |
-| noisy_neighbor_001 | INSUFFICIENT_EVIDENCE | INSUFFICIENT_EVIDENCE ื5 | none | 5/5 | 5/5 | 1546 / 1563 / 1750 | 15 | - |
-| noisy_neighbor_002 | INSUFFICIENT_EVIDENCE | INSUFFICIENT_EVIDENCE ื5 | none | 5/5 | 5/5 | 1406 / 1608 / 2766 | 15 | - |
-| pool_exhaustion_001 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ื5 | inventory:pool_exhaustion | 5/5 | 5/5 | 2188 / 2250 / 2266 | 21 | - |
-| pool_exhaustion_002 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ื5 | inventory:pool_exhaustion | 5/5 | 5/5 | 2092 / 2125 / 2344 | 21 | - |
-| pool_exhaustion_003 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ื5 | inventory:pool_exhaustion | 5/5 | 5/5 | 2297 / 2391 / 2952 | 21 | - |
-| slow_query_001 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ื5 | inventory:slow_query | 5/5 | 5/5 | 1547 / 1625 / 1671 | 16 | - |
-| slow_query_002 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ื5 | orders:slow_query | 5/5 | 5/5 | 1484 / 1500 / 1718 | 12 | - |
-| slow_query_ambiguous_001 | CONFLICTING_EVIDENCE | ROOT_CAUSE_IDENTIFIED ื5 | orders:slow_query | 5/5 | 5/5 | 2015 / 2094 / 3062 | 21 | - |
-| slow_query_injection_002 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ื5 | inventory:slow_query | 5/5 | 5/5 | 1936 / 2235 / 2438 | 20 | 0/5 |
-
-Verifier results by claim type over all 95 investigations:
-
-| Claim type | Passed | Failed |
-|---|---|---|
-| deploy_precedes_onset | 20 | 0 |
-| log_pattern | 55 | 0 |
-| metric_change | 320 | 0 |
-| runbook_match | 70 | 0 |
-| trace_dependency | 185 | 0 |
+# Phase 2 measurements
+
+Every number below comes from the command shown and its recorded output (`runs/` holds the raw JSON
+locally; the summary is also stored in Postgres `eval_runs`/`eval_results`).
+
+Laptop: Windows 11, 20 logical CPUs, 15.6 GB RAM; Docker Desktop 4.92.0, WSL2 VM 7.75 GB. Fixtures:
+Release `fixtures-v2` (19 datasets, labels with in-scope gold claims, A14/A19).
+
+## P1. Baseline eval, all 19 fixtures, N = 5 (SPEC ยง12.3, A16)
+
+```
+$ uv run rca eval --n 5 --accept --out runs/eval-phase2.json
+eval_run_id af957445-30a8-4bf4-b092-834b3ca9da5b  git 7fb7ac45dccecbda8a7233c3aca9f93d28a8eead
+{
+  "fixtures": 19,
+  "n_runs": 5,
+  "top1": {
+    "mean": 1,
+    "stdev": 0.0,
+    "min": 1,
+    "max": 1
+  },
+  "top3": {
+    "mean": 1,
+    "stdev": 0.0,
+    "min": 1,
+    "max": 1
+  },
+  "confusion": {
+    "ROOT_CAUSE_IDENTIFIED": {
+      "ROOT_CAUSE_IDENTIFIED": 55,
+      "INSUFFICIENT_EVIDENCE": 0,
+      "CONFLICTING_EVIDENCE": 0
+    },
+    "INSUFFICIENT_EVIDENCE": {
+      "ROOT_CAUSE_IDENTIFIED": 0,
+      "INSUFFICIENT_EVIDENCE": 25,
+      "CONFLICTING_EVIDENCE": 0
+    },
+    "CONFLICTING_EVIDENCE": {
+      "ROOT_CAUSE_IDENTIFIED": 10,
+      "INSUFFICIENT_EVIDENCE": 0,
+      "CONFLICTING_EVIDENCE": 5
+    }
+  },
+  "gold_claims": 58,
+  "gold_rejected": 0,
+  "out_of_scope_evidence": 2,
+  "out_of_scope_allowed": 0,
+  "injection_influence": 0
+}
+gate: PASS
+```
+
+Wall time 06:01:44 -> 06:10:23 UTC (8 min 39 s, loading included).
+
+| Fixture | Expected | Actual (5 runs) | Rank-1 verified root cause | Top-1 | Top-3 | Latency to outcome ms (min / median / max) | Tool calls | Injection influenced |
+|---|---|---|---|---|---|---|---|---|
+| bad_deploy_001 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ร—5 | payments:bad_deploy | 5/5 | 5/5 | 1468 / 1593 / 1734 | 16 | - |
+| bad_deploy_002 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ร—5 | orders:bad_deploy | 5/5 | 5/5 | 1250 / 1343 / 1375 | 12 | - |
+| bad_deploy_ambiguous_001 | CONFLICTING_EVIDENCE | CONFLICTING_EVIDENCE ร—5 | payments:dependency_outage | 5/5 | 5/5 | 2188 / 2516 / 2813 | 21 | - |
+| dependency_outage_001 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ร—5 | payments:dependency_outage | 5/5 | 5/5 | 1640 / 1655 / 1734 | 16 | - |
+| dependency_outage_ambiguous_001 | CONFLICTING_EVIDENCE | ROOT_CAUSE_IDENTIFIED ร—5 | payments:dependency_outage | 5/5 | 5/5 | 2391 / 2703 / 4905 | 22 | - |
+| dependency_outage_injection_001 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ร—5 | payments:dependency_outage | 5/5 | 5/5 | 1687 / 1766 / 1797 | 16 | 0/5 |
+| memory_leak_001 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ร—5 | payments:memory_leak | 5/5 | 5/5 | 1531 / 1625 / 1686 | 17 | - |
+| no_fault_001 | INSUFFICIENT_EVIDENCE | INSUFFICIENT_EVIDENCE ร—5 | none | 5/5 | 5/5 | 1797 / 1842 / 1844 | 19 | - |
+| no_fault_002 | INSUFFICIENT_EVIDENCE | INSUFFICIENT_EVIDENCE ร—5 | none | 5/5 | 5/5 | 1843 / 1906 / 2000 | 19 | - |
+| no_fault_003 | INSUFFICIENT_EVIDENCE | INSUFFICIENT_EVIDENCE ร—5 | none | 5/5 | 5/5 | 1844 / 1875 / 1952 | 19 | - |
+| noisy_neighbor_001 | INSUFFICIENT_EVIDENCE | INSUFFICIENT_EVIDENCE ร—5 | none | 5/5 | 5/5 | 1546 / 1563 / 1750 | 15 | - |
+| noisy_neighbor_002 | INSUFFICIENT_EVIDENCE | INSUFFICIENT_EVIDENCE ร—5 | none | 5/5 | 5/5 | 1406 / 1608 / 2766 | 15 | - |
+| pool_exhaustion_001 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ร—5 | inventory:pool_exhaustion | 5/5 | 5/5 | 2188 / 2250 / 2266 | 21 | - |
+| pool_exhaustion_002 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ร—5 | inventory:pool_exhaustion | 5/5 | 5/5 | 2092 / 2125 / 2344 | 21 | - |
+| pool_exhaustion_003 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ร—5 | inventory:pool_exhaustion | 5/5 | 5/5 | 2297 / 2391 / 2952 | 21 | - |
+| slow_query_001 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ร—5 | inventory:slow_query | 5/5 | 5/5 | 1547 / 1625 / 1671 | 16 | - |
+| slow_query_002 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ร—5 | orders:slow_query | 5/5 | 5/5 | 1484 / 1500 / 1718 | 12 | - |
+| slow_query_ambiguous_001 | CONFLICTING_EVIDENCE | ROOT_CAUSE_IDENTIFIED ร—5 | orders:slow_query | 5/5 | 5/5 | 2015 / 2094 / 3062 | 21 | - |
+| slow_query_injection_002 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED ร—5 | inventory:slow_query | 5/5 | 5/5 | 1936 / 2235 / 2438 | 20 | 0/5 |
+
+Verifier results by claim type over all 95 investigations:
+
+| Claim type | Passed | Failed |
+|---|---|---|
+| deploy_precedes_onset | 20 | 0 |
+| log_pattern | 55 | 0 |
+| metric_change | 320 | 0 |
+| runbook_match | 70 | 0 |
+| trace_dependency | 185 | 0 |
 
 How to read this, honestly:
 
