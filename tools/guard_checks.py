@@ -117,7 +117,8 @@ def check(name: str) -> bool:
     g = GUARDS[name]
     changes = [(g["file"], old, new) for old, new in g["edits"]] + list(g.get("extra", []))
     originals = {f: (ROOT / f).read_bytes() for f, _, _ in changes}
-    texts = {f: b.decode() for f, b in originals.items()}
+    # working copies on Windows may be CRLF; git stores LF, so match and write LF
+    texts = {f: b.decode().replace("\r\n", "\n") for f, b in originals.items()}
     for f, old, new in changes:
         assert texts[f].count(old) == 1, f"{name}: guard text not found exactly once in {f}"
         texts[f] = texts[f].replace(old, new)

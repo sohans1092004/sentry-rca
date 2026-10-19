@@ -1,0 +1,64 @@
+{
+  "run": {
+    "run_id": "dependency_outage-1-20261018T225030",
+    "plan": {
+      "scenario": "dependency_outage",
+      "variant": null,
+      "seed": 1,
+      "delay_s": 41,
+      "root_cause": {
+        "service": "payments",
+        "cause_kind": "dependency_outage"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "orders",
+        "gateway"
+      ],
+      "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "payments",
+          "kind": "dependency_outage",
+          "params": {
+            "error_rate": 0.74,
+            "timeout_ms": 289
+          },
+          "duration_s": 244
+        }
+      ],
+      "deploy": null
+    },
+    "injection_start": "2026-10-18T22:50:30.052+00:00",
+    "applied": [
+      {
+        "at": "2026-10-18T22:50:30.600+00:00",
+        "at_s": 0,
+        "service": "payments",
+        "kind": "dependency_outage",
+        "params": {
+          "error_rate": 0.74,
+          "timeout_ms": 289
+        },
+        "duration_s": 244
+      }
+    ],
+    "deploy_row": null,
+    "injection_end": "2026-10-18T22:54:34.060+00:00"
+  },
+  "incident": {
+    "id": "678d8faa-669a-4b23-9066-e9ec87bc55b5",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-18 22:50:42.467250+00:00",
+    "first_anomaly_at": "2026-10-18 22:50:37.398729+00:00",
+    "last_seen": "2026-10-18 22:55:27.384926+00:00",
+    "alert_count": 58,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 11.86725,
+  "onset_to_open_s": 5.068521,
+  "variant": null
+}

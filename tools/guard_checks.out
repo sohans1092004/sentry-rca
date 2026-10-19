@@ -1,0 +1,121 @@
+=== stable_ids @ 2026-10-19T05:23:23+00:00 -> PASS
+property: Stable-ID dedup: the same telemetry delivered twice is one logical row under FINAL
+guard removed in common/ids.py: [('return uuid.uuid5(_NAMESPACE, json.dumps(parts, sort_keys=True, separators=(",", ":")))', 'return uuid.uuid4()')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_processors.py::test_same_telemetry_twice_is_one_logical_row[metrics] tests/integration/test_processors.py::test_same_telemetry_twice_is_one_logical_row[logs]
+E       AssertionError: assert 240 == (5 * 16)
+E        +  where 240 = final_count(<clickhouse_connect.driver.httpclient.HttpClient object at 0x00000172EF6500B0>, 'metrics')
+E        +  and   16 = <function <lambda> at 0x00000172EF5400E0>(10)
+E       AssertionError: assert 150 == (5 * 10)
+E        +  where 150 = final_count(<clickhouse_connect.driver.httpclient.HttpClient object at 0x00000172EF803AA0>, 'logs')
+E        +  and   10 = <function <lambda> at 0x00000172EF5402C0>(10)
+============================= 2 failed in 17.26s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_processors.py::test_same_telemetry_twice_is_one_logical_row[metrics] tests/integration/test_processors.py::test_same_telemetry_twice_is_one_logical_row[logs]
+============================= 2 passed in 20.47s ==============================
+
+=== validation @ 2026-10-19T05:25:41+00:00 -> PASS
+property: DLQ: malformed payloads land in the right DLQ with a reason; processing continues
+guard removed in processors/convert.py: [('    if not ok:\n        raise Invalid(reason)', '    pass')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_processors.py::test_malformed_payloads_go_to_dlq_and_processing_continues
+E       assert 1 == 2
+E        +  where 1 = len(["decode_error: Error parsing message with type 'opentelemetry.proto.metrics.v1.MetricsData': Wire format was corrupt"])
+E       assert 1 == 2
+E        +  where 1 = len(["decode_error: Error parsing message with type 'opentelemetry.proto.logs.v1.LogsData': Wire format was corrupt"])
+E       assert 1 == 2
+E        +  where 1 = len(["decode_error: Error parsing message with type 'opentelemetry.proto.trace.v1.TracesData': Wire format was corrupt"])
+======================== 3 failed in 108.97s (0:01:48) ========================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_processors.py::test_malformed_payloads_go_to_dlq_and_processing_continues
+============================= 3 passed in 24.85s ==============================
+
+=== commit_after_insert @ 2026-10-19T05:26:54+00:00 -> PASS
+property: Commit-after-insert: a kill between insert and commit loses no telemetry
+guard removed in processors/runner.py: [('        _crash_point("between_insert_and_commit")\n        consumer.commit(asynchronous=False)\n', ''), ('        if rows:\n            _insert(', '        _crash_point("between_insert_and_commit")\n        consumer.commit(asynchronous=False)\n        if rows:\n            _insert(')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_processors.py::test_kill_between_insert_and_commit_loses_nothing
+E       assert 0 > 0
+============================= 1 failed in 11.96s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_processors.py::test_kill_between_insert_and_commit_loses_nothing
+============================= 1 passed in 57.13s ==============================
+
+=== incidents_plain_insert @ 2026-10-19T05:27:06+00:00 -> PASS
+property: Incident dedup: N repeated alerts -> one open incident with alert_count = N
+guard removed in alerting/engine.py: [('        "ON CONFLICT (tenant_id, fingerprint) WHERE status <> \'resolved\' "\n        "DO UPDATE SET last_seen = EXCLUDED.last_seen, alert_count = incidents.alert_count + 1 "\n', '')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_alerting.py::test_repeated_alerts_make_exactly_one_open_incident
+E       AssertionError: 7 open incidents for one condition
+E       assert 7 == 1
+E        +  where 7 = open_incidents(<psycopg.Connection [IDLE] (host=localhost port=53335 user=sentry database=t_ad3d0f9e19be) at 0x231824fdb50>)
+============================== 1 failed in 4.05s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_alerting.py::test_repeated_alerts_make_exactly_one_open_incident
+============================== 1 passed in 3.90s ==============================
+
+=== incidents_full_unique_index @ 2026-10-19T05:27:33+00:00 -> PASS
+property: Incident dedup is per open incident: after resolve, a new alert opens a new incident
+guard removed in common/migrations/postgres/0001_init.sql: [("  ON incidents (tenant_id, fingerprint) WHERE status <> 'resolved';", '  ON incidents (tenant_id, fingerprint);')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_alerting.py::test_alert_after_resolve_opens_a_new_incident
+E       AssertionError: assert [('resolved', 2)] == [('resolved', 1), ('open', 1)]
+E         
+E         At index 0 diff: ('resolved', 2) != ('resolved', 1)
+E         Right contains one more item: ('open', 1)
+E         
+E         Full diff:
+E           [
+E               (
+============================== 1 failed in 8.23s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_alerting.py::test_alert_after_resolve_opens_a_new_incident
+============================= 1 passed in 13.43s ==============================
+
+=== stable_trigger_id @ 2026-10-19T05:27:52+00:00 -> PASS
+property: incidents.opened redelivery is harmless: two publishes -> one downstream event
+guard removed in alerting/engine.py: [('return f"opened:{incident_id}"', 'return f"opened:{incident_id}:{uuid.uuid4()}"')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_alerting.py::test_incidents_opened_redelivery_is_one_event_downstream
+E       assert (2,) == (1,)
+E         
+E         At index 0 diff: 2 != 1
+E         
+E         Full diff:
+E           (
+E         -     1,
+E         ?     ^
+============================== 1 failed in 7.60s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_alerting.py::test_incidents_opened_redelivery_is_one_event_downstream
+============================== 1 passed in 7.54s ==============================
+
+=== metrics_1h_dedup @ 2026-10-19T05:28:12+00:00 -> PASS
+property: metrics_1h: a batch delivered twice is counted once
+guard removed in recorder/downsample.py: [('  ORDER BY point_id LIMIT 1 BY point_id  -- one row per stable ID: a redelivered copy counts once\n', '')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_retention.py::test_metrics_1h_counts_a_twice_delivered_batch_once
+E       assert (40, 380.0, 0.0, 19.0) == (20, 190.0, 0.0, 19.0)
+E         
+E         At index 0 diff: 40 != 20
+E         
+E         Full diff:
+E           (
+E         -     20,
+E         ?     ^
+============================== 1 failed in 7.99s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_retention.py::test_metrics_1h_counts_a_twice_delivered_batch_once
+============================== 1 passed in 8.06s ==============================
+
+=== fixture_content_hash @ 2026-10-19T05:28:46+00:00 -> PASS
+property: Fixture round trip: identical row counts and content hashes after load
+guard removed in recorder/load.py: [('    verify_hashes(dataset, ch, database)\n', '')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_recorder.py::test_loader_rejects_tampered_dataset
+E       Failed: DID NOT RAISE DatasetMismatch
+============================= 1 failed in 14.13s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_recorder.py::test_loader_rejects_tampered_dataset
+============================= 1 passed in 15.14s ==============================
+

@@ -1,0 +1,88 @@
+{
+  "run": {
+    "run_id": "dependency_outage-ambiguous-1-20261019T044810",
+    "plan": {
+      "scenario": "dependency_outage",
+      "variant": "ambiguous",
+      "seed": 1,
+      "delay_s": 20,
+      "root_cause": {
+        "service": "payments",
+        "cause_kind": "dependency_outage"
+      },
+      "acceptable_alternatives": [
+        {
+          "service": "inventory",
+          "cause_kind": "memory_leak"
+        }
+      ],
+      "symptom_services": [
+        "gateway",
+        "orders"
+      ],
+      "expected_outcome": "CONFLICTING_EVIDENCE",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "payments",
+          "kind": "dependency_outage",
+          "params": {
+            "error_rate": 0.74,
+            "timeout_ms": 202
+          },
+          "duration_s": 268
+        },
+        {
+          "at_s": 27,
+          "service": "inventory",
+          "kind": "memory_leak",
+          "params": {
+            "objects": 1418
+          },
+          "duration_s": 250
+        }
+      ],
+      "deploy": null
+    },
+    "injection_start": "2026-10-19T04:48:10.046+00:00",
+    "applied": [
+      {
+        "at": "2026-10-19T04:48:10.426+00:00",
+        "at_s": 0,
+        "service": "payments",
+        "kind": "dependency_outage",
+        "params": {
+          "error_rate": 0.74,
+          "timeout_ms": 202
+        },
+        "duration_s": 268
+      },
+      {
+        "at": "2026-10-19T04:48:37.072+00:00",
+        "at_s": 27,
+        "service": "inventory",
+        "kind": "memory_leak",
+        "params": {
+          "objects": 1418
+        },
+        "duration_s": 250
+      }
+    ],
+    "deploy_row": null,
+    "injection_end": "2026-10-19T04:52:47.150+00:00"
+  },
+  "incident": {
+    "id": "a879bab3-0263-4437-a058-2a23dd3476b0",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-19 04:48:29.070679+00:00",
+    "first_anomaly_at": "2026-10-19 04:48:23.988621+00:00",
+    "last_seen": "2026-10-19 04:53:38.975346+00:00",
+    "alert_count": 63,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 18.644679,
+  "onset_to_open_s": 5.082058,
+  "variant": "ambiguous"
+}

@@ -1,0 +1,64 @@
+{
+  "run": {
+    "run_id": "noisy_neighbor-2-20261019T020049",
+    "plan": {
+      "scenario": "noisy_neighbor",
+      "variant": null,
+      "seed": 2,
+      "delay_s": 26,
+      "root_cause": {
+        "service": "batchjob",
+        "cause_kind": "noisy_neighbor"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "payments",
+        "inventory",
+        "orders",
+        "gateway"
+      ],
+      "expected_outcome": "INSUFFICIENT_EVIDENCE",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "batchjob",
+          "kind": "cpu_burn",
+          "params": {
+            "workers": 9
+          },
+          "duration_s": 279
+        }
+      ],
+      "deploy": null
+    },
+    "injection_start": "2026-10-19T02:00:49.215+00:00",
+    "applied": [
+      {
+        "at": "2026-10-19T02:00:49.605+00:00",
+        "at_s": 0,
+        "service": "batchjob",
+        "kind": "cpu_burn",
+        "params": {
+          "workers": 9
+        },
+        "duration_s": 279
+      }
+    ],
+    "deploy_row": null,
+    "injection_end": "2026-10-19T02:05:28.238+00:00"
+  },
+  "incident": {
+    "id": "33aa291d-3f71-480f-a956-7eb72b8a9522",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-19 02:01:06.980678+00:00",
+    "first_anomaly_at": "2026-10-19 02:01:01.920674+00:00",
+    "last_seen": "2026-10-19 02:06:16.908176+00:00",
+    "alert_count": 63,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 17.375678,
+  "onset_to_open_s": 5.060004,
+  "variant": null
+}

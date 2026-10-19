@@ -1,0 +1,26 @@
+{
+  "tables": {
+    "metrics": {
+      "rows": 181427,
+      "sha256": "792780ab4f4434cb4395dec8ee161f21673be9e2531061ee1192dfe66f10e73f"
+    },
+    "logs": {
+      "rows": 3843,
+      "sha256": "8318deba638c0ee3f73b919075efacb0bcb0d17226db03b5f920893b521e7131"
+    },
+    "spans": {
+      "rows": 149304,
+      "sha256": "d32abf0097a2dd51ee834e2bcb16aaaedc3f79bdbff6cbbe18098469c3adb565"
+    },
+    "deploys": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "fixture_id": "no_fault_003",
+  "version": "v1",
+  "window": [
+    "2026-10-19 04:02:52.419402+00:00",
+    "2026-10-19 04:27:57.409730+00:00"
+  ]
+}
