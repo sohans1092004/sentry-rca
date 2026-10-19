@@ -3,17 +3,20 @@
 Reservations first check an availability figure kept in an in-process cache (TTL ~15 min, staggered);
 a miss runs a reconciliation query that costs ~100-150 ms. A stock import invalidates 1-3 keys now
 and then; cache_stampede invalidates all of them every few seconds, so every reservation misses.
-Every 5-10 minutes a maintenance task holds the whole pool idle for 150 ms and its own fail-fast
-acquires (50 ms) time out: healthy traffic meets pool timeouts without load on the database or users
-waiting more than 150 ms. (Measured 14:17 and 14:51 UTC: 12 concurrent reconciliation queries, and
-12 invalidated keys, each raised gateway p95 2x for ~30 s and opened an incident.)"""
+Every 5-10 minutes a maintenance task, on its own one-connection pool with a 100 ms statement
+timeout, holds its connection while a fail-fast acquire times out, then reconciles one SKU, which
+Postgres cancels: healthy traffic logs pool timeouts and statement timeouts from the same code as a
+fault would, and no user request waits. (Measured 14:17, 14:51, 15:37 UTC: reconciliation load and
+holding the service pool each raised gateway p95 2x for ~30 s and opened an incident.)"""
 
 import asyncio
+import contextlib
 import logging
 import random
 import time
 import uuid
 
+import asyncpg
 from fastapi import HTTPException
 from opentelemetry import metrics
 
@@ -40,12 +43,14 @@ log = logging.getLogger("inventory")
 async def _start(s: Service) -> None:
     await db.start(SCHEMA, ["stock", "holds"])
     asyncio.get_running_loop().create_task(_invalidations())
+    await maint.connect()
     asyncio.get_running_loop().create_task(_reconcile())
 
 
 svc = Service("inventory", _start)
 app = svc.app
 db = Db(svc.faults)
+maint = Db(svc.faults, size=1, statement_timeout_ms=100, instrumented=False)
 _cache: dict[str, tuple[float, int]] = {}
 cache_requests = metrics.get_meter("sentry.demo").create_counter("cache.requests", description="lookups by result")
 
@@ -71,7 +76,12 @@ async def _invalidations() -> None:
 async def _reconcile() -> None:
     while True:
         await asyncio.sleep(random.uniform(300, 600))
-        await db.maintenance(hold_s=0.15)
+        assert maint.pool is not None
+        async with maint.pool.acquire():  # its only connection: the next acquire must time out
+            with contextlib.suppress(PoolTimeout):
+                await maint.run("maintenance", "SELECT 1", acquire_timeout_s=0.05)
+        with contextlib.suppress(asyncpg.QueryCanceledError):
+            await maint.run("reconcile", AVAILABILITY, f"sku-{random.randrange(SKUS)}")
 
 
 async def _available(sku: str) -> int:

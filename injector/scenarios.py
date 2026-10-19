@@ -170,7 +170,8 @@ def _confounders(p: Plan, rng: random.Random) -> None:
     mild_svc, kind, mild_at = rng.choice(others), rng.choice(["jitter", "memory_step", "client_errors"]), -round(
         rng.uniform(30, 300))  # fmt: skip
     if kind == "jitter":
-        p.steps.append(Step(mild_at, mild_svc, "jitter", {"p": 0.1, "max_ms": 60}, round(rng.uniform(60, 90)),
+        # 3 % of requests: under the 5 % that moves p95 (p 0.1, 60 ms opened an incident on its own)
+        p.steps.append(Step(mild_at, mild_svc, "jitter", {"p": 0.03, "max_ms": 40}, round(rng.uniform(60, 90)),
                             "confounder"))  # fmt: skip
     elif kind == "memory_step":
         p.steps.append(Step(mild_at, mild_svc, "memory_step", {"mib": rng.randint(40, 80)}, 900, "confounder"))

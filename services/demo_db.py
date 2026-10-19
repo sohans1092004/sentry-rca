@@ -7,12 +7,12 @@ Faults reach it through normal code paths only (Amendment A21):
 - pool_exhaustion: a connection leak. With the fault on, some queries never return their connection
   for a while; the pool (size 10) fills and acquires time out.
 
-Healthy traffic hits the same paths without moving user latency: inventory's reconciliation job
-fills the pool now and then and its own fail-fast acquires time out (pool timeouts, slow statements),
-and, rarely, one write waits 2.5 s on a lock, past the statement timeout."""
+Healthy traffic meets the same code paths without touching user requests: inventory's maintenance
+task has its own one-connection pool, where a fail-fast acquire times out (the same QueuePool line)
+and a reconciliation query runs under a 100 ms statement timeout and is cancelled (the same query
+failure line). Cache misses log slow statements."""
 
 import asyncio
-import contextlib
 import logging
 import os
 import random
@@ -39,9 +39,6 @@ CREATE OR REPLACE FUNCTION lock_wait() RETURNS trigger AS $$
 DECLARE d INT;
 BEGIN
   SELECT delay_ms INTO d FROM lock_waits WHERE tbl = TG_TABLE_NAME AND op = TG_OP AND until > clock_timestamp();
-  IF d IS NULL AND random() < 0.0001 THEN
-    d := 2500;  -- a rare long lock wait, past statement_timeout
-  END IF;
   IF d IS NOT NULL THEN PERFORM pg_sleep(d / 1000.0); END IF;
   RETURN NEW;
 END $$ LANGUAGE plpgsql;
@@ -58,21 +55,27 @@ class PoolTimeout(Exception):
 
 
 class Db:
-    def __init__(self, faults: Faults):
+    def __init__(self, faults: Faults, size: int = POOL_SIZE, statement_timeout_ms: int = STATEMENT_TIMEOUT_MS,
+                 instrumented: bool = True):  # fmt: skip
         self.faults = faults
         self.pool: asyncpg.Pool | None = None
-        self.size = POOL_SIZE
-        self.statement_timeout_ms = STATEMENT_TIMEOUT_MS
+        self.size = size
+        self.statement_timeout_ms = statement_timeout_ms
+        self.in_use = 0
         meter = metrics.get_meter("sentry.demo")
         self.wait_ms = meter.create_histogram("db.pool.wait", unit="ms", description="time to acquire a connection")
-        self.in_use = 0
-        meter.create_observable_gauge(
-            "db.pool.in_use", [lambda _o: [metrics.Observation(self.in_use, {"pool.size": str(self.size)})]]
-        )
+        if instrumented:  # one pool gauge per service: the maintenance pool is not the service's pool
+            meter.create_observable_gauge(
+                "db.pool.in_use", [lambda _o: [metrics.Observation(self.in_use, {"pool.size": str(self.size)})]]
+            )
 
     async def _pool(self) -> asyncpg.Pool:
         settings = {"statement_timeout": str(self.statement_timeout_ms)}
-        return await asyncpg.create_pool(DSN, min_size=2, max_size=self.size, server_settings=settings)
+        return await asyncpg.create_pool(DSN, min_size=min(2, self.size), max_size=self.size, server_settings=settings)
+
+    async def connect(self) -> None:
+        """A pool without schema work (the service's main Db creates the schema)."""
+        self.pool = await self._pool()
 
     async def start(self, schema: str, tables: list[str]) -> None:
         for attempt in range(30):
@@ -128,21 +131,6 @@ class Db:
                 asyncio.get_running_loop().create_task(self._release_later(pool, conn, held_s))
             else:
                 self.in_use -= 1
-                await pool.release(conn)
-
-    async def maintenance(self, hold_s: float) -> None:
-        """Hold every connection idle for hold_s while two fail-fast checks run: they time out on the
-        full pool (the same QueuePool line requests would log) and nothing touches the database."""
-        pool = self.pool
-        assert pool is not None
-        held = [await pool.acquire() for _ in range(self.size)]
-        try:
-            for _ in range(2):
-                with contextlib.suppress(PoolTimeout):
-                    await self.run("maintenance", "SELECT 1", acquire_timeout_s=0.05)
-            await asyncio.sleep(hold_s)
-        finally:
-            for conn in held:
                 await pool.release(conn)
 
     async def _release_later(self, pool: asyncpg.Pool, conn: Any, after_s: float) -> None:
