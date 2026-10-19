@@ -64,26 +64,26 @@ away, and nothing connects to the batch job. It is stored on the row (`orchestra
    and the `tool_calls` row (`:236`) in one transaction. Only then are the rows, exactly as stored,
    returned to the ranker.
 
-## 4. The baseline ranks (`investigation/baseline.py:143`)
+## 4. The baseline ranks (`investigation/baseline.py:152`)
 
-For `pool_exhaustion_001` it made 20 tool calls:
+For `pool_exhaustion_001` it made 21 tool calls:
 
-1. `get_incident_timeline` (`:146`). The timeline (`investigation/timeline.py:75`) finds onsets per
+1. `get_incident_timeline` (`:155`). The timeline (`investigation/timeline.py:75`) finds onsets per
    service and signal on 5 s export ticks (`:59`, threshold `:66`, two consecutive ticks `:69`): here
    inventory's latency, error rate and **pool wait** all jump at 21:25:26, and orders, payments and the
    gateway within half a second of it, so precedence alone cannot pick the cause.
-2. Two trace queries from the first onset: slow traces (`:161`) and failing ones (`:170`).
-   `_dominant()` (`:103`) walks each trace down from the gateway's root span along the failing or
+2. Two trace queries from the first onset: slow traces (`:170`) and failing ones (`:179`).
+   `_dominant()` (`:112`) walks each trace down from the gateway's root span along the failing or
    slowest child while it holds at least half the root's time; inventory is where the walk ends in
    most of them.
-3. Per anomalous service, a fixed set of follow-ups: deploys (`:183`), WARN and ERROR logs (`:207`),
-   memory or pool-wait metrics when those signals had onsets (`:224`, `:231`), latency (`:237`).
+3. Per anomalous service, a fixed set of follow-ups: deploys (`:192`), WARN and ERROR logs (`:217`),
+   memory or pool-wait metrics when those signals had onsets (`:233`, `:240`), latency (`:246`).
 4. Kind evidence: inventory has `"pool acquire timeout"` log lines and a pool-wait rise, so its kind is
-   `pool_exhaustion` (`:256`). Orders, payments and the gateway are only slow: `downstream_symptom`.
+   `pool_exhaustion` (`:265`). Orders, payments and the gateway are only slow: `downstream_symptom`.
 5. Claims: each hypothesis carries typed claims citing the rows used: `log_pattern` (`_log_claim`,
-   `:78`), `metric_change` on pool wait and latency (`_metric_claim`, `:48`, threshold 0.8 × the rise
+   `:87`), `metric_change` on pool wait and latency (`_metric_claim`, `:57`, threshold 0.8 × the rise
    the cited rows show), and `trace_dependency` gateway → inventory over the top five dominated traces
-   (`:246`). Score `0.4 trace + 0.3 kind + 0.2 temporal + 0.1 deploy` (`:272`): inventory 0.662.
+   (`:255`). Score `0.4 trace + 0.3 kind + 0.2 temporal + 0.1 deploy` (`:281`): inventory 0.662.
 
 ## 5. The verifier checks every claim (`investigation/verifier.py`)
 
@@ -114,5 +114,55 @@ calls, skips the committed hypotheses and finishes without writing a duplicate r
 
 ## Example `rca show` output
 
-Filled in from a real investigation of `pool_exhaustion_001` after the Phase 2 eval:
-see `docs/measurements/phase2.md`.
+Eval run `af957445`, fixture `pool_exhaustion_001`, run 0 (long argument lists are cut at 120
+characters by `rca show` itself):
+
+```
+$ uv run rca show f49c02c3-c42d-4946-bffe-bbe4dd956170
+investigation f49c02c3-c42d-4946-bffe-bbe4dd956170  (incident f14c54fc-8a07-490c-89a7-3524b4182385 on gateway, first anomaly 2026-10-18 21:25:32.654520+00:00, trigger eval:af957445-30a8-4bf4-b092-834b3ca9da5b:0)
+status complete  outcome ROOT_CAUSE_IDENTIFIED  budget {"wall_ms": 2266, "tool_calls": 21}
+scope: tenant 00000000-0000-4000-8000-000000000001  services ['gateway', 'inventory', 'orders', 'payments']  window 2026-10-18T21:10:32.654Z .. 2026-10-18T21:35:47.635Z  caps 500 rows / 262144 B  excluded fixture pool_exhaustion_001
+
+tool calls:
+  #1   baseline get_incident_timeline  clamped    13 rows  202 ms  {"end": "2026-10-18T21:35:47.635Z", "services": ["gateway", "inventory", "orders", "payments"], "start": "2026  snapshot c6836324ee6a
+  #2   baseline query_traces           allowed   444 rows  94 ms  {"end": "2026-10-18T21:28:26.073Z", "limit": 500, "min_duration_ms": 108.173, "services": ["gateway", "invento  snapshot 6770630c24e7
+  #3   baseline query_traces           allowed   500 rows  78 ms  {"end": "2026-10-18T21:26:26.073Z", "limit": 500, "services": ["gateway", "inventory", "orders", "payments"],   snapshot 2a16bd917e4f
+  #4   baseline get_recent_deploys     clamped     0 rows  0 ms  {"end": "2026-10-18T21:35:47.635Z", "service": "orders", "start": "2026-10-18T21:10:32.654Z"}  snapshot 95c16d5070a1
+  #5   baseline query_logs             allowed     0 rows  63 ms  {"end": "2026-10-18T21:35:47.635Z", "limit": 500, "service": "orders", "severity": "WARN", "start": "2026-10-1  snapshot 95c16d5070a1
+  #6   baseline query_logs             allowed   132 rows  61 ms  {"end": "2026-10-18T21:35:47.635Z", "limit": 500, "service": "orders", "severity": "ERROR", "start": "2026-10-  snapshot 6650595d1168
+  #7   baseline query_metrics          clamped   500 rows  77 ms  {"end": "2026-10-18T21:35:47.635Z", "labels": {}, "metric": "http.server.request.duration.mean", "service": "o  snapshot ef36883c63b9
+  #8   baseline get_recent_deploys     clamped     0 rows  46 ms  {"end": "2026-10-18T21:35:47.635Z", "service": "payments", "start": "2026-10-18T21:10:32.654Z"}  snapshot 95c16d5070a1
+  #9   baseline query_logs             allowed     8 rows  62 ms  {"end": "2026-10-18T21:35:47.635Z", "limit": 500, "service": "payments", "severity": "WARN", "start": "2026-10  snapshot a4e487d558b8
+  #10  baseline query_logs             allowed     0 rows  46 ms  {"end": "2026-10-18T21:35:47.635Z", "limit": 500, "service": "payments", "severity": "ERROR", "start": "2026-1  snapshot 95c16d5070a1
+  #11  baseline query_metrics          clamped   303 rows  62 ms  {"end": "2026-10-18T21:35:47.635Z", "labels": {}, "metric": "http.server.request.duration.mean", "service": "p  snapshot 00576d444843
+  #12  baseline get_recent_deploys     clamped     0 rows  47 ms  {"end": "2026-10-18T21:35:47.635Z", "service": "gateway", "start": "2026-10-18T21:10:32.654Z"}  snapshot 95c16d5070a1
+  #13  baseline query_logs             allowed     0 rows  45 ms  {"end": "2026-10-18T21:35:47.635Z", "limit": 500, "service": "gateway", "severity": "WARN", "start": "2026-10-  snapshot 95c16d5070a1
+  #14  baseline query_logs             allowed   132 rows  63 ms  {"end": "2026-10-18T21:35:47.635Z", "limit": 500, "service": "gateway", "severity": "ERROR", "start": "2026-10  snapshot 658cf0833942
+  #15  baseline query_metrics          clamped   500 rows  61 ms  {"end": "2026-10-18T21:35:47.635Z", "labels": {}, "metric": "http.server.request.duration.mean", "service": "g  snapshot 1b7f1d76410b
+  #16  baseline get_recent_deploys     clamped     0 rows  61 ms  {"end": "2026-10-18T21:35:47.635Z", "service": "inventory", "start": "2026-10-18T21:10:32.654Z"}  snapshot 95c16d5070a1
+  #17  baseline query_logs             allowed     2 rows  63 ms  {"end": "2026-10-18T21:35:47.635Z", "limit": 500, "service": "inventory", "severity": "WARN", "start": "2026-1  snapshot 5cb25cad9ce8
+  #18  baseline query_logs             allowed   140 rows  61 ms  {"end": "2026-10-18T21:35:47.635Z", "limit": 500, "service": "inventory", "severity": "ERROR", "start": "2026-  snapshot 82d299d62a70
+  #19  baseline query_metrics          clamped   500 rows  62 ms  {"end": "2026-10-18T21:35:47.635Z", "labels": {}, "metric": "db.pool.wait.mean", "service": "inventory", "star  snapshot 17765ee969f7
+  #20  baseline query_metrics          clamped   500 rows  62 ms  {"end": "2026-10-18T21:35:47.635Z", "labels": {}, "metric": "http.server.request.duration.mean", "service": "i  snapshot f8a16d3db163
+  #21  baseline search_runbooks        allowed     3 rows  46 ms  {"query": "pool exhaustion in inventory", "top_k": 3}  snapshot ac90f555ef96
+
+hypotheses:
+  baseline #1 candidate_root_cause inventory:pool_exhaustion  score 0.6620  -> PASSED
+      unverified explanation: inventory: pool_exhaustion evidence; dominant in 39 of 50 slow or failing traces.
+      [passed] log_pattern {"min_count": 20, "pattern": "pool acquire timeout", "service": "inventory", "window": ["2026-10-18T
+      [passed] metric_change {"direction": "up", "metric": "db.pool.wait.mean", "min_magnitude": 2172.3, "service": "inventory", 
+      [passed] metric_change {"direction": "up", "metric": "http.server.request.duration.mean", "min_magnitude": 59.2, "service":
+      [passed] trace_dependency {"child_service": "inventory", "min_latency_share": 0.96, "parent_service": "gateway"}
+      [passed] runbook_match {"doc_id": "fa7600b9-e175-5196-9ddc-0cf78ff0eeab", "similarity": 0.7697}
+  baseline #2 downstream_symptom orders:latency  score 0.2480  -> PASSED
+      unverified explanation: orders slowed with no cause of its own in the evidence.
+      [passed] metric_change {"direction": "up", "metric": "http.server.request.duration.mean", "min_magnitude": 13.9, "service":
+      [passed] trace_dependency {"child_service": "orders", "min_latency_share": 0.97, "parent_service": "gateway"}
+  baseline #3 downstream_symptom payments:latency  score 0.1900  -> PASSED
+      unverified explanation: payments slowed with no cause of its own in the evidence.
+      [passed] metric_change {"direction": "up", "metric": "http.server.request.duration.mean", "min_magnitude": 5.3, "service": 
+      [passed] trace_dependency {"child_service": "payments", "min_latency_share": 0.5, "parent_service": "gateway"}
+  baseline #4 downstream_symptom gateway:latency  score 0.1000  -> PASSED
+      unverified explanation: gateway slowed with no cause of its own in the evidence.
+      [passed] metric_change {"direction": "up", "metric": "http.server.request.duration.mean", "min_magnitude": 12.2, "service":
+```

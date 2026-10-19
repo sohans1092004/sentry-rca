@@ -1,20 +1,20 @@
-=== stable_ids @ 2026-10-19T05:23:23+00:00 -> PASS
+=== stable_ids @ 2026-10-19T06:12:12+00:00 -> PASS
 property: Stable-ID dedup: the same telemetry delivered twice is one logical row under FINAL
 guard removed in common/ids.py: [('return uuid.uuid5(_NAMESPACE, json.dumps(parts, sort_keys=True, separators=(",", ":")))', 'return uuid.uuid4()')]
 --- guard removed (expect failure, exit 1):
 $ uv run pytest -vv -p no:cacheprovider tests/integration/test_processors.py::test_same_telemetry_twice_is_one_logical_row[metrics] tests/integration/test_processors.py::test_same_telemetry_twice_is_one_logical_row[logs]
 E       AssertionError: assert 240 == (5 * 16)
-E        +  where 240 = final_count(<clickhouse_connect.driver.httpclient.HttpClient object at 0x00000172EF6500B0>, 'metrics')
-E        +  and   16 = <function <lambda> at 0x00000172EF5400E0>(10)
+E        +  where 240 = final_count(<clickhouse_connect.driver.httpclient.HttpClient object at 0x000002A490967D10>, 'metrics')
+E        +  and   16 = <function <lambda> at 0x000002A48FEC4CC0>(10)
 E       AssertionError: assert 150 == (5 * 10)
-E        +  where 150 = final_count(<clickhouse_connect.driver.httpclient.HttpClient object at 0x00000172EF803AA0>, 'logs')
-E        +  and   10 = <function <lambda> at 0x00000172EF5402C0>(10)
-============================= 2 failed in 17.26s ==============================
+E        +  where 150 = final_count(<clickhouse_connect.driver.httpclient.HttpClient object at 0x000002A492500D10>, 'logs')
+E        +  and   10 = <function <lambda> at 0x000002A491E53100>(10)
+============================= 2 failed in 26.35s ==============================
 --- guard restored (expect pass, exit 0):
 $ uv run pytest -vv -p no:cacheprovider tests/integration/test_processors.py::test_same_telemetry_twice_is_one_logical_row[metrics] tests/integration/test_processors.py::test_same_telemetry_twice_is_one_logical_row[logs]
-============================= 2 passed in 20.47s ==============================
+============================= 2 passed in 26.52s ==============================
 
-=== validation @ 2026-10-19T05:25:41+00:00 -> PASS
+=== validation @ 2026-10-19T06:14:40+00:00 -> PASS
 property: DLQ: malformed payloads land in the right DLQ with a reason; processing continues
 guard removed in processors/convert.py: [('    if not ok:\n        raise Invalid(reason)', '    pass')]
 --- guard removed (expect failure, exit 1):
@@ -25,36 +25,36 @@ E       assert 1 == 2
 E        +  where 1 = len(["decode_error: Error parsing message with type 'opentelemetry.proto.logs.v1.LogsData': Wire format was corrupt"])
 E       assert 1 == 2
 E        +  where 1 = len(["decode_error: Error parsing message with type 'opentelemetry.proto.trace.v1.TracesData': Wire format was corrupt"])
-======================== 3 failed in 108.97s (0:01:48) ========================
+======================== 3 failed in 111.94s (0:01:51) ========================
 --- guard restored (expect pass, exit 0):
 $ uv run pytest -vv -p no:cacheprovider tests/integration/test_processors.py::test_malformed_payloads_go_to_dlq_and_processing_continues
-============================= 3 passed in 24.85s ==============================
+============================= 3 passed in 30.82s ==============================
 
-=== commit_after_insert @ 2026-10-19T05:26:54+00:00 -> PASS
+=== commit_after_insert @ 2026-10-19T06:15:57+00:00 -> PASS
 property: Commit-after-insert: a kill between insert and commit loses no telemetry
 guard removed in processors/runner.py: [('        _crash_point("between_insert_and_commit")\n        consumer.commit(asynchronous=False)\n', ''), ('        if rows:\n            _insert(', '        _crash_point("between_insert_and_commit")\n        consumer.commit(asynchronous=False)\n        if rows:\n            _insert(')]
 --- guard removed (expect failure, exit 1):
 $ uv run pytest -vv -p no:cacheprovider tests/integration/test_processors.py::test_kill_between_insert_and_commit_loses_nothing
 E       assert 0 > 0
-============================= 1 failed in 11.96s ==============================
+============================= 1 failed in 15.15s ==============================
 --- guard restored (expect pass, exit 0):
 $ uv run pytest -vv -p no:cacheprovider tests/integration/test_processors.py::test_kill_between_insert_and_commit_loses_nothing
-============================= 1 passed in 57.13s ==============================
+============================= 1 passed in 57.65s ==============================
 
-=== incidents_plain_insert @ 2026-10-19T05:27:06+00:00 -> PASS
+=== incidents_plain_insert @ 2026-10-19T06:16:23+00:00 -> PASS
 property: Incident dedup: N repeated alerts -> one open incident with alert_count = N
 guard removed in alerting/engine.py: [('        "ON CONFLICT (tenant_id, fingerprint) WHERE status <> \'resolved\' "\n        "DO UPDATE SET last_seen = EXCLUDED.last_seen, alert_count = incidents.alert_count + 1 "\n', '')]
 --- guard removed (expect failure, exit 1):
 $ uv run pytest -vv -p no:cacheprovider tests/integration/test_alerting.py::test_repeated_alerts_make_exactly_one_open_incident
 E       AssertionError: 7 open incidents for one condition
 E       assert 7 == 1
-E        +  where 7 = open_incidents(<psycopg.Connection [IDLE] (host=localhost port=53335 user=sentry database=t_ad3d0f9e19be) at 0x231824fdb50>)
-============================== 1 failed in 4.05s ==============================
+E        +  where 7 = open_incidents(<psycopg.Connection [IDLE] (host=localhost port=60669 user=sentry database=t_e6c724528758) at 0x172170dec00>)
+============================== 1 failed in 9.08s ==============================
 --- guard restored (expect pass, exit 0):
 $ uv run pytest -vv -p no:cacheprovider tests/integration/test_alerting.py::test_repeated_alerts_make_exactly_one_open_incident
-============================== 1 passed in 3.90s ==============================
+============================= 1 passed in 11.60s ==============================
 
-=== incidents_full_unique_index @ 2026-10-19T05:27:33+00:00 -> PASS
+=== incidents_full_unique_index @ 2026-10-19T06:16:38+00:00 -> PASS
 property: Incident dedup is per open incident: after resolve, a new alert opens a new incident
 guard removed in common/migrations/postgres/0001_init.sql: [("  ON incidents (tenant_id, fingerprint) WHERE status <> 'resolved';", '  ON incidents (tenant_id, fingerprint);')]
 --- guard removed (expect failure, exit 1):
@@ -67,12 +67,12 @@ E
 E         Full diff:
 E           [
 E               (
-============================== 1 failed in 8.23s ==============================
+============================== 1 failed in 5.27s ==============================
 --- guard restored (expect pass, exit 0):
 $ uv run pytest -vv -p no:cacheprovider tests/integration/test_alerting.py::test_alert_after_resolve_opens_a_new_incident
-============================= 1 passed in 13.43s ==============================
+============================== 1 passed in 5.23s ==============================
 
-=== stable_trigger_id @ 2026-10-19T05:27:52+00:00 -> PASS
+=== stable_trigger_id @ 2026-10-19T06:17:00+00:00 -> PASS
 property: incidents.opened redelivery is harmless: two publishes -> one downstream event
 guard removed in alerting/engine.py: [('return f"opened:{incident_id}"', 'return f"opened:{incident_id}:{uuid.uuid4()}"')]
 --- guard removed (expect failure, exit 1):
@@ -85,12 +85,12 @@ E         Full diff:
 E           (
 E         -     1,
 E         ?     ^
-============================== 1 failed in 7.60s ==============================
+============================== 1 failed in 8.81s ==============================
 --- guard restored (expect pass, exit 0):
 $ uv run pytest -vv -p no:cacheprovider tests/integration/test_alerting.py::test_incidents_opened_redelivery_is_one_event_downstream
-============================== 1 passed in 7.54s ==============================
+============================== 1 passed in 8.61s ==============================
 
-=== metrics_1h_dedup @ 2026-10-19T05:28:12+00:00 -> PASS
+=== metrics_1h_dedup @ 2026-10-19T06:17:29+00:00 -> PASS
 property: metrics_1h: a batch delivered twice is counted once
 guard removed in recorder/downsample.py: [('  ORDER BY point_id LIMIT 1 BY point_id  -- one row per stable ID: a redelivered copy counts once\n', '')]
 --- guard removed (expect failure, exit 1):
@@ -103,19 +103,460 @@ E         Full diff:
 E           (
 E         -     20,
 E         ?     ^
-============================== 1 failed in 7.99s ==============================
+============================= 1 failed in 13.58s ==============================
 --- guard restored (expect pass, exit 0):
 $ uv run pytest -vv -p no:cacheprovider tests/integration/test_retention.py::test_metrics_1h_counts_a_twice_delivered_batch_once
-============================== 1 passed in 8.06s ==============================
+============================= 1 passed in 11.29s ==============================
 
-=== fixture_content_hash @ 2026-10-19T05:28:46+00:00 -> PASS
+=== fixture_content_hash @ 2026-10-19T06:18:05+00:00 -> PASS
 property: Fixture round trip: identical row counts and content hashes after load
 guard removed in recorder/load.py: [('    verify_hashes(dataset, ch, database)\n', '')]
 --- guard removed (expect failure, exit 1):
 $ uv run pytest -vv -p no:cacheprovider tests/integration/test_recorder.py::test_loader_rejects_tampered_dataset
 E       Failed: DID NOT RAISE DatasetMismatch
-============================= 1 failed in 14.13s ==============================
+============================= 1 failed in 14.88s ==============================
 --- guard restored (expect pass, exit 0):
 $ uv run pytest -vv -p no:cacheprovider tests/integration/test_recorder.py::test_loader_rejects_tampered_dataset
-============================= 1 passed in 15.14s ==============================
+============================= 1 passed in 15.38s ==============================
+
+=== tenant_filter @ 2026-10-19T06:18:27+00:00 -> PASS
+property: Tenant forced: a query never returns another tenant's rows
+guard removed in investigation/backend.py: [('"WHERE tenant_id = {t:String} AND service IN {s:Array(String)} AND metric IN', '"WHERE service IN {s:Array(String)} AND metric IN')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_phase2.py::test_clickhouse_queries_never_return_another_tenants_rows
+E       AssertionError: another tenant's rows came back
+E       assert (24 == 12)
+E        +  where 24 = len([{'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 7, tzinfo=datetime.timezone.utc), 'value': 1000.0, 'point_id': '3ae9d60f-caba-42ba-b166-bc322c7a3201', 'row_id': '3ae9d60f-caba-42ba-b166-bc322c7a3201'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 7, tzinfo=datetime.timezone.utc), 'value': 1.0, 'point_id': 'f72bfe97-4969-49f8-9003-66b181276de8', 'row_id': 'f72bfe97-4969-49f8-9003-66b181276de8'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 12, tzinfo=datetime.timezone.utc), 'value': 1001.0, 'point_id': 'a15111df-5c10-42d8-9ba9-12ef5394f5fa', 'row_id': 'a15111df-5c10-42d8-9ba9-12ef5394f5fa'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 12, tzinfo=datetime.timezone.utc), 'value': 2.0, 'point_id': 'cd517d83-e202-48cd-a055-95bca9ff581d', 'row_id': 'cd517d83-e202-48cd-a055-95bca9ff581d'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 17, tzinfo=datetime.timezone.utc), 'value': 3.0, 'point_id': '7e7e904d-0118-4330-b806-3640527f98ef', 'row_id': '7e7e904d-0118-4330-b806-3640527f98ef'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 17, tzinfo=datetime.timezone.utc), 'value': 1002.0, 'point_id': 'c28c8118-6b32-4d57-b825-eeae6e421157', 'row_id': 'c28c8118-6b32-4d57-b825-eeae6e421157'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 22, tzinfo=datetime.timezone.utc), 'value': 1003.0, 'point_id': 'a1d6949c-7be1-47e4-b565-1f01cf352f79', 'row_id': 'a1d6949c-7be1-47e4-b565-1f01cf352f79'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 22, tzinfo=datetime.timezone.utc), 'value': 4.0, 'point_id': 'e7c1952c-3348-4d14-be3c-32b61655b092', 'row_id': 'e7c1952c-3348-4d14-be3c-32b61655b092'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 27, tzinfo=datetime.timezone.utc), 'value': 5.0, 'point_id': '6d2e1a96-015b-4b0b-ade7-9e142c3c67e4', 'row_id': '6d2e1a96-015b-4b0b-ade7-9e142c3c67e4'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 27, tzinfo=datetime.timezone.utc), 'value': 1004.0, 'point_id': 'ca24556a-6761-45a3-b27f-89065fe16706', 'row_id': 'ca24556a-6761-45a3-b27f-89065fe16706'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 32, tzinfo=datetime.timezone.utc), 'value': 1005.0, 'point_id': '88925cc1-1cc4-4e14-8de7-945716f1aadb', 'row_id': '88925cc1-1cc4-4e14-8de7-945716f1aadb'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 32, tzinfo=datetime.timezone.utc), 'value': 6.0, 'point_id': '9984b001-b887-4d53-b5db-bd1577c7da4a', 'row_id': '9984b001-b887-4d53-b5db-bd1577c7da4a'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 37, tzinfo=datetime.timezone.utc), 'value': 7.0, 'point_id': '90d8836e-c6ac-45e9-85b4-eb959c987988', 'row_id': '90d8836e-c6ac-45e9-85b4-eb959c987988'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 37, tzinfo=datetime.timezone.utc), 'value': 1006.0, 'point_id': 'b23670d1-cb49-4aa0-b9d0-875822ba6dda', 'row_id': 'b23670d1-cb49-4aa0-b9d0-875822ba6dda'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 42, tzinfo=datetime.timezone.utc), 'value': 8.0, 'point_id': '45e9945e-c075-45db-b7e1-360a8742aeea', 'row_id': '45e9945e-c075-45db-b7e1-360a8742aeea'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 42, tzinfo=datetime.timezone.utc), 'value': 1007.0, 'point_id': '7f22a0f2-cf1f-48fb-9043-5b9209a9452f', 'row_id': '7f22a0f2-cf1f-48fb-9043-5b9209a9452f'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 47, tzinfo=datetime.timezone.utc), 'value': 9.0, 'point_id': '47a0ee2a-2c49-4645-a01e-efd8bd3c42be', 'row_id': '47a0ee2a-2c49-4645-a01e-efd8bd3c42be'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 47, tzinfo=datetime.timezone.utc), 'value': 1008.0, 'point_id': '855ef4d5-a374-41f7-90a3-459e4b84ddcc', 'row_id': '855ef4d5-a374-41f7-90a3-459e4b84ddcc'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 52, tzinfo=datetime.timezone.utc), 'value': 10.0, 'point_id': '0dda0def-cb3b-4afe-8b33-acbcce90a784', 'row_id': '0dda0def-cb3b-4afe-8b33-acbcce90a784'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 52, tzinfo=datetime.timezone.utc), 'value': 1009.0, 'point_id': 'd9ac742f-2c71-4195-bf92-f775d08fff8e', 'row_id': 'd9ac742f-2c71-4195-bf92-f775d08fff8e'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 57, tzinfo=datetime.timezone.utc), 'value': 1010.0, 'point_id': '5c129eb3-19c5-4573-b5c7-5247aeda97f0', 'row_id': '5c129eb3-19c5-4573-b5c7-5247aeda97f0'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 57, tzinfo=datetime.timezone.utc), 'value': 11.0, 'point_id': 'bb48fb5a-9d98-4876-8e1c-719eded47271', 'row_id': 'bb48fb5a-9d98-4876-8e1c-719eded47271'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 9, 2, tzinfo=datetime.timezone.utc), 'value': 12.0, 'point_id': '38e62f97-14a8-4997-8eb0-8ee87f68721d', 'row_id': '38e62f97-14a8-4997-8eb0-8ee87f68721d'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 9, 2, tzinfo=datetime.timezone.utc), 'value': 1011.0, 'point_id': 'c0e3f245-7ec3-4c34-8da0-b64d5f78f0c6', 'row_id': 'c0e3f245-7ec3-4c34-8da0-b64d5f78f0c6'}])
+E        +    where [{'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 7, tzinfo=datetime.timezone.utc), 'value': 1000.0, 'point_id': '3ae9d60f-caba-42ba-b166-bc322c7a3201', 'row_id': '3ae9d60f-caba-42ba-b166-bc322c7a3201'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 7, tzinfo=datetime.timezone.utc), 'value': 1.0, 'point_id': 'f72bfe97-4969-49f8-9003-66b181276de8', 'row_id': 'f72bfe97-4969-49f8-9003-66b181276de8'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 12, tzinfo=datetime.timezone.utc), 'value': 1001.0, 'point_id': 'a15111df-5c10-42d8-9ba9-12ef5394f5fa', 'row_id': 'a15111df-5c10-42d8-9ba9-12ef5394f5fa'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 12, tzinfo=datetime.timezone.utc), 'value': 2.0, 'point_id': 'cd517d83-e202-48cd-a055-95bca9ff581d', 'row_id': 'cd517d83-e202-48cd-a055-95bca9ff581d'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 17, tzinfo=datetime.timezone.utc), 'value': 3.0, 'point_id': '7e7e904d-0118-4330-b806-3640527f98ef', 'row_id': '7e7e904d-0118-4330-b806-3640527f98ef'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 17, tzinfo=datetime.timezone.utc), 'value': 1002.0, 'point_id': 'c28c8118-6b32-4d57-b825-eeae6e421157', 'row_id': 'c28c8118-6b32-4d57-b825-eeae6e421157'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 22, tzinfo=datetime.timezone.utc), 'value': 1003.0, 'point_id': 'a1d6949c-7be1-47e4-b565-1f01cf352f79', 'row_id': 'a1d6949c-7be1-47e4-b565-1f01cf352f79'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 22, tzinfo=datetime.timezone.utc), 'value': 4.0, 'point_id': 'e7c1952c-3348-4d14-be3c-32b61655b092', 'row_id': 'e7c1952c-3348-4d14-be3c-32b61655b092'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 27, tzinfo=datetime.timezone.utc), 'value': 5.0, 'point_id': '6d2e1a96-015b-4b0b-ade7-9e142c3c67e4', 'row_id': '6d2e1a96-015b-4b0b-ade7-9e142c3c67e4'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 27, tzinfo=datetime.timezone.utc), 'value': 1004.0, 'point_id': 'ca24556a-6761-45a3-b27f-89065fe16706', 'row_id': 'ca24556a-6761-45a3-b27f-89065fe16706'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 32, tzinfo=datetime.timezone.utc), 'value': 1005.0, 'point_id': '88925cc1-1cc4-4e14-8de7-945716f1aadb', 'row_id': '88925cc1-1cc4-4e14-8de7-945716f1aadb'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 32, tzinfo=datetime.timezone.utc), 'value': 6.0, 'point_id': '9984b001-b887-4d53-b5db-bd1577c7da4a', 'row_id': '9984b001-b887-4d53-b5db-bd1577c7da4a'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 37, tzinfo=datetime.timezone.utc), 'value': 7.0, 'point_id': '90d8836e-c6ac-45e9-85b4-eb959c987988', 'row_id': '90d8836e-c6ac-45e9-85b4-eb959c987988'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 37, tzinfo=datetime.timezone.utc), 'value': 1006.0, 'point_id': 'b23670d1-cb49-4aa0-b9d0-875822ba6dda', 'row_id': 'b23670d1-cb49-4aa0-b9d0-875822ba6dda'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 42, tzinfo=datetime.timezone.utc), 'value': 8.0, 'point_id': '45e9945e-c075-45db-b7e1-360a8742aeea', 'row_id': '45e9945e-c075-45db-b7e1-360a8742aeea'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 42, tzinfo=datetime.timezone.utc), 'value': 1007.0, 'point_id': '7f22a0f2-cf1f-48fb-9043-5b9209a9452f', 'row_id': '7f22a0f2-cf1f-48fb-9043-5b9209a9452f'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 47, tzinfo=datetime.timezone.utc), 'value': 9.0, 'point_id': '47a0ee2a-2c49-4645-a01e-efd8bd3c42be', 'row_id': '47a0ee2a-2c49-4645-a01e-efd8bd3c42be'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 47, tzinfo=datetime.timezone.utc), 'value': 1008.0, 'point_id': '855ef4d5-a374-41f7-90a3-459e4b84ddcc', 'row_id': '855ef4d5-a374-41f7-90a3-459e4b84ddcc'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 52, tzinfo=datetime.timezone.utc), 'value': 10.0, 'point_id': '0dda0def-cb3b-4afe-8b33-acbcce90a784', 'row_id': '0dda0def-cb3b-4afe-8b33-acbcce90a784'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 52, tzinfo=datetime.timezone.utc), 'value': 1009.0, 'point_id': 'd9ac742f-2c71-4195-bf92-f775d08fff8e', 'row_id': 'd9ac742f-2c71-4195-bf92-f775d08fff8e'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 57, tzinfo=datetime.timezone.utc), 'value': 1010.0, 'point_id': '5c129eb3-19c5-4573-b5c7-5247aeda97f0', 'row_id': '5c129eb3-19c5-4573-b5c7-5247aeda97f0'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 57, tzinfo=datetime.timezone.utc), 'value': 11.0, 'point_id': 'bb48fb5a-9d98-4876-8e1c-719eded47271', 'row_id': 'bb48fb5a-9d98-4876-8e1c-719eded47271'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 9, 2, tzinfo=datetime.timezone.utc), 'value': 12.0, 'point_id': '38e62f97-14a8-4997-8eb0-8ee87f68721d', 'row_id': '38e62f97-14a8-4997-8eb0-8ee87f68721d'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 9, 2, tzinfo=datetime.timezone.utc), 'value': 1011.0, 'point_id': 'c0e3f245-7ec3-4c34-8da0-b64d5f78f0c6', 'row_id': 'c0e3f245-7ec3-4c34-8da0-b64d5f78f0c6'}] = Decision(decision='allowed', reason=None, executed={'start': '2026-10-19T06:03:07.000Z', 'end': '2026-10-19T06:13:07.000Z', 'service': 'orders', 'metric': 'lat', 'labels': {}}, rows=[{'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 7, tzinfo=datetime.timezone.utc), 'value': 1000.0, 'point_id': '3ae9d60f-caba-42ba-b166-bc322c7a3201', 'row_id': '3ae9d60f-caba-42ba-b166-bc322c7a3201'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 7, tzinfo=datetime.timezone.utc), 'value': 1.0, 'point_id': 'f72bfe97-4969-49f8-9003-66b181276de8', 'row_id': 'f72bfe97-4969-49f8-9003-66b181276de8'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 12, tzinfo=datetime.timezone.utc), 'value': 1001.0, 'point_id': 'a15111df-5c10-42d8-9ba9-12ef5394f5fa', 'row_id': 'a15111df-5c10-42d8-9ba9-12ef5394f5fa'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 12, tzinfo=datetime.timezone.utc), 'value': 2.0, 'point_id': 'cd517d83-e202-48cd-a055-95bca9ff581d', 'row_id': 'cd517d83-e202-48cd-a055-95bca9ff581d'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 17, tzinfo=datetime.timezone.utc), 'value': 3.0, 'point_id': '7e7e904d-0118-4330-b806-3640527f98ef', 'row_id': '7e7e904d-0118-4330-b806-3640527f98ef'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 17, tzinfo=datetime.timezone.utc), 'value': 1002.0, 'point_id': 'c28c8118-6b32-4d57-b825-eeae6e421157', 'row_id': 'c28c8118-6b32-4d57-b825-eeae6e421157'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 22, tzinfo=datetime.timezone.utc), 'value': 1003.0, 'point_id': 'a1d6949c-7be1-47e4-b565-1f01cf352f79', 'row_id': 'a1d6949c-7be1-47e4-b565-1f01cf352f79'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 22, tzinfo=datetime.timezone.utc), 'value': 4.0, 'point_id': 'e7c1952c-3348-4d14-be3c-32b61655b092', 'row_id': 'e7c1952c-3348-4d14-be3c-32b61655b092'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 27, tzinfo=datetime.timezone.utc), 'value': 5.0, 'point_id': '6d2e1a96-015b-4b0b-ade7-9e142c3c67e4', 'row_id': '6d2e1a96-015b-4b0b-ade7-9e142c3c67e4'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 27, tzinfo=datetime.timezone.utc), 'value': 1004.0, 'point_id': 'ca24556a-6761-45a3-b27f-89065fe16706', 'row_id': 'ca24556a-6761-45a3-b27f-89065fe16706'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 32, tzinfo=datetime.timezone.utc), 'value': 1005.0, 'point_id': '88925cc1-1cc4-4e14-8de7-945716f1aadb', 'row_id': '88925cc1-1cc4-4e14-8de7-945716f1aadb'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 32, tzinfo=datetime.timezone.utc), 'value': 6.0, 'point_id': '9984b001-b887-4d53-b5db-bd1577c7da4a', 'row_id': '9984b001-b887-4d53-b5db-bd1577c7da4a'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 37, tzinfo=datetime.timezone.utc), 'value': 7.0, 'point_id': '90d8836e-c6ac-45e9-85b4-eb959c987988', 'row_id': '90d8836e-c6ac-45e9-85b4-eb959c987988'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 37, tzinfo=datetime.timezone.utc), 'value': 1006.0, 'point_id': 'b23670d1-cb49-4aa0-b9d0-875822ba6dda', 'row_id': 'b23670d1-cb49-4aa0-b9d0-875822ba6dda'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 42, tzinfo=datetime.timezone.utc), 'value': 8.0, 'point_id': '45e9945e-c075-45db-b7e1-360a8742aeea', 'row_id': '45e9945e-c075-45db-b7e1-360a8742aeea'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 42, tzinfo=datetime.timezone.utc), 'value': 1007.0, 'point_id': '7f22a0f2-cf1f-48fb-9043-5b9209a9452f', 'row_id': '7f22a0f2-cf1f-48fb-9043-5b9209a9452f'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 47, tzinfo=datetime.timezone.utc), 'value': 9.0, 'point_id': '47a0ee2a-2c49-4645-a01e-efd8bd3c42be', 'row_id': '47a0ee2a-2c49-4645-a01e-efd8bd3c42be'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 47, tzinfo=datetime.timezone.utc), 'value': 1008.0, 'point_id': '855ef4d5-a374-41f7-90a3-459e4b84ddcc', 'row_id': '855ef4d5-a374-41f7-90a3-459e4b84ddcc'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 52, tzinfo=datetime.timezone.utc), 'value': 10.0, 'point_id': '0dda0def-cb3b-4afe-8b33-acbcce90a784', 'row_id': '0dda0def-cb3b-4afe-8b33-acbcce90a784'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 52, tzinfo=datetime.timezone.utc), 'value': 1009.0, 'point_id': 'd9ac742f-2c71-4195-bf92-f775d08fff8e', 'row_id': 'd9ac742f-2c71-4195-bf92-f775d08fff8e'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 57, tzinfo=datetime.timezone.utc), 'value': 1010.0, 'point_id': '5c129eb3-19c5-4573-b5c7-5247aeda97f0', 'row_id': '5c129eb3-19c5-4573-b5c7-5247aeda97f0'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 8, 57, tzinfo=datetime.timezone.utc), 'value': 11.0, 'point_id': 'bb48fb5a-9d98-4876-8e1c-719eded47271', 'row_id': 'bb48fb5a-9d98-4876-8e1c-719eded47271'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 9, 2, tzinfo=datetime.timezone.utc), 'value': 12.0, 'point_id': '38e62f97-14a8-4997-8eb0-8ee87f68721d', 'row_id': '38e62f97-14a8-4997-8eb0-8ee87f68721d'}, {'service': 'orders', 'metric': 'lat', 'labels': {'route': '/x'}, 'ts': datetime.datetime(2026, 10, 19, 6, 9, 2, tzinfo=datetime.timezone.utc), 'value': 1011.0, 'point_id': 'c0e3f245-7ec3-4c34-8da0-b64d5f78f0c6', 'row_id': 'c0e3f245-7ec3-4c34-8da0-b64d5f78f0c6'}], truncated=False).rows
+============================== 1 failed in 9.10s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_phase2.py::test_clickhouse_queries_never_return_another_tenants_rows
+============================== 1 passed in 7.95s ==============================
+
+=== service_allowlist @ 2026-10-19T06:18:31+00:00 -> PASS
+property: Service allowlist: a service outside scope is rejected, never queried
+guard removed in investigation/tools.py: [('    outside = [s for s in services if s not in scope.services]', '    outside: list[str] = []')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_scope_tools.py::test_service_outside_the_allowlist_is_rejected_with_a_reason
+E           AssertionError: query_metrics
+E           assert ('allowed' == 'rejected'
+E             
+E             - rejected
+E             + allowed)
+============================== 1 failed in 1.18s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_scope_tools.py::test_service_outside_the_allowlist_is_rejected_with_a_reason
+============================== 1 passed in 0.80s ==============================
+
+=== window_clamp @ 2026-10-19T06:18:34+00:00 -> PASS
+property: Window clamp: a request beyond the scope window runs only within it
+guard removed in investigation/tools.py: [('    if start < scope.start:\n        start = scope.start\n', '    if start < scope.start:\n'), ('    if end > scope.end:\n        end = scope.end\n', '    if end > scope.end:\n')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_scope_tools.py::test_window_is_clamped_and_recorded
+E       AssertionError: assert ('clamped' == 'clamped'
+E         
+E           clamped and '2026-10-16T10:00:00.000Z' == '2026-10-18T09:30:00.000Z'
+E         
+E         - 2026-10-18T09:30:00.000Z
+E         ?          ^  - ^
+E         + 2026-10-16T10:00:00.000Z
+E         ?          ^ +  ^)
+============================== 1 failed in 0.92s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_scope_tools.py::test_window_is_clamped_and_recorded
+============================== 1 passed in 0.91s ==============================
+
+=== row_byte_caps @ 2026-10-19T06:18:38+00:00 -> PASS
+property: Row and byte caps: at most 500 rows and 256 KB per result; limits clamped
+guard removed in investigation/tools.py: [('    return rows[:limit], len(rows) > limit', '    return rows, False'), ('    if n > cap:\n        clamps.append(key)\n        return cap\n', '')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_scope_tools.py::test_limit_and_rows_and_bytes_are_capped
+E       AssertionError: assert ('allowed' == 'clamped'
+E         
+E         - clamped
+E         + allowed)
+============================== 1 failed in 1.54s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_scope_tools.py::test_limit_and_rows_and_bytes_are_capped
+============================== 1 passed in 0.80s ==============================
+
+=== snapshot_before_return @ 2026-10-19T06:19:15+00:00 -> PASS
+property: Snapshot before return: a citation resolves after the telemetry is deleted
+guard removed in investigation/tools.py: [('            snapshot_id, rows, truncated = snap.id, json.loads(snap.content)["rows"], snap.truncated', '            snapshot_id, rows, truncated, snap = None, d.rows, d.truncated, None')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_phase2.py::test_citation_resolves_after_the_telemetry_is_deleted
+E       AssertionError: citation did not resolve after the telemetry was deleted: cited tool call 1 has no snapshot
+E       assert False
+E        +  where False = ClaimResult(ordinal=0, claim_type='metric_change', passed=False, reason='cited tool call 1 has no snapshot', citations=[]).passed
+============================= 1 failed in 17.92s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_phase2.py::test_citation_resolves_after_the_telemetry_is_deleted
+============================= 1 passed in 14.20s ==============================
+
+=== verifier_fabricated_seq @ 2026-10-19T06:19:20+00:00 -> PASS
+property: Verifier: a citation of a tool call not in this investigation
+guard removed in investigation/verifier.py: [('require', 'not in this investigation', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_fabricated_tool_call_seq
+E           AssertionError
+============================== 1 failed in 0.93s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_fabricated_tool_call_seq
+============================== 1 passed in 1.20s ==============================
+
+=== verifier_same_ranker @ 2026-10-19T06:19:23+00:00 -> PASS
+property: Verifier: a citation of another ranker's tool call (A15)
+guard removed in investigation/verifier.py: [('require', 'ranker")', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_cites_another_rankers_tool_call
+E       AssertionError: the adversarial claim was accepted
+E       assert not True
+E        +  where True = ClaimResult(ordinal=0, claim_type='metric_change', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='query_metrics', scope_decision='allowed', requested={'tool': 'query_metrics'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'b0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:59:30.000Z', 'value': 50.0}, {'row_id': 'b1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:59:00.000Z', 'value': 50.0}, {'row_id': 'b2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:30.000Z', 'value': 50.0}, {'row_id': 'b3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:00.000Z', 'value': 50.0}, {'row_id': 'b4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:57:30.000Z', 'value': 50.0}, {'row_id': 'w0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:00.000Z', 'value': 150.0}, {'row_id': 'w1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:30.000Z', 'value': 150.0}, {'row_id': 'w2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:00.000Z', 'value': 150.0}, {'row_id': 'w3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:30.000Z', 'value': 150.0}, {'row_id': 'w4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:02:00.000Z', 'value': 150.0}], truncated=False), ['b0', 'b1', 'b2', 'b3', 'b4', 'w0', 'w1', 'w2', 'w3', 'w4'])]).passed
+============================== 1 failed in 0.82s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_cites_another_rankers_tool_call
+============================== 1 passed in 0.87s ==============================
+
+=== verifier_rejected_call @ 2026-10-19T06:19:27+00:00 -> PASS
+property: Verifier: a citation of a rejected tool call
+guard removed in investigation/verifier.py: [('require', 'which was rejected', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_cites_a_rejected_tool_call
+E       AssertionError: the adversarial claim was accepted
+E       assert not True
+E        +  where True = ClaimResult(ordinal=0, claim_type='metric_change', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='query_metrics', scope_decision='rejected', requested={'tool': 'query_metrics'}, executed=None, reason=None, snapshot_id='snap', rows=[{'row_id': 'b0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:59:30.000Z', 'value': 50.0}, {'row_id': 'b1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:59:00.000Z', 'value': 50.0}, {'row_id': 'b2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:30.000Z', 'value': 50.0}, {'row_id': 'b3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:00.000Z', 'value': 50.0}, {'row_id': 'b4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:57:30.000Z', 'value': 50.0}, {'row_id': 'w0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:00.000Z', 'value': 150.0}, {'row_id': 'w1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:30.000Z', 'value': 150.0}, {'row_id': 'w2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:00.000Z', 'value': 150.0}, {'row_id': 'w3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:30.000Z', 'value': 150.0}, {'row_id': 'w4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:02:00.000Z', 'value': 150.0}], truncated=False), ['b0', 'b1', 'b2', 'b3', 'b4', 'w0', 'w1', 'w2', 'w3', 'w4'])]).passed
+============================== 1 failed in 0.97s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_cites_a_rejected_tool_call
+============================== 1 passed in 0.87s ==============================
+
+=== verifier_has_snapshot @ 2026-10-19T06:19:31+00:00 -> PASS
+property: Verifier: a citation of a call without snapshot
+guard removed in investigation/verifier.py: [('require', 'has no snapshot', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_cites_a_call_without_snapshot
+E       AssertionError: the adversarial claim was accepted
+E       assert not True
+E        +  where True = ClaimResult(ordinal=0, claim_type='metric_change', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='query_metrics', scope_decision='allowed', requested={'tool': 'query_metrics'}, executed={}, reason=None, snapshot_id=None, rows=[{'row_id': 'b0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:59:30.000Z', 'value': 50.0}, {'row_id': 'b1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:59:00.000Z', 'value': 50.0}, {'row_id': 'b2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:30.000Z', 'value': 50.0}, {'row_id': 'b3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:00.000Z', 'value': 50.0}, {'row_id': 'b4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:57:30.000Z', 'value': 50.0}, {'row_id': 'w0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:00.000Z', 'value': 150.0}, {'row_id': 'w1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:30.000Z', 'value': 150.0}, {'row_id': 'w2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:00.000Z', 'value': 150.0}, {'row_id': 'w3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:30.000Z', 'value': 150.0}, {'row_id': 'w4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:02:00.000Z', 'value': 150.0}], truncated=False), ['b0', 'b1', 'b2', 'b3', 'b4', 'w0', 'w1', 'w2', 'w3', 'w4'])]).passed
+============================== 1 failed in 0.87s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_cites_a_call_without_snapshot
+============================== 1 passed in 0.74s ==============================
+
+=== verifier_claim_tool @ 2026-10-19T06:19:34+00:00 -> PASS
+property: Verifier: a claim citing the wrong tool (A18)
+guard removed in investigation/verifier.py: [('require', 'claim cannot cite', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_cites_the_wrong_tool_for_the_claim_type
+E       AssertionError: the adversarial claim was accepted
+E       assert not True
+E        +  where True = ClaimResult(ordinal=0, claim_type='log_pattern', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='query_metrics', scope_decision='allowed', requested={'tool': 'query_metrics'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'l0', 'service': 'inventory', 'ts': '2026-10-18T10:00:00.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l1', 'service': 'inventory', 'ts': '2026-10-18T10:00:10.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l2', 'service': 'inventory', 'ts': '2026-10-18T10:00:20.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l3', 'service': 'inventory', 'ts': '2026-10-18T10:00:30.000Z', 'body': 'pool acquire timeout after 0.5s'}], truncated=False), ['l0', 'l1', 'l2', 'l3'])]).passed
+============================== 1 failed in 0.87s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_cites_the_wrong_tool_for_the_claim_type
+============================== 1 passed in 0.76s ==============================
+
+=== verifier_row_in_snapshot @ 2026-10-19T06:19:38+00:00 -> PASS
+property: Verifier: a row_id not in the snapshot
+guard removed in investigation/verifier.py: [('require', 'is not in the snapshot', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_row_id_not_in_snapshot
+E       AssertionError: malformed claim: KeyError: 'fabricated-row'
+E       assert 'not in the snapshot' in "malformed claim: KeyError: 'fabricated-row'"
+E        +  where "malformed claim: KeyError: 'fabricated-row'" = ClaimResult(ordinal=0, claim_type='metric_change', passed=False, reason="malformed claim: KeyError: 'fabricated-row'", citations=[]).reason
+============================== 1 failed in 0.83s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_row_id_not_in_snapshot
+============================== 1 passed in 0.90s ==============================
+
+=== verifier_metric_service @ 2026-10-19T06:19:42+00:00 -> PASS
+property: Verifier: metric rows from another service
+guard removed in investigation/verifier.py: [('require', 'is from another service', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_rows_from_the_wrong_service
+E       AssertionError: the adversarial claim was accepted
+E       assert not True
+E        +  where True = ClaimResult(ordinal=0, claim_type='metric_change', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='query_metrics', scope_decision='allowed', requested={'tool': 'query_metrics'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'b0', 'service': 'orders', 'metric': 'latency', 'ts': '2026-10-18T09:59:30.000Z', 'value': 50.0}, {'row_id': 'b1', 'service': 'orders', 'metric': 'latency', 'ts': '2026-10-18T09:59:00.000Z', 'value': 50.0}, {'row_id': 'b2', 'service': 'orders', 'metric': 'latency', 'ts': '2026-10-18T09:58:30.000Z', 'value': 50.0}, {'row_id': 'b3', 'service': 'orders', 'metric': 'latency', 'ts': '2026-10-18T09:58:00.000Z', 'value': 50.0}, {'row_id': 'b4', 'service': 'orders', 'metric': 'latency', 'ts': '2026-10-18T09:57:30.000Z', 'value': 50.0}, {'row_id': 'w0', 'service': 'orders', 'metric': 'latency', 'ts': '2026-10-18T10:00:00.000Z', 'value': 150.0}, {'row_id': 'w1', 'service': 'orders', 'metric': 'latency', 'ts': '2026-10-18T10:00:30.000Z', 'value': 150.0}, {'row_id': 'w2', 'service': 'orders', 'metric': 'latency', 'ts': '2026-10-18T10:01:00.000Z', 'value': 150.0}, {'row_id': 'w3', 'service': 'orders', 'metric': 'latency', 'ts': '2026-10-18T10:01:30.000Z', 'value': 150.0}, {'row_id': 'w4', 'service': 'orders', 'metric': 'latency', 'ts': '2026-10-18T10:02:00.000Z', 'value': 150.0}], truncated=False), ['b0', 'b1', 'b2', 'b3', 'b4', 'w0', 'w1', 'w2', 'w3', 'w4'])]).passed
+============================== 1 failed in 0.89s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_rows_from_the_wrong_service
+============================== 1 passed in 0.75s ==============================
+
+=== verifier_log_service @ 2026-10-19T06:19:47+00:00 -> PASS
+property: Verifier: log rows from another service
+guard removed in investigation/verifier.py: [('require', 'is from another service', 1)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_rows_from_the_wrong_service
+E       AssertionError: the adversarial claim was accepted
+E       assert not True
+E        +  where True = ClaimResult(ordinal=0, claim_type='log_pattern', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='query_logs', scope_decision='allowed', requested={'tool': 'query_logs'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'l0', 'service': 'orders', 'ts': '2026-10-18T10:00:00.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l1', 'service': 'orders', 'ts': '2026-10-18T10:00:10.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l2', 'service': 'orders', 'ts': '2026-10-18T10:00:20.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l3', 'service': 'orders', 'ts': '2026-10-18T10:00:30.000Z', 'body': 'pool acquire timeout after 0.5s'}], truncated=False), ['l0', 'l1', 'l2', 'l3'])]).passed
+============================== 1 failed in 0.98s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_rows_from_the_wrong_service
+============================== 1 passed in 1.69s ==============================
+
+=== verifier_metric_window @ 2026-10-19T06:19:51+00:00 -> PASS
+property: Verifier: metric rows outside window + baseline
+guard removed in investigation/verifier.py: [('require', 'outside window and baseline', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_rows_outside_the_window
+E       AssertionError: the adversarial claim was accepted
+E       assert not True
+E        +  where True = ClaimResult(ordinal=0, claim_type='metric_change', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='query_metrics', scope_decision='allowed', requested={'tool': 'query_metrics'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'b0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:30:00.000Z', 'value': 50.0}, {'row_id': 'b1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:59:00.000Z', 'value': 50.0}, {'row_id': 'b2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:30.000Z', 'value': 50.0}, {'row_id': 'b3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:00.000Z', 'value': 50.0}, {'row_id': 'b4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:57:30.000Z', 'value': 50.0}, {'row_id': 'w0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:00.000Z', 'value': 150.0}, {'row_id': 'w1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:30.000Z', 'value': 150.0}, {'row_id': 'w2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:00.000Z', 'value': 150.0}, {'row_id': 'w3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:30.000Z', 'value': 150.0}, {'row_id': 'w4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:02:00.000Z', 'value': 150.0}], truncated=False), ['b0', 'b1', 'b2', 'b3', 'b4', 'w0', 'w1', 'w2', 'w3', 'w4'])]).passed
+============================== 1 failed in 1.01s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_rows_outside_the_window
+============================== 1 passed in 0.83s ==============================
+
+=== verifier_log_window @ 2026-10-19T06:19:56+00:00 -> PASS
+property: Verifier: log rows outside the window
+guard removed in investigation/verifier.py: [('require', 'is outside the window', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_rows_outside_the_window
+E       AssertionError: the adversarial claim was accepted
+E       assert not True
+E        +  where True = ClaimResult(ordinal=0, claim_type='log_pattern', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='query_logs', scope_decision='allowed', requested={'tool': 'query_logs'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'l0', 'service': 'inventory', 'ts': '2026-10-18T10:00:00.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l1', 'service': 'inventory', 'ts': '2026-10-18T10:00:10.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l2', 'service': 'inventory', 'ts': '2026-10-18T10:00:20.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l3', 'service': 'inventory', 'ts': '2026-10-18T10:00:30.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l4', 'service': 'inventory', 'ts': '2026-10-18T10:00:40.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l5', 'service': 'inventory', 'ts': '2026-10-18T10:00:50.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l6', 'service': 'inventory', 'ts': '2026-10-18T10:01:00.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l7', 'service': 'inventory', 'ts': '2026-10-18T10:01:10.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l8', 'service': 'inventory', 'ts': '2026-10-18T10:01:20.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l9', 'service': 'inventory', 'ts': '2026-10-18T10:01:30.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l10', 'service': 'inventory', 'ts': '2026-10-18T10:01:40.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l11', 'service': 'inventory', 'ts': '2026-10-18T10:01:50.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l12', 'service': 'inventory', 'ts': '2026-10-18T10:02:00.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l13', 'service': 'inventory', 'ts': '2026-10-18T10:02:10.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l14', 'service': 'inventory', 'ts': '2026-10-18T10:02:20.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l15', 'service': 'inventory', 'ts': '2026-10-18T10:02:30.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l16', 'service': 'inventory', 'ts': '2026-10-18T10:02:40.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l17', 'service': 'inventory', 'ts': '2026-10-18T10:02:50.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l18', 'service': 'inventory', 'ts': '2026-10-18T10:03:00.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l19', 'service': 'inventory', 'ts': '2026-10-18T10:03:10.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l20', 'service': 'inventory', 'ts': '2026-10-18T10:03:20.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l21', 'service': 'inventory', 'ts': '2026-10-18T10:03:30.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l22', 'service': 'inventory', 'ts': '2026-10-18T10:03:40.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l23', 'service': 'inventory', 'ts': '2026-10-18T10:03:50.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l24', 'service': 'inventory', 'ts': '2026-10-18T10:04:00.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l25', 'service': 'inventory', 'ts': '2026-10-18T10:04:10.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l26', 'service': 'inventory', 'ts': '2026-10-18T10:04:20.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l27', 'service': 'inventory', 'ts': '2026-10-18T10:04:30.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l28', 'service': 'inventory', 'ts': '2026-10-18T10:04:40.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l29', 'service': 'inventory', 'ts': '2026-10-18T10:04:50.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l30', 'service': 'inventory', 'ts': '2026-10-18T10:05:00.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l31', 'service': 'inventory', 'ts': '2026-10-18T10:05:10.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l32', 'service': 'inventory', 'ts': '2026-10-18T10:05:20.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l33', 'service': 'inventory', 'ts': '2026-10-18T10:05:30.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l34', 'service': 'inventory', 'ts': '2026-10-18T10:05:40.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l35', 'service': 'inventory', 'ts': '2026-10-18T10:05:50.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l36', 'service': 'inventory', 'ts': '2026-10-18T10:06:00.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l37', 'service': 'inventory', 'ts': '2026-10-18T10:06:10.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l38', 'service': 'inventory', 'ts': '2026-10-18T10:06:20.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l39', 'service': 'inventory', 'ts': '2026-10-18T10:06:30.000Z', 'body': 'pool acquire timeout after 0.5s'}], truncated=False), ['l0', 'l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7', 'l8', 'l9', 'l10', 'l11', 'l12', 'l13', 'l14', 'l15', 'l16', 'l17', 'l18', 'l19', 'l20', 'l21', 'l22', 'l23', 'l24', 'l25', 'l26', 'l27', 'l28', 'l29', 'l30', 'l31', 'l32', 'l33', 'l34', 'l35', 'l36', 'l37', 'l38', 'l39'])]).passed
+============================== 1 failed in 1.00s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_rows_outside_the_window
+============================== 1 passed in 1.42s ==============================
+
+=== verifier_magnitude @ 2026-10-19T06:20:00+00:00 -> PASS
+property: Verifier: magnitude just over the data
+guard removed in investigation/verifier.py: [('require', 'claimed at least {mm}', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_magnitude_exactly_at_just_over_and_just_under
+E       AssertionError: assert True is False
+E        +  where True = ClaimResult(ordinal=0, claim_type='metric_change', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='query_metrics', scope_decision='allowed', requested={'tool': 'query_metrics'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'b0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:59:30.000Z', 'value': 50.0}, {'row_id': 'b1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:59:00.000Z', 'value': 50.0}, {'row_id': 'b2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:30.000Z', 'value': 50.0}, {'row_id': 'b3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:00.000Z', 'value': 50.0}, {'row_id': 'b4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:57:30.000Z', 'value': 50.0}, {'row_id': 'w0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:00.000Z', 'value': 150.0}, {'row_id': 'w1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:30.000Z', 'value': 150.0}, {'row_id': 'w2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:00.000Z', 'value': 150.0}, {'row_id': 'w3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:30.000Z', 'value': 150.0}, {'row_id': 'w4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:02:00.000Z', 'value': 150.0}], truncated=False), ['b0', 'b1', 'b2', 'b3', 'b4', 'w0', 'w1', 'w2', 'w3', 'w4'])]).passed
+E        +    where ClaimResult(ordinal=0, claim_type='metric_change', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='query_metrics', scope_decision='allowed', requested={'tool': 'query_metrics'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'b0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:59:30.000Z', 'value': 50.0}, {'row_id': 'b1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:59:00.000Z', 'value': 50.0}, {'row_id': 'b2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:30.000Z', 'value': 50.0}, {'row_id': 'b3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:00.000Z', 'value': 50.0}, {'row_id': 'b4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:57:30.000Z', 'value': 50.0}, {'row_id': 'w0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:00.000Z', 'value': 150.0}, {'row_id': 'w1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:30.000Z', 'value': 150.0}, {'row_id': 'w2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:00.000Z', 'value': 150.0}, {'row_id': 'w3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:30.000Z', 'value': 150.0}, {'row_id': 'w4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:02:00.000Z', 'value': 150.0}], truncated=False), ['b0', 'b1', 'b2', 'b3', 'b4', 'w0', 'w1', 'w2', 'w3', 'w4'])]) = check({'type': 'metric_change', 'service': 'inventory', 'metric': 'latency', 'window': ['2026-10-18T10:00:00.000Z', '2026-10-18T10:05:00.000Z'], 'direction': 'up', 'min_magnitude': 2.000000001, 'cites': [{'tool_call_seq': 1, 'row_ids': ['b0', 'b1', 'b2', 'b3', 'b4', 'w0', 'w1', 'w2', 'w3', 'w4']}]}, {1: CallRecord(id='id1', seq=1, ranker='baseline', tool_name='query_metrics', scope_decision='allowed', requested={'tool': 'query_metrics'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'b0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:59:30.000Z', 'value': 50.0}, {'row_id': 'b1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:59:00.000Z', 'value': 50.0}, {'row_id': 'b2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:30.000Z', 'value': 50.0}, {'row_id': 'b3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:00.000Z', 'value': 50.0}, {'row_id': 'b4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:57:30.000Z', 'value': 50.0}, {'row_id': 'w0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:00.000Z', 'value': 150.0}, {'row_id': 'w1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:30.000Z', 'value': 150.0}, {'row_id': 'w2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:00.000Z', 'value': 150.0}, {'row_id': 'w3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:30.000Z', 'value': 150.0}, {'row_id': 'w4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:02:00.000Z', 'value': 150.0}], truncated=False)})
+E        +      where {'type': 'metric_change', 'service': 'inventory', 'metric': 'latency', 'window': ['2026-10-18T10:00:00.000Z', '2026-10-18T10:05:00.000Z'], 'direction': 'up', 'min_magnitude': 2.000000001, 'cites': [{'tool_call_seq': 1, 'row_ids': ['b0', 'b1', 'b2', 'b3', 'b4', 'w0', 'w1', 'w2', 'w3', 'w4']}]} = metric_claim([{'row_id': 'b0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:59:30.000Z', 'value': 50.0}, {'row_id': 'b1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:59:00.000Z', 'value': 50.0}, {'row_id': 'b2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:30.000Z', 'value': 50.0}, {'row_id': 'b3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:00.000Z', 'value': 50.0}, {'row_id': 'b4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:57:30.000Z', 'value': 50.0}, {'row_id': 'w0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:00.000Z', 'value': 150.0}, {'row_id': 'w1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:30.000Z', 'value': 150.0}, {'row_id': 'w2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:00.000Z', 'value': 150.0}, {'row_id': 'w3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:30.000Z', 'value': 150.0}, {'row_id': 'w4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:02:00.000Z', 'value': 150.0}], mm=2.000000001)
+========================= 1 failed, 2 passed in 0.88s =========================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_magnitude_exactly_at_just_over_and_just_under
+============================== 3 passed in 0.75s ==============================
+
+=== verifier_min_points @ 2026-10-19T06:20:03+00:00 -> PASS
+property: Verifier: fewer than 3 baseline points
+guard removed in investigation/verifier.py: [('require', 'cited baseline points, need 3', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_too_few_points_before_or_inside
+E       AssertionError: 2 cited window points, need 3
+E       assert 'baseline points, need 3' in '2 cited window points, need 3'
+E        +  where '2 cited window points, need 3' = ClaimResult(ordinal=0, claim_type='metric_change', passed=False, reason='2 cited window points, need 3', citations=[]).reason
+============================== 1 failed in 1.43s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_too_few_points_before_or_inside
+============================== 1 passed in 0.73s ==============================
+
+=== verifier_log_count @ 2026-10-19T06:20:07+00:00 -> PASS
+property: Verifier: fewer matching log rows than claimed
+guard removed in investigation/verifier.py: [('require', 'cited rows contain', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_one_failed_claim_rejects_the_hypothesis_and_every_result_is_kept
+E       AssertionError: assert (not True)
+E        +  where True = HypothesisResult(passed=True, reason=None, claims=[ClaimResult(ordinal=0, claim_type='metric_change', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='query_metrics', scope_decision='allowed', requested={'tool': 'query_metrics'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'b0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:59:30.000Z', 'value': 50.0}, {'row_id': 'b1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:59:00.000Z', 'value': 50.0}, {'row_id': 'b2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:30.000Z', 'value': 50.0}, {'row_id': 'b3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:58:00.000Z', 'value': 50.0}, {'row_id': 'b4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T09:57:30.000Z', 'value': 50.0}, {'row_id': 'w0', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:00.000Z', 'value': 150.0}, {'row_id': 'w1', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:00:30.000Z', 'value': 150.0}, {'row_id': 'w2', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:00.000Z', 'value': 150.0}, {'row_id': 'w3', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:01:30.000Z', 'value': 150.0}, {'row_id': 'w4', 'service': 'inventory', 'metric': 'latency', 'ts': '2026-10-18T10:02:00.000Z', 'value': 150.0}], truncated=False), ['b0', 'b1', 'b2', 'b3', 'b4', 'w0', 'w1', 'w2', 'w3', 'w4'])]), ClaimResult(ordinal=1, claim_type='log_pattern', passed=True, reason=None, citations=[(CallRecord(id='id2', seq=2, ranker='baseline', tool_name='query_logs', scope_decision='allowed', requested={'tool': 'query_logs'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'l0', 'service': 'inventory', 'ts': '2026-10-18T10:00:00.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l1', 'service': 'inventory', 'ts': '2026-10-18T10:00:10.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l2', 'service': 'inventory', 'ts': '2026-10-18T10:00:20.000Z', 'body': 'pool acquire timeout after 0.5s'}, {'row_id': 'l3', 'service': 'inventory', 'ts': '2026-10-18T10:00:30.000Z', 'body': 'pool acquire timeout after 0.5s'}], truncated=False), ['l0', 'l1', 'l2', 'l3'])])]).passed
+============================== 1 failed in 0.82s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_one_failed_claim_rejects_the_hypothesis_and_every_result_is_kept
+============================== 1 passed in 0.78s ==============================
+
+=== verifier_trace_descent @ 2026-10-19T06:20:11+00:00 -> PASS
+property: Verifier: a child span not under the parent
+guard removed in investigation/verifier.py: [('require', 'descends from a cited', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_child_span_not_under_the_parent
+E       AssertionError: malformed claim: ValueError: max() iterable argument is empty
+E       assert 'descends from' in 'malformed claim: ValueError: max() iterable argument is empty'
+E        +  where 'malformed claim: ValueError: max() iterable argument is empty' = ClaimResult(ordinal=0, claim_type='trace_dependency', passed=False, reason='malformed claim: ValueError: max() iterable argument is empty', citations=[]).reason
+============================== 1 failed in 0.91s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_child_span_not_under_the_parent
+============================== 1 passed in 0.74s ==============================
+
+=== verifier_trace_share @ 2026-10-19T06:20:15+00:00 -> PASS
+property: Verifier: a latency share above the data
+guard removed in investigation/verifier.py: [('require', 'child share', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_child_share_below_claim
+E       AssertionError: the adversarial claim was accepted
+E       assert not True
+E        +  where True = ClaimResult(ordinal=0, claim_type='trace_dependency', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='query_traces', scope_decision='allowed', requested={'tool': 'query_traces'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'g', 'span_id': 'g', 'parent_span_id': '', 'trace_id': 't1', 'service': 'gateway', 'duration_ms': 1000.0, 'start_ts': '2026-10-18T10:00:00.000Z'}, {'row_id': 'o', 'span_id': 'o', 'parent_span_id': 'g', 'trace_id': 't1', 'service': 'orders', 'duration_ms': 990.0, 'start_ts': '2026-10-18T10:00:00.000Z'}, {'row_id': 'i', 'span_id': 'i', 'parent_span_id': 'o', 'trace_id': 't1', 'service': 'inventory', 'duration_ms': 700.0, 'start_ts': '2026-10-18T10:00:00.000Z'}], truncated=False), ['g', 'i'])]).passed
+============================== 1 failed in 0.92s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_child_share_below_claim
+============================== 1 passed in 0.78s ==============================
+
+=== verifier_deploy_before_onset @ 2026-10-19T06:20:19+00:00 -> PASS
+property: Verifier: a deploy after the onset
+guard removed in investigation/verifier.py: [('require', 'not before the onset', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_deploy_after_onset
+E       AssertionError: the adversarial claim was accepted
+E       assert not True
+E        +  where True = ClaimResult(ordinal=0, claim_type='deploy_precedes_onset', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='get_recent_deploys', scope_decision='allowed', requested={'tool': 'get_recent_deploys'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'd1', 'id': 'd1', 'service': 'orders', 'version': 'v2', 'started_at': '2026-10-18T10:01:00.000Z', 'finished_at': '2026-10-18T10:02:00.000Z'}], truncated=False), ['d1']), (CallRecord(id='id2', seq=2, ranker='baseline', tool_name='get_incident_timeline', scope_decision='allowed', requested={'tool': 'get_incident_timeline'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 't3', 'kind': 'anomaly_onset', 'service': 'orders', 'signal': 'latency_ms', 'ts': '2026-10-18T10:00:00.000Z'}], truncated=False), ['t3'])]).passed
+============================== 1 failed in 0.98s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_deploy_after_onset
+============================== 1 passed in 0.88s ==============================
+
+=== verifier_deploy_gap @ 2026-10-19T06:20:22+00:00 -> PASS
+property: Verifier: a deploy beyond max_deploy_gap
+guard removed in investigation/verifier.py: [('require', 'over the gap', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_deploy_beyond_max_gap
+E       AssertionError: the adversarial claim was accepted
+E       assert not True
+E        +  where True = ClaimResult(ordinal=0, claim_type='deploy_precedes_onset', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='get_recent_deploys', scope_decision='allowed', requested={'tool': 'get_recent_deploys'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'd1', 'id': 'd1', 'service': 'orders', 'version': 'v2', 'started_at': '2026-10-18T09:28:00.000Z', 'finished_at': '2026-10-18T09:29:00.000Z'}], truncated=False), ['d1']), (CallRecord(id='id2', seq=2, ranker='baseline', tool_name='get_incident_timeline', scope_decision='allowed', requested={'tool': 'get_incident_timeline'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 't3', 'kind': 'anomaly_onset', 'service': 'orders', 'signal': 'latency_ms', 'ts': '2026-10-18T10:00:00.000Z'}], truncated=False), ['t3'])]).passed
+============================== 1 failed in 0.81s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_deploy_beyond_max_gap
+============================== 1 passed in 0.70s ==============================
+
+=== verifier_deploy_service @ 2026-10-19T06:20:26+00:00 -> PASS
+property: Verifier: another service's deploy
+guard removed in investigation/verifier.py: [('require', 'is for {d.get', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_deploy_for_another_service
+E       AssertionError: the adversarial claim was accepted
+E       assert not True
+E        +  where True = ClaimResult(ordinal=0, claim_type='deploy_precedes_onset', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='get_recent_deploys', scope_decision='allowed', requested={'tool': 'get_recent_deploys'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'd1', 'id': 'd1', 'service': 'payments', 'version': 'v2', 'started_at': '2026-10-18T09:54:00.000Z', 'finished_at': '2026-10-18T09:55:00.000Z'}], truncated=False), ['d1']), (CallRecord(id='id2', seq=2, ranker='baseline', tool_name='get_incident_timeline', scope_decision='allowed', requested={'tool': 'get_incident_timeline'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 't3', 'kind': 'anomaly_onset', 'service': 'orders', 'signal': 'latency_ms', 'ts': '2026-10-18T10:00:00.000Z'}], truncated=False), ['t3'])]).passed
+============================== 1 failed in 0.93s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_deploy_for_another_service
+============================== 1 passed in 1.17s ==============================
+
+=== verifier_onset_match @ 2026-10-19T06:20:30+00:00 -> PASS
+property: Verifier: an onset matching no timeline row
+guard removed in investigation/verifier.py: [('require', 'abs(_ts(r["ts"]) - onset)', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_onset_not_matching_any_timeline_row
+E       AssertionError: the adversarial claim was accepted
+E       assert not True
+E        +  where True = ClaimResult(ordinal=0, claim_type='deploy_precedes_onset', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='get_recent_deploys', scope_decision='allowed', requested={'tool': 'get_recent_deploys'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'd1', 'id': 'd1', 'service': 'orders', 'version': 'v2', 'started_at': '2026-10-18T09:54:00.000Z', 'finished_at': '2026-10-18T09:55:00.000Z'}], truncated=False), ['d1']), (CallRecord(id='id2', seq=2, ranker='baseline', tool_name='get_incident_timeline', scope_decision='allowed', requested={'tool': 'get_incident_timeline'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 't3', 'kind': 'anomaly_onset', 'service': 'orders', 'signal': 'latency_ms', 'ts': '2026-10-18T10:01:01.000Z'}], truncated=False), ['t3'])]).passed
+============================== 1 failed in 0.98s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_onset_not_matching_any_timeline_row
+============================== 1 passed in 0.76s ==============================
+
+=== verifier_runbook_threshold @ 2026-10-19T06:20:34+00:00 -> PASS
+property: Verifier: a runbook below runbook_min_similarity
+guard removed in investigation/verifier.py: [('require', '>= RUNBOOK_MIN_SIMILARITY', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_runbook_below_threshold
+E       AssertionError: the adversarial claim was accepted
+E       assert not True
+E        +  where True = ClaimResult(ordinal=0, claim_type='runbook_match', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='search_runbooks', scope_decision='allowed', requested={'tool': 'search_runbooks'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'rb1', 'doc_id': 'rb1', 'title': 'Pool exhaustion', 'kind': 'runbook', 'fixture_id': None, 'excerpt': '...', 'similarity': 0.74}], truncated=False), ['rb1'])]).passed
+============================== 1 failed in 0.86s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_runbook_below_threshold
+============================== 1 passed in 0.80s ==============================
+
+=== verifier_own_postmortem @ 2026-10-19T06:20:37+00:00 -> PASS
+property: Verifier: the evaluated fixture's own postmortem
+guard removed in investigation/verifier.py: [('require', 'own postmortem', 0)]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_excluded_fixture_postmortem
+E       AssertionError: the adversarial claim was accepted
+E       assert not True
+E        +  where True = ClaimResult(ordinal=0, claim_type='runbook_match', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='search_runbooks', scope_decision='allowed', requested={'tool': 'search_runbooks'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'rb1', 'doc_id': 'rb1', 'title': 'Pool exhaustion', 'kind': 'postmortem', 'fixture_id': 'pool_exhaustion_001', 'excerpt': '...', 'similarity': 0.9}], truncated=False), ['rb1'])]).passed
+============================== 1 failed in 0.87s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_excluded_fixture_postmortem
+============================== 1 passed in 0.77s ==============================
+
+=== verifier_runbook_only_root @ 2026-10-19T06:20:40+00:00 -> PASS
+property: Verifier: a root cause supported only by runbook_match
+guard removed in investigation/verifier.py: [('    if hypothesis["causal_role"] == "candidate_root_cause" and all(', '    if False and all(')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_root_cause_supported_only_by_runbook_match
+E       AssertionError: assert (not True)
+E        +  where True = HypothesisResult(passed=True, reason=None, claims=[ClaimResult(ordinal=0, claim_type='runbook_match', passed=True, reason=None, citations=[(CallRecord(id='id1', seq=1, ranker='baseline', tool_name='search_runbooks', scope_decision='allowed', requested={'tool': 'search_runbooks'}, executed={}, reason=None, snapshot_id='snap', rows=[{'row_id': 'rb1', 'doc_id': 'rb1', 'title': 'Pool exhaustion', 'kind': 'runbook', 'fixture_id': None, 'excerpt': '...', 'similarity': 0.81}], truncated=False), ['rb1'])])]).passed
+============================== 1 failed in 0.84s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_root_cause_supported_only_by_runbook_match
+============================== 1 passed in 0.75s ==============================
+
+=== verifier_empty_claims @ 2026-10-19T06:20:44+00:00 -> PASS
+property: Verifier: a hypothesis with no claims
+guard removed in investigation/verifier.py: [('    if not isinstance(claims, list) or not claims:', '    if not isinstance(claims, list):')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_empty_claim_list
+E       AssertionError: assert (not False and 'at least one claim' in 'a root cause needs evidence beyond a similar past incident')
+E        +  where False = HypothesisResult(passed=False, reason='a root cause needs evidence beyond a similar past incident', claims=[]).passed
+E        +  and   'a root cause needs evidence beyond a similar past incident' = HypothesisResult(passed=False, reason='a root cause needs evidence beyond a similar past incident', claims=[]).reason
+============================== 1 failed in 0.85s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_verifier.py::test_empty_claim_list
+============================== 1 passed in 0.79s ==============================
+
+=== contamination_sql @ 2026-10-19T06:21:11+00:00 -> PASS
+property: Contamination rule (§12.2): search_runbooks never returns the evaluated fixture's postmortem
+guard removed in investigation/runbooks.py: [('"AND (fixture_id IS NULL OR fixture_id <> COALESCE(%s, \'\')) "', '"AND (fixture_id IS NULL OR fixture_id <> COALESCE(%s, \'\') OR TRUE) "')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_phase2.py::test_fixtures_own_postmortem_is_not_returned_by_search_runbooks
+E       AssertionError: the evaluated fixture's own postmortem was returned
+E       assert '64d00d9c-6d22-4892-b7ca-cee27b93feda' not in ['64d00d9c-6d22-4892-b7ca-cee27b93feda', '680c8660-2c4c-47b6-840e-1ab63e0a49a6']
+E        +  where '64d00d9c-6d22-4892-b7ca-cee27b93feda' = Doc(id='64d00d9c-6d22-4892-b7ca-cee27b93feda', title='Postmortem: pool_exhaustion_001', kind='postmortem', fixture_id='pool_exhaustion_001', body='inventory').id
+============================= 1 failed in 11.21s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_phase2.py::test_fixtures_own_postmortem_is_not_returned_by_search_runbooks
+============================= 1 passed in 10.19s ==============================
+
+=== idempotent_investigation @ 2026-10-19T06:21:29+00:00 -> PASS
+property: Idempotent investigation insert: a redelivered trigger creates no second investigation
+guard removed in investigation/orchestrator.py: [('"ON CONFLICT (incident_id, trigger_id) DO NOTHING RETURNING id::text",', '"RETURNING id::text",')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_phase2.py::test_redelivered_trigger_creates_no_second_investigation
+E       AssertionError: 2 investigations for one trigger
+E       assert 2 == 1
+============================== 1 failed in 7.38s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_phase2.py::test_redelivered_trigger_creates_no_second_investigation
+============================== 1 passed in 5.79s ==============================
+
+=== append_only_grants @ 2026-10-19T06:21:44+00:00 -> PASS
+property: Append-only audit: the app role cannot UPDATE or DELETE a tool_call row
+guard removed in common/migrations/postgres/0005_app_role.sql: [('REVOKE ALL ON tool_calls, evidence_snapshots, hypotheses, claims, claim_citations FROM sentry_app;\nGRANT SELECT, INSERT ON tool_calls', 'GRANT ALL ON tool_calls')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_phase2.py::test_app_role_cannot_update_or_delete_audit_rows
+E       AssertionError: the app role changed the audit trail: []
+E       assert [] == [('query_logs',)]
+E         
+E         Right contains one more item: ('query_logs',)
+E         
+E         Full diff:
+E         + []
+E         - [
+============================== 1 failed in 5.23s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_phase2.py::test_app_role_cannot_update_or_delete_audit_rows
+============================== 1 passed in 5.18s ==============================
+
+=== conflict_margin @ 2026-10-19T06:21:59+00:00 -> PASS
+property: Conflict margin (§7.5): an ambiguous fixture reports CONFLICTING_EVIDENCE
+guard removed in investigation/outcome.py: [('        if different and top["score"] - other["score"] <= margin:', '        if False:')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/fixtures/test_offline_baseline.py::test_ambiguous_fixture_reports_conflicting_evidence
+E       AssertionError: ([('payments', 'dependency_outage'), ('inventory', 'bad_deploy')], 'ROOT_CAUSE_IDENTIFIED')
+E       assert (2 >= 2 and 'ROOT_CAUSE_IDENTIFIED' == 'CONFLICTING_EVIDENCE'
+E        +  where 2 = len({('payments', 'dependency_outage'), ('inventory', 'bad_deploy')})
+E        +    where {('payments', 'dependency_outage'), ('inventory', 'bad_deploy')} = set([('payments', 'dependency_outage'), ('inventory', 'bad_deploy')])
+E         
+E         - CONFLICTING_EVIDENCE
+E         + ROOT_CAUSE_IDENTIFIED)
+============================== 1 failed in 5.54s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/fixtures/test_offline_baseline.py::test_ambiguous_fixture_reports_conflicting_evidence
+============================== 1 passed in 4.80s ==============================
+
+=== eval_db_hash @ 2026-10-19T06:22:51+00:00 -> PASS
+property: Eval read-only (A16): a write to the eval database fails the eval
+guard removed in evals/harness.py: [('    if before != after:\n', '    if False:\n')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_phase2.py::test_eval_fails_when_the_database_changes
+E           Failed: DID NOT RAISE EvalFailed
+============================= 1 failed in 20.09s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_phase2.py::test_eval_fails_when_the_database_changes
+============================= 1 passed in 25.79s ==============================
 
