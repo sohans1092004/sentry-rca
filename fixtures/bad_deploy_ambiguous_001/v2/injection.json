@@ -1,0 +1,104 @@
+{
+  "run": {
+    "run_id": "bad_deploy-ambiguous-1-20261019T013930",
+    "plan": {
+      "scenario": "bad_deploy",
+      "variant": "ambiguous",
+      "seed": 1,
+      "delay_s": 31,
+      "root_cause": {
+        "service": "inventory",
+        "cause_kind": "bad_deploy"
+      },
+      "acceptable_alternatives": [
+        {
+          "service": "payments",
+          "cause_kind": "dependency_outage"
+        }
+      ],
+      "symptom_services": [
+        "gateway",
+        "orders",
+        "payments"
+      ],
+      "expected_outcome": "CONFLICTING_EVIDENCE",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 17,
+          "service": "inventory",
+          "kind": "bad_deploy",
+          "params": {
+            "version": "inventory-v1.28.0",
+            "mode": "slow",
+            "delay_ms": 668
+          },
+          "duration_s": 272
+        },
+        {
+          "at_s": 12,
+          "service": "payments",
+          "kind": "dependency_outage",
+          "params": {
+            "error_rate": 0.8,
+            "timeout_ms": 287
+          },
+          "duration_s": 184
+        }
+      ],
+      "deploy": {
+        "service": "inventory",
+        "version": "inventory-v1.28.0",
+        "rollout_s": 17
+      }
+    },
+    "injection_start": "2026-10-19T01:39:30.911+00:00",
+    "applied": [
+      {
+        "at": "2026-10-19T01:39:48.245+00:00",
+        "at_s": 12,
+        "service": "payments",
+        "kind": "dependency_outage",
+        "params": {
+          "error_rate": 0.8,
+          "timeout_ms": 287
+        },
+        "duration_s": 184
+      },
+      {
+        "at": "2026-10-19T01:39:48.275+00:00",
+        "at_s": 17,
+        "service": "inventory",
+        "kind": "bad_deploy",
+        "params": {
+          "version": "inventory-v1.28.0",
+          "mode": "slow",
+          "delay_ms": 668
+        },
+        "duration_s": 272
+      }
+    ],
+    "deploy_row": {
+      "id": "f3064aa1-9352-4a57-b7fc-b75c4dc2e681",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "inventory",
+      "version": "inventory-v1.28.0",
+      "started_at": "2026-10-19T01:39:30.911+00:00",
+      "finished_at": "2026-10-19T01:39:48.173+00:00"
+    },
+    "injection_end": "2026-10-19T01:44:19.912+00:00"
+  },
+  "incident": {
+    "id": "98e09400-9c6a-4759-b9fd-2d9f9253b0cc",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-19 01:40:07.054956+00:00",
+    "first_anomaly_at": "2026-10-19 01:40:01.974253+00:00",
+    "last_seen": "2026-10-19 01:45:16.959618+00:00",
+    "alert_count": 63,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 18.809956,
+  "onset_to_open_s": 5.080703,
+  "variant": "ambiguous"
+}

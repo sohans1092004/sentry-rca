@@ -186,7 +186,12 @@ def main() -> None:
             with psycopg.connect(config.PG_DSN, autocommit=True) as owner:
                 print("loaded", runbooks.load(owner, cassette, config.DEMO_TENANT_ID, docs), "documents")
             if args.live:
+                from investigation.baseline import runbook_queries
+
+                for q in runbook_queries(["gateway", "inventory", "orders", "payments"]):
+                    cassette.embed(runbooks.query_text(q))
                 cassette.save()
+                print("cassette:", len(cassette.entries), "entries", cassette.model, cassette.digest[:12])
         else:
             drift = cassette.drift()
             print("no drift" if not drift else "\n".join(f"DRIFT {d:.3g}  {t}" for t, d in drift))

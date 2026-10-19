@@ -1,7 +1,7 @@
 """Package fixture datasets as deterministic tarballs, record their hashes in fixtures/index.json, and
 upload them as assets of one GitHub Release per fixture version.
 
-    uv run python tools/publish_fixtures.py [--no-upload]
+    uv run python tools/publish_fixtures.py [--version=v2] [--no-upload]
 
 Deterministic: entries sorted, mtime/uid/gid zeroed, gzip header without a timestamp. Re-packaging
 an unchanged dataset gives the same bytes, so the sha256 in index.json identifies the content.
@@ -19,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DATA, LABELS = ROOT / "data" / "fixtures", ROOT / "fixtures"
 OUT = ROOT / "data" / "release"
-VERSION = "v1"
+VERSION = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--version=")), "v2")  # v1: Phase 1 labels
 TAG = f"fixtures-{VERSION}"
 REPO = "sohans1092004/sentry-rca"
 

@@ -40,6 +40,15 @@ TRACE_WINDOW = timedelta(minutes=3)
 W_TRACE, W_KIND, W_TEMPORAL, W_DEPLOY = 0.4, 0.3, 0.2, 0.1
 
 
+def runbook_query(kind: str, service: str) -> str:
+    return f"{kind.replace('_', ' ')} in {service}"
+
+
+def runbook_queries(services: list[str]) -> list[str]:
+    """Every search_runbooks query rank() can issue, so the embedding cassette can hold them all."""
+    return [runbook_query(k, s) for k in KIND_PRIORITY for s in sorted(services)]
+
+
 def _floor(x: float, digits: int) -> float:
     f = 10.0**digits
     return float(math.floor(x * f) / f)
@@ -258,7 +267,7 @@ def rank(scope: Scope, call: Call, runbook_search: bool = True) -> list[dict[str
             kind = kinds[0]
             claims = evidence[kind] + support
             if runbook_search:
-                rb = call("search_runbooks", {"query": f"{kind.replace('_', ' ')} in {svc}", "top_k": 3})
+                rb = call("search_runbooks", {"query": runbook_query(kind, svc), "top_k": 3})
                 top = [r for r in rb.rows if r["similarity"] >= 0.75][:1]
                 claims += [
                     {

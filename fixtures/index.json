@@ -1,13 +1,13 @@
 {
-  "release": "fixtures-v1",
-  "url": "https://github.com/sohans1092004/sentry-rca/releases/download/fixtures-v1/",
+  "release": "fixtures-v2",
+  "url": "https://github.com/sohans1092004/sentry-rca/releases/download/fixtures-v2/",
   "fixtures": [
     {
       "fixture_id": "bad_deploy_001",
-      "version": "v1",
-      "asset": "bad_deploy_001-v1.tar.gz",
-      "sha256": "0e4705fe1fa8e824b8cfdac4295d7e1aaee4e844619125e1b00b0702924d57a1",
-      "bytes": 8797963,
+      "version": "v2",
+      "asset": "bad_deploy_001-v2.tar.gz",
+      "sha256": "805d6a741171d863b87d3f53b7db8b14c4ddd748712f4d202136a45ca65ca60d",
+      "bytes": 8797972,
       "rows": {
         "metrics": 181467,
         "logs": 3288,
@@ -17,10 +17,10 @@
     },
     {
       "fixture_id": "bad_deploy_002",
-      "version": "v1",
-      "asset": "bad_deploy_002-v1.tar.gz",
-      "sha256": "2b0c0543b0c5c1d59c7f406b0ac5e0aa919bcf36eb9fd4e0235c04d9a8dcae61",
-      "bytes": 8203434,
+      "version": "v2",
+      "asset": "bad_deploy_002-v2.tar.gz",
+      "sha256": "069a4ebed1e0172adf9f0951b30514d82f107f5b4ca501344f34783982089cca",
+      "bytes": 8203436,
       "rows": {
         "metrics": 178867,
         "logs": 3114,
@@ -30,10 +30,10 @@
     },
     {
       "fixture_id": "bad_deploy_ambiguous_001",
-      "version": "v1",
-      "asset": "bad_deploy_ambiguous_001-v1.tar.gz",
-      "sha256": "a424c85ed365a34342eeefd6467c038c08c5703e33c9c90a739d0f1016f0e031",
-      "bytes": 8661920,
+      "version": "v2",
+      "asset": "bad_deploy_ambiguous_001-v2.tar.gz",
+      "sha256": "2a1864a17acec99debc43a2f0ebbb0ff154cc7619c98110f2e043ced3a4b2c94",
+      "bytes": 8661914,
       "rows": {
         "metrics": 184873,
         "logs": 3996,
@@ -43,10 +43,10 @@
     },
     {
       "fixture_id": "dependency_outage_001",
-      "version": "v1",
-      "asset": "dependency_outage_001-v1.tar.gz",
-      "sha256": "17bf37d07f43211a84ed7a610cfe0b678d1a45c71291798e1cd732db4a056b43",
-      "bytes": 8462123,
+      "version": "v2",
+      "asset": "dependency_outage_001-v2.tar.gz",
+      "sha256": "e30cf97bcc3a842286222519b92db996b2a4e6b18204cd4a88b68cc299a26b2d",
+      "bytes": 8462119,
       "rows": {
         "metrics": 181890,
         "logs": 3975,
@@ -56,10 +56,10 @@
     },
     {
       "fixture_id": "dependency_outage_ambiguous_001",
-      "version": "v1",
-      "asset": "dependency_outage_ambiguous_001-v1.tar.gz",
-      "sha256": "13ae717c994123b757fd3b8827a7fe0588017070e67f5c8076483e667a02be3a",
-      "bytes": 10283263,
+      "version": "v2",
+      "asset": "dependency_outage_ambiguous_001-v2.tar.gz",
+      "sha256": "1e9fc14db3ce3398d4c8dca5aad5a8b26ae94b0575a481393510a27879ac20cd",
+      "bytes": 10283267,
       "rows": {
         "metrics": 196466,
         "logs": 5822,
@@ -69,10 +69,10 @@
     },
     {
       "fixture_id": "dependency_outage_injection_001",
-      "version": "v1",
-      "asset": "dependency_outage_injection_001-v1.tar.gz",
-      "sha256": "6e4f5879cdc6f6ec3ec4ea078dc2ec0dff9a7f514c180df224667d58bd08bba4",
-      "bytes": 8125043,
+      "version": "v2",
+      "asset": "dependency_outage_injection_001-v2.tar.gz",
+      "sha256": "5e51685a9e998b865b6cb7faaf430bfcdfc25c474a6dc9903b3ffbf330655703",
+      "bytes": 8127336,
       "rows": {
         "metrics": 176510,
         "logs": 3666,
@@ -82,10 +82,10 @@
     },
     {
       "fixture_id": "memory_leak_001",
-      "version": "v1",
-      "asset": "memory_leak_001-v1.tar.gz",
-      "sha256": "d3ed0f22a5cb517057cf45561c9513ea73af682533461f8a8291d408b6139869",
-      "bytes": 8053925,
+      "version": "v2",
+      "asset": "memory_leak_001-v2.tar.gz",
+      "sha256": "94a8c3a96d17a1851f64019b69eb42e012045eb9a166ce83c656a0503d07a12f",
+      "bytes": 8053928,
       "rows": {
         "metrics": 173670,
         "logs": 2851,
@@ -95,10 +95,10 @@
     },
     {
       "fixture_id": "no_fault_001",
-      "version": "v1",
-      "asset": "no_fault_001-v1.tar.gz",
-      "sha256": "8ea59b5ae896413c919655eb65034913f0f3ff71498cbf37cfaf2a4266d40eb0",
-      "bytes": 8180951,
+      "version": "v2",
+      "asset": "no_fault_001-v2.tar.gz",
+      "sha256": "647c6490302d8f39159167288ff88158bba2159df73bc05679b447e6a74914f3",
+      "bytes": 8180944,
       "rows": {
         "metrics": 168751,
         "logs": 3070,
@@ -108,10 +108,10 @@
     },
     {
       "fixture_id": "no_fault_002",
-      "version": "v1",
-      "asset": "no_fault_002-v1.tar.gz",
-      "sha256": "dfabbda528d3cdeac4eeaa04d8cee30f79bec1e6f0438a519eea9a5560efe831",
-      "bytes": 8058087,
+      "version": "v2",
+      "asset": "no_fault_002-v2.tar.gz",
+      "sha256": "73890ef0c58d7d4508e38b89428abb1b827502a0ca728fa9ab6125552a497017",
+      "bytes": 8058079,
       "rows": {
         "metrics": 170631,
         "logs": 2936,
@@ -121,10 +121,10 @@
     },
     {
       "fixture_id": "no_fault_003",
-      "version": "v1",
-      "asset": "no_fault_003-v1.tar.gz",
-      "sha256": "0f0a74b4644b871eaecc21caa399713b2197610dfcca24af4e450090d5008c20",
-      "bytes": 9451743,
+      "version": "v2",
+      "asset": "no_fault_003-v2.tar.gz",
+      "sha256": "1838b274bd0563c9adb276d01ed590d93c56067cd838059ff67205c3b60a8e2f",
+      "bytes": 9451741,
       "rows": {
         "metrics": 181427,
         "logs": 3843,
@@ -134,10 +134,10 @@
     },
     {
       "fixture_id": "noisy_neighbor_001",
-      "version": "v1",
-      "asset": "noisy_neighbor_001-v1.tar.gz",
-      "sha256": "5d8357a1d80b62ca4a118ca5f9b1a1db337bd954bcc3bd70d762bd77b8bb1619",
-      "bytes": 8547142,
+      "version": "v2",
+      "asset": "noisy_neighbor_001-v2.tar.gz",
+      "sha256": "dd354a0589f828f113167578ecefa7660a842200e0ee95f4f2cca6c76a5481bc",
+      "bytes": 8547265,
       "rows": {
         "metrics": 181749,
         "logs": 3070,
@@ -147,10 +147,10 @@
     },
     {
       "fixture_id": "noisy_neighbor_002",
-      "version": "v1",
-      "asset": "noisy_neighbor_002-v1.tar.gz",
-      "sha256": "1d2cd47ff8adebb5a610e076a21a6877466e9aaf3148fdc72ebfacb516f37781",
-      "bytes": 8507392,
+      "version": "v2",
+      "asset": "noisy_neighbor_002-v2.tar.gz",
+      "sha256": "3baa85dcbb1f243768614082629ba1ef5ace42d8057b461a527199afe83a8d33",
+      "bytes": 8507450,
       "rows": {
         "metrics": 178505,
         "logs": 3130,
@@ -160,10 +160,10 @@
     },
     {
       "fixture_id": "pool_exhaustion_001",
-      "version": "v1",
-      "asset": "pool_exhaustion_001-v1.tar.gz",
-      "sha256": "5e28dc2c23aa429cd9e7b2af944a87e48381bf4b132785f0769e1a9c2b17e5b8",
-      "bytes": 9045244,
+      "version": "v2",
+      "asset": "pool_exhaustion_001-v2.tar.gz",
+      "sha256": "dc9d105bc94a94212df0b77585f2503043e30f8c3c62178c334a7bac76d76dea",
+      "bytes": 9045262,
       "rows": {
         "metrics": 188452,
         "logs": 3604,
@@ -173,10 +173,10 @@
     },
     {
       "fixture_id": "pool_exhaustion_002",
-      "version": "v1",
-      "asset": "pool_exhaustion_002-v1.tar.gz",
-      "sha256": "aba0fbc69688fd85ddbdd22f650cd5b6cdbfadacd5b7218f9962f816816b4865",
-      "bytes": 8048081,
+      "version": "v2",
+      "asset": "pool_exhaustion_002-v2.tar.gz",
+      "sha256": "ee53d3fb73e137278fac5e768442dcc63dee3fb543a117bad904cd3c7098909f",
+      "bytes": 8048084,
       "rows": {
         "metrics": 174903,
         "logs": 2896,
@@ -186,9 +186,9 @@
     },
     {
       "fixture_id": "pool_exhaustion_003",
-      "version": "v1",
-      "asset": "pool_exhaustion_003-v1.tar.gz",
-      "sha256": "c8c59cd2751549d4a34785fb802afcef41de582bf218e1711059711c44f1d03b",
+      "version": "v2",
+      "asset": "pool_exhaustion_003-v2.tar.gz",
+      "sha256": "3ed392071eb8eb21f21bc025d6092abf03cd644b0d857f6d659a8a69e452d2b8",
       "bytes": 8730729,
       "rows": {
         "metrics": 176143,
@@ -199,10 +199,10 @@
     },
     {
       "fixture_id": "slow_query_001",
-      "version": "v1",
-      "asset": "slow_query_001-v1.tar.gz",
-      "sha256": "bcc9fb851514f601db5d6323214c0ad1e57632be1759bcf5f2dd3a4eb7836f90",
-      "bytes": 8572865,
+      "version": "v2",
+      "asset": "slow_query_001-v2.tar.gz",
+      "sha256": "5518f0f88fcbefa8410618f314aa9bca52bbd1b64d8f7645c17b4fe60b5cb95d",
+      "bytes": 8572869,
       "rows": {
         "metrics": 177307,
         "logs": 3792,
@@ -212,10 +212,10 @@
     },
     {
       "fixture_id": "slow_query_002",
-      "version": "v1",
-      "asset": "slow_query_002-v1.tar.gz",
-      "sha256": "e385f65b8aa7f8625548043603238b0779e09c09cfdfbcc8d0f5cab245733c49",
-      "bytes": 9705704,
+      "version": "v2",
+      "asset": "slow_query_002-v2.tar.gz",
+      "sha256": "e9b8a87849084b5a5582acb5d92c039e1446d22f6142c3dfb7152fec78dd09c3",
+      "bytes": 9705717,
       "rows": {
         "metrics": 176588,
         "logs": 4709,
@@ -225,10 +225,10 @@
     },
     {
       "fixture_id": "slow_query_ambiguous_001",
-      "version": "v1",
-      "asset": "slow_query_ambiguous_001-v1.tar.gz",
-      "sha256": "146afdf75c1f5a3a777bf4f5cb5b2d9b0c053f62a3aa15bbda7c622296abdd91",
-      "bytes": 8512513,
+      "version": "v2",
+      "asset": "slow_query_ambiguous_001-v2.tar.gz",
+      "sha256": "e798d2dd8765dd36deed2b443cc1f1f1547c9bf780fd29448f0fc0c69157fc61",
+      "bytes": 8512516,
       "rows": {
         "metrics": 181892,
         "logs": 3502,
@@ -238,10 +238,10 @@
     },
     {
       "fixture_id": "slow_query_injection_002",
-      "version": "v1",
-      "asset": "slow_query_injection_002-v1.tar.gz",
-      "sha256": "e4fe116c03c431c242d8ad10c6441e26a56d5052bbd77099326946ca6dcfe28f",
-      "bytes": 8577252,
+      "version": "v2",
+      "asset": "slow_query_injection_002-v2.tar.gz",
+      "sha256": "a814b7649c65be615907ad47fef43c2642fd3e82f0445ab6cc826e132ac9bf2b",
+      "bytes": 8579513,
       "rows": {
         "metrics": 177668,
         "logs": 3772,

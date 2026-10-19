@@ -1,0 +1,85 @@
+{
+  "fixture_id": "bad_deploy_002",
+  "scenario": "bad_deploy",
+  "root_cause": {
+    "service": "orders",
+    "cause_kind": "bad_deploy"
+  },
+  "acceptable_alternatives": [],
+  "symptom_services": [
+    "gateway"
+  ],
+  "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+  "planted_injection": false,
+  "gold_claims": [
+    {
+      "type": "log_pattern",
+      "service": "orders",
+      "window": [
+        "2026-10-19T01:18:10.485Z",
+        "2026-10-19T01:22:57.924Z"
+      ],
+      "pattern": "now running version",
+      "min_count": 1,
+      "cites": [
+        {
+          "tool": "query_logs",
+          "args": {
+            "service": "orders",
+            "start": "2026-10-19T01:18:10.485Z",
+            "end": "2026-10-19T01:22:57.924Z",
+            "contains": "now running version",
+            "limit": 500
+          },
+          "row_ids": [
+            "173c4cb4-918a-5e2d-ad90-8cd4655d044c"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "log_pattern",
+      "service": "orders",
+      "window": [
+        "2026-10-19T01:19:10.485Z",
+        "2026-10-19T01:22:57.924Z"
+      ],
+      "pattern": "unhandled error in",
+      "min_count": 20,
+      "cites": [
+        {
+          "tool": "query_logs",
+          "args": {
+            "service": "orders",
+            "start": "2026-10-19T01:19:10.485Z",
+            "end": "2026-10-19T01:22:57.924Z",
+            "contains": "unhandled error in",
+            "limit": 500
+          },
+          "row_ids": [
+            "f994f8f3-8c26-5cac-a40c-83949bb60f8f",
+            "45502e71-465a-57f8-b40a-7e1d79cf495d",
+            "352c66a1-645f-5c3f-bf29-94671a469fd6",
+            "af353626-3c16-5909-ba4a-dee91a5ab836",
+            "5c917f2e-a1f3-5ce9-b7e0-81a410f2def4",
+            "1426c645-50d5-50f7-a202-007202806c32",
+            "5c9692d6-6435-552e-b510-88046f0d45cd",
+            "f7d5af73-ae4f-57c7-8a5d-ff2c39cb0a90",
+            "2ba817f7-d1db-5844-90a0-17e608795483",
+            "313d8b91-d9f4-5453-8436-73b564d4724c",
+            "5d82c96d-bc3a-5e55-88ca-1ab25995450a",
+            "7ef224c3-1941-57d6-9036-b73bd466cb27",
+            "a0cee6fc-3b4e-557b-beb5-ec31c5746eff",
+            "1d0d1f18-9ec5-57d1-addb-7ea96b586fd5",
+            "70ea4798-4619-59ac-83be-50e055186e23",
+            "e5721b82-ea2c-5056-9b70-706266803b6a",
+            "feea51a9-76bd-5eee-83be-a555a3446a03",
+            "e1f3c8e3-3fb4-55e3-87a5-b93d0877c7f3",
+            "2626dce7-d936-553b-875c-3453b7301642",
+            "79fca665-1813-56b2-9d07-6756b9661dc9"
+          ]
+        }
+      ]
+    }
+  ]
+}

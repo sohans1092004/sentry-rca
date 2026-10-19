@@ -1,0 +1,65 @@
+{
+  "run": {
+    "run_id": "slow_query-1-20261018T222907",
+    "plan": {
+      "scenario": "slow_query",
+      "variant": null,
+      "seed": 1,
+      "delay_s": 56,
+      "root_cause": {
+        "service": "inventory",
+        "cause_kind": "slow_query"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "payments",
+        "orders",
+        "gateway"
+      ],
+      "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "inventory",
+          "kind": "slow_query",
+          "params": {
+            "query": "reserve",
+            "delay_ms": 546
+          },
+          "duration_s": 272
+        }
+      ],
+      "deploy": null
+    },
+    "injection_start": "2026-10-18T22:29:07.192+00:00",
+    "applied": [
+      {
+        "at": "2026-10-18T22:29:07.767+00:00",
+        "at_s": 0,
+        "service": "inventory",
+        "kind": "slow_query",
+        "params": {
+          "query": "reserve",
+          "delay_ms": 546
+        },
+        "duration_s": 272
+      }
+    ],
+    "deploy_row": null,
+    "injection_end": "2026-10-18T22:33:39.197+00:00"
+  },
+  "incident": {
+    "id": "302b5b9a-d8ba-447d-ae72-61e774600819",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-18 22:29:22.549809+00:00",
+    "first_anomaly_at": "2026-10-18 22:29:17.463762+00:00",
+    "last_seen": "2026-10-18 22:34:37.448951+00:00",
+    "alert_count": 64,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 14.782809,
+  "onset_to_open_s": 5.086047,
+  "variant": null
+}
