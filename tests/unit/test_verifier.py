@@ -210,3 +210,14 @@ def test_one_failed_claim_rejects_the_hypothesis_and_every_result_is_kept():
     h = verify(hypothesis(metric_claim(p, mm=1.0), log_claim(lg, seq=2, min_count=5)), calls, "baseline")
     assert not h.passed and [c.passed for c in h.claims] == [True, False]
     assert "4 cited rows contain" in h.claims[1].reason
+
+
+def test_the_verifier_does_not_depend_on_gold():
+    """The verifier must be independent of recorder/gold.py, which builds the gold claims it is tested against."""
+    import ast
+    from pathlib import Path
+
+    tree = ast.parse((Path(__file__).parents[2] / "investigation" / "verifier.py").read_text(encoding="utf-8"))
+    imported = {n.module for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)}
+    imported |= {a.name for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
+    assert not any(m and m.startswith("recorder") for m in imported), imported

@@ -1,7 +1,6 @@
 # ADR-006: A causal-ranking heuristic, not formal causal inference, and its blind spot
 
-**Status:** Draft (written in Phase 1 for the `noisy_neighbor` fixtures; the heuristic itself is
-built in Phase 2, and its measured accuracy goes here then).
+**Status:** Accepted (Phase 2). Measured accuracy: `docs/measurements/phase2.md`.
 
 ## Context
 
@@ -38,6 +37,35 @@ upstream explanation, wrongly blames a victim instead of reporting insufficient 
 that names `payments` or `inventory` as the root cause of a `noisy_neighbor` fixture is scored
 wrong.
 
+## How the baseline implements it (`investigation/baseline.py`)
+
+1. **Onsets** come from `get_incident_timeline` (Amendment A20): per service and signal (latency,
+   error rate, CPU, memory, pool wait) on the services' own 5 s metric export ticks, against the first
+   10 minutes of the window. Ticks, not 30 s buckets: a bucket stamps an onset up to 30 s before the
+   data that shows it, which made a true "deploy finished before the onset" claim false.
+2. **Temporal precedence is weak here, and the ranker treats it so.** For request-connected faults,
+   every upstream service's latency onset lands within ~0.5 s of the cause's (latency propagates
+   instantly; the spread is export-tick jitter). Precedence is only a tie-breaking 0.2 of the score.
+3. **Trace structure carries the ranking.** For each slow or failing trace from the first onset, walk
+   down from the incident service's root span along the failing child, else the child holding the
+   most time, while it holds at least half of the root; the service reached is that trace's dominant
+   service. Share of traces dominated = 0.4 of the score.
+4. **A cause kind needs its own evidence** (0.3): pool-acquire timeouts, slow-query warnings,
+   provider failures, memory growth, or a deploy finishing <= 30 min before the service's onset
+   (deploy proximity adds up to 0.1). A service that is only slow is a `downstream_symptom`; with no
+   candidate at all, the outcome is `INSUFFICIENT_EVIDENCE`.
+
+Every hypothesis is emitted as typed claims citing the rows used, with thresholds set conservatively
+below what the cited rows show, so true claims verify (ADR-007). The output is byte-identical across
+runs on the same data (tested on every fixture).
+
+## Gold claims stay inside the scope (Amendment A14)
+
+The `noisy_neighbor` fixtures hold a true fact no investigation can cite: the batch job's CPU rose.
+It is kept in `label.json` as `out_of_scope_evidence` with its reason ("no trace edge to the incident
+service"), never as a gold claim, and a scope test asserts that citing it is rejected during that
+fixture's investigation.
+
 ## Consequences
 
 - Request-connected chains (deploy → slow query → pool exhaustion → retry storm → CPU) are the
@@ -45,5 +73,8 @@ wrong.
 - Closing the gap would take host-level topology (which containers share a node or core) as a
   second source of edges, so a host neighbour enters the scope. Out of scope for this project; it is
   the first thing a production version would add.
-- TODO (Phase 2): baseline accuracy on the request-connected fixtures vs the `noisy_neighbor`
-  fixtures, and how often each ranker blames a victim.
+- Measured (Phase 2 eval, `docs/measurements/phase2.md`): baseline outcome per fixture, including
+  whether it blames a victim on the `noisy_neighbor` fixtures. Known miss before the full eval: on
+  `slow_query_ambiguous_001` both injected causes are found and verified but scored 0.45 apart, so the
+  baseline reports one root cause instead of `CONFLICTING_EVIDENCE`: an error-mode fault barely shows
+  in slow traces, so trace dominance favours the slow cause.
