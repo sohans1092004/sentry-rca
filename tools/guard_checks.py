@@ -48,17 +48,38 @@ GUARDS: dict[str, dict] = {
         ],
         "tests": [T + "test_processors.py::test_kill_between_insert_and_commit_loses_nothing"],
     },
-    "incidents_one_open": {
+    # Two ways to break incident dedup, each failing by visible state, not by an error:
+    "incidents_plain_insert": {
         "property": "Incident dedup: N repeated alerts -> one open incident with alert_count = N",
-        "file": "common/migrations/postgres/0001_init.sql",
+        "file": "alerting/engine.py",
         "edits": [
             (
+                "        \"ON CONFLICT (tenant_id, fingerprint) WHERE status <> 'resolved' \"\n"
+                '        "DO UPDATE SET last_seen = EXCLUDED.last_seen, alert_count = incidents.alert_count + 1 "\n',
+                "",
+            )
+        ],
+        # a plain INSERT needs the index gone too, or it fails with a unique violation instead of duplicating
+        "extra": [
+            (
+                "common/migrations/postgres/0001_init.sql",
                 "CREATE UNIQUE INDEX incidents_one_open\n"
                 "  ON incidents (tenant_id, fingerprint) WHERE status <> 'resolved';",
                 "",
             )
         ],
-        "tests": [T + "test_alerting.py::test_repeated_alerts_dedup_into_one_incident_until_resolved"],
+        "tests": [T + "test_alerting.py::test_repeated_alerts_make_exactly_one_open_incident"],
+    },
+    "incidents_full_unique_index": {
+        "property": "Incident dedup is per open incident: after resolve, a new alert opens a new incident",
+        "file": "common/migrations/postgres/0001_init.sql",
+        "edits": [
+            (
+                "  ON incidents (tenant_id, fingerprint) WHERE status <> 'resolved';",
+                "  ON incidents (tenant_id, fingerprint);",
+            )
+        ],
+        "tests": [T + "test_alerting.py::test_alert_after_resolve_opens_a_new_incident"],
     },
     "stable_trigger_id": {
         "property": "incidents.opened redelivery is harmless: two publishes -> one downstream event",
@@ -76,26 +97,29 @@ GUARDS: dict[str, dict] = {
 
 
 def pytest(tests: list[str]) -> tuple[int, str]:
-    cmd = ["uv", "run", "pytest", "-q", "-p", "no:cacheprovider", *tests]
+    cmd = ["uv", "run", "pytest", "-vv", "-p", "no:cacheprovider", *tests]
     p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
     lines = (p.stdout + p.stderr).strip().splitlines()
-    summary = "\n".join(lines[-6:])
+    errors = [ln for ln in lines if ln.startswith("E ")][:8]  # the failing assertion, with its values
+    summary = "\n".join(errors + lines[-1:])
     return p.returncode, f"$ {' '.join(cmd)}\n{summary}"
 
 
 def check(name: str) -> bool:
     g = GUARDS[name]
-    path = ROOT / g["file"]
-    original = path.read_bytes()
-    text = original.decode()
-    for old, new in g["edits"]:
-        assert text.count(old) == 1, f"{name}: guard text not found exactly once in {g['file']}"
-        text = text.replace(old, new)
+    changes = [(g["file"], old, new) for old, new in g["edits"]] + list(g.get("extra", []))
+    originals = {f: (ROOT / f).read_bytes() for f, _, _ in changes}
+    texts = {f: b.decode() for f, b in originals.items()}
+    for f, old, new in changes:
+        assert texts[f].count(old) == 1, f"{name}: guard text not found exactly once in {f}"
+        texts[f] = texts[f].replace(old, new)
     try:
-        path.write_bytes(text.encode())
+        for f, t in texts.items():
+            (ROOT / f).write_bytes(t.encode())
         removed_rc, removed_out = pytest(g["tests"])
     finally:
-        path.write_bytes(original)
+        for f, b in originals.items():
+            (ROOT / f).write_bytes(b)
     restored_rc, restored_out = pytest(g["tests"])
     ok = removed_rc != 0 and restored_rc == 0
     report = (

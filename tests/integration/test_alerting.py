@@ -16,20 +16,28 @@ def incidents(pg):
     return pg.execute("SELECT id::text, status, alert_count FROM incidents ORDER BY opened_at").fetchall()
 
 
-def test_repeated_alerts_dedup_into_one_incident_until_resolved(pg):
+def open_incidents(pg):
+    return pg.execute("SELECT count(*) FROM incidents WHERE status <> 'resolved'").fetchone()[0]
+
+
+def test_repeated_alerts_make_exactly_one_open_incident(pg):
     t0 = datetime.now(UTC)
     results = [record_alert(pg, DEMO_TENANT_ID, FP, "gateway", t0, t0 + timedelta(seconds=5 * i)) for i in range(7)]
+    assert open_incidents(pg) == 1, f"{open_incidents(pg)} open incidents for one condition"
     assert [opened for _, opened in results] == [True] + [False] * 6
-    assert len({iid for iid, _ in results}) == 1
-    assert incidents(pg) == [(results[0][0], "open", 7)]
+    assert incidents(pg) == [(results[0][0], "open", 7)]  # alert_count = N
 
-    last_seen = t0 + timedelta(seconds=30)
-    assert resolve_stale(pg, last_seen + timedelta(minutes=2)) == []  # still within the resolve window
-    assert resolve_stale(pg, last_seen + timedelta(minutes=4)) == [results[0][0]]
+
+def test_alert_after_resolve_opens_a_new_incident(pg):
+    t0 = datetime.now(UTC)
+    first, _ = record_alert(pg, DEMO_TENANT_ID, FP, "gateway", t0, t0)
+    assert resolve_stale(pg, t0 + timedelta(minutes=2)) == []  # still within the resolve window
+    assert resolve_stale(pg, t0 + timedelta(minutes=4)) == [first]
 
     new_id, opened = record_alert(pg, DEMO_TENANT_ID, FP, "gateway", t0, t0 + timedelta(minutes=10))
-    assert opened and new_id != results[0][0]
-    assert incidents(pg) == [(results[0][0], "resolved", 7), (new_id, "open", 1)]
+    # (id, status, alert_count) rows: the resolved incident must be untouched and a new one open
+    assert [(status, n) for _, status, n in incidents(pg)] == [("resolved", 1), ("open", 1)]
+    assert opened and new_id != first
 
 
 def test_incidents_opened_redelivery_is_one_event_downstream(pg, kafka_bootstrap, topics):
