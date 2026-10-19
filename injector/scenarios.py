@@ -12,7 +12,7 @@ from typing import Any
 
 import httpx
 
-from common import config, db
+from common import config, db, deploys
 
 SCENARIOS = ["bad_deploy", "slow_query", "pool_exhaustion", "dependency_outage", "memory_leak",
              "noisy_neighbor", "no_fault"]  # fmt: skip
@@ -61,6 +61,15 @@ class Plan:
     planted_injection: bool
     steps: list[Step] = field(default_factory=list)
     deploy: dict[str, Any] | None = None  # bad_deploy: {service, version, rollout_s}
+    notes: str | None = None  # written into label.json (Amendment A13)
+
+
+NOISY_NEIGHBOR_NOTE = (
+    "batchjob shares a CPU core with payments and inventory but has no trace edges: no span connects it "
+    "to any service, so it never appears in service_edges and is outside every investigation scope "
+    "(SPEC 5.2) by design. No claim about it can be cited, so INSUFFICIENT_EVIDENCE is the expected, "
+    "honest outcome; a ranker that blames payments or inventory (the victims) is wrong. See ADR-006."
+)
 
 
 def _fault(scenario: str, rng: random.Random, exclude: set[str]) -> tuple[str, list[Step], dict[str, Any] | None]:
@@ -120,7 +129,7 @@ def plan(scenario: str, seed: int, variant: str | None = None) -> Plan:
         p = Plan(scenario, variant, seed, delay, None, [], list(DEMO), "INSUFFICIENT_EVIDENCE", False, steps)
     elif scenario == "noisy_neighbor":  # A3: no trace path, outside any scope -> nothing verifiable
         p = Plan(scenario, variant, seed, delay, {"service": root, "cause_kind": scenario}, [], _symptoms(root),
-                 "INSUFFICIENT_EVIDENCE", False, steps)  # fmt: skip
+                 "INSUFFICIENT_EVIDENCE", False, steps, notes=NOISY_NEIGHBOR_NOTE)  # fmt: skip
     else:
         p = Plan(scenario, variant, seed, delay, {"service": root, "cause_kind": scenario}, [], _symptoms(root),
                  "ROOT_CAUSE_IDENTIFIED", False, steps, deploy)  # fmt: skip
@@ -173,12 +182,7 @@ def run(p: Plan, runs_dir: Path = Path("runs"), sleep: Any = time.sleep) -> dict
             sleep(p.deploy["rollout_s"])
             deploy = {"id": str(uuid.uuid4()), "tenant_id": config.DEMO_TENANT_ID, "service": p.deploy["service"],
                       "version": p.deploy["version"], "started_at": start, "finished_at": _now()}  # fmt: skip
-            with db.postgres() as conn:
-                conn.execute(
-                    "INSERT INTO deploys (id, tenant_id, service, version, started_at, finished_at) "
-                    "VALUES (%(id)s, %(tenant_id)s, %(service)s, %(version)s, %(started_at)s, %(finished_at)s)",
-                    deploy,
-                )
+            deploys.record(db.clickhouse(), deploy)
             record["deploy_row"] = {k: _iso(v) if isinstance(v, datetime) else v for k, v in deploy.items()}
         for step in sorted(p.steps, key=lambda s: s.at_s):
             sleep(max(0.0, step.at_s - (time.monotonic() - t0)))

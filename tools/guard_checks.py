@@ -87,6 +87,14 @@ GUARDS: dict[str, dict] = {
         "edits": [('return f"opened:{incident_id}"', 'return f"opened:{incident_id}:{uuid.uuid4()}"')],
         "tests": [T + "test_alerting.py::test_incidents_opened_redelivery_is_one_event_downstream"],
     },
+    "metrics_1h_dedup": {
+        "property": "metrics_1h: a batch delivered twice is counted once",
+        "file": "recorder/downsample.py",
+        "edits": [
+            ("  ORDER BY point_id LIMIT 1 BY point_id  -- one row per stable ID: a redelivered copy counts once\n", "")
+        ],
+        "tests": [T + "test_retention.py::test_metrics_1h_counts_a_twice_delivered_batch_once"],
+    },
     "fixture_content_hash": {
         "property": "Fixture round trip: identical row counts and content hashes after load",
         "file": "recorder/load.py",

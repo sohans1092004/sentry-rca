@@ -67,7 +67,7 @@ All measured on the development laptop unless stated; report as "where the bottl
 | Requirement | Target |
 |---|---|
 | Ingestion throughput | 5,000 events/s sustained (mixed signals); measure and report the ceiling |
-| Alert-to-incident latency | < 30 s from anomaly onset |
+| Alert-to-incident latency | < 30 s from anomaly onset for fast-onset faults (a step change: errors, slow queries, pool exhaustion, outages, bad deploys, CPU contention); slow-onset faults (`memory_leak`) measured and reported separately, without a target (A12) |
 | First verified hypothesis visible | < 60 s for a single-service incident |
 | Final outcome | < 90 s for a single-service incident; multi-hop incidents measured and reported separately |
 | Platform availability without the LLM | Ingestion, alerting and baseline investigation keep working with the model stopped |
@@ -199,7 +199,8 @@ A traffic generator produces steady load with daily-shaped variation and random 
   "symptom_services": ["orders", "payments", "gateway"],
   "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
   "planted_injection": false,
-  "gold_claims": [ { "type": "metric_change", "...": "..." } ]
+  "gold_claims": [ { "type": "metric_change", "...": "..." } ],
+  "notes": "optional: why this label is what it is, when that is not obvious (A13)"
 }
 ```
 
@@ -238,7 +239,16 @@ CREATE TABLE spans (
 
 - **Dedup**: at-least-once delivery means duplicates; `ReplacingMergeTree` keyed by the stable ID collapses them in the background, and queries that must be exact use `FINAL` or `argMax` (ADR-001 records the query cost).
 - `service_edges` is a materialised view of parent → child service calls per 5-minute bucket, derived from spans; it feeds the dependency graph (§5.2).
-- `metrics_1h` is a materialised 1-hour downsample kept 90 days.
+- `metrics_1h` is a 1-hour downsample kept 90 days, computed by an hourly job from **deduplicated** raw rows for closed hours only; re-running an hour replaces it (A10). It is not a materialised view: a view fires on insert, before dedup, and counts a redelivered batch twice.
+- `deploys` lives in ClickHouse, live and in every eval database, so the injector's writes, the fixture recorder and `get_recent_deploys` share one code path (`common/deploys.py`) (A9):
+
+```sql
+CREATE TABLE deploys (
+  id String, tenant_id LowCardinality(String), service LowCardinality(String), version String,
+  started_at DateTime64(3), finished_at DateTime64(3)
+) ENGINE = ReplacingMergeTree
+  ORDER BY (tenant_id, service, finished_at, id);
+```
 - A daily job archives logs and spans older than 7 days to local Parquet files, kept 90 days.
 - Evals use a separate ClickHouse database per run, loaded from fixture datasets, so fixtures never mix with live data.
 
@@ -268,10 +278,7 @@ CREATE TABLE alert_rules (
   enabled BOOLEAN NOT NULL DEFAULT true
 );
 
-CREATE TABLE deploys (
-  id UUID PRIMARY KEY, tenant_id UUID NOT NULL, service TEXT NOT NULL,
-  version TEXT NOT NULL, started_at TIMESTAMPTZ NOT NULL, finished_at TIMESTAMPTZ NOT NULL
-);
+-- deploys: moved to ClickHouse (§4.1, A9)
 
 CREATE TABLE investigations (
   id UUID PRIMARY KEY,
@@ -527,6 +534,17 @@ Common checks for every claim: each cited `tool_call_seq` belongs to this invest
 | `deploy_precedes_onset(deploy_id, service, onset_ts)` | The cited deploy row is that deploy, for that service; it finished before `onset_ts`, and `onset_ts − finished_at` ≤ `max_deploy_gap` (default 30 min); `onset_ts` matches a cited timeline anomaly-onset row within 1 minute |
 | `runbook_match(doc_id, similarity)` | The cited runbook row is that document, with similarity ≥ the claimed value and ≥ `runbook_min_similarity` (default 0.75), and it is not an excluded fixture postmortem |
 
+**Numeric rules (pinned, A11).** These are exact, so the verifier and the fixture gold claims (`recorder/gold.py`) agree to the last row:
+
+- Timestamps are UTC, compared at millisecond precision (ClickHouse `DateTime64(3)`).
+- A claim `window` `[start, end]` is **closed**: a row at `start` or at `end` is inside it.
+- `metric_change` baseline is the **half-open** interval `[start − 15 min, start)`: a row at exactly `start` is in the window, not the baseline.
+- `b` and `w` are **arithmetic means of the cited rows' `value`**, unweighted (each cited row counts once, whatever its labels or interval). Only cited rows count; rows of the same series that are not cited are ignored.
+- Magnitude is `(w − b) / max(|b|, ε)` with **ε = 1e-6**. `up` passes when it is `≥ min_magnitude`; `down` passes when it is `≤ −min_magnitude`. Both comparisons are inclusive.
+- `log_pattern`: a cited row matches when `pattern.lower()` is a substring of `body.lower()`; at least `min_count` cited rows must match.
+- `trace_dependency`: a span descends from another when following `parent_span_id` links (at most 64 hops) reaches it; the share is `child.duration_ms / parent.duration_ms` and passes when `≥ min_latency_share` for every cited trace. Gold claims cite the parent as the root SERVER span of `parent_service` starting inside the window, and the child as the longest SERVER span of `child_service` under it.
+- Gold claims set thresholds below what the data shows: `min_magnitude = max(0.4, ⌊0.8 × observed ratio⌋ to 1 decimal)`, `min_latency_share = ⌊smallest observed share⌋ to 2 decimals`, and are emitted only when the observed ratio is ≥ 0.5 (share ≥ 0.3).
+
 Hypothesis rules:
 - At least one claim.
 - A `candidate_root_cause` needs at least one claim that is not `runbook_match`: a similar past incident is supporting context, not evidence.
@@ -743,3 +761,8 @@ Decisions taken while building, each landed in the same commit as the code it go
 | A6 | 1 | §3, §8.1 | Fixture gold claims use the §8.1 claim shape, but each cite is `{"tool": <§5.1 tool>, "args": {...}, "row_ids": [stable telemetry IDs]}` instead of `tool_call_seq`; Phase 2's eval harness executes each cite as a tool call and rewrites it to `tool_call_seq` before verification. Phase 1 gold claims are `metric_change`, `log_pattern` and `trace_dependency`; `deploy_precedes_onset` gold claims (which cite timeline rows) are added in Phase 2 as new dataset versions. | No investigation, and so no tool call, exists when a fixture is recorded. |
 | A7 | 1 | §5.2, §19.4 | Fixtures record the window `first_anomaly_at − 15 min` to `last_seen + 5 min`; in fixture evals the §5.2 scope window is clamped to the recorded window. Live scope defaults (30 min before / 15 after) are unchanged. | Fixtures must not overlap another fault's window; 15/5 margins make a 19-fixture campaign ~7 h instead of ~14 h, and 15 min still covers §8.2's 15-minute `metric_change` baseline. |
 | A8 | 1 | §19 (thresholds) | Alert defaults: evaluate every 5 s over a trailing 60 s window, 2 consecutive breaches. Error rate = 5xx / requests > 5 % with ≥ 20 requests. Latency: p95 robust z-score (median/MAD of 1-minute p95s over the trailing 30 min, ≥ 10 baseline minutes) > 4, and p95 > 1.5 × baseline median, and p95 − median > 20 ms. Auto-resolve after 3 min without a breach (the C11 operational meaning of `status`; the spec gave no resolve rule). | The ratio and absolute floors stop background wobble firing; median/MAD keeps a previous incident in the trailing window from masking the next; 2 × 5 s keeps detection well inside the 30 s target. |
+| A9 | 1 | §4.1, §4.2 | `deploys` moves from Postgres to ClickHouse (DDL in §4.1). `common/deploys.py` is the one code path: `record()` for the injector, `recent()` for the fixture recorder and Phase 2's `get_recent_deploys`, against the live or an eval database alike. `python -m common.migrate` copies remaining Postgres rows across before the Postgres migration drops the table. | Evals load fixtures into an isolated ClickHouse database; with deploys in Postgres, the live and eval paths of `get_recent_deploys` would differ. |
+| A10 | 1 | §4.1, §4.4 | `metrics_1h` is computed by an hourly job (`recorder/downsample.py`, run by the archiver) over closed hours, from raw rows deduplicated by `point_id`; a ReplacingMergeTree versioned by `computed_at` makes a recompute replace the hour. The materialised view is dropped. | The view fired on insert, before ReplacingMergeTree dedup, so a redelivered batch inflated the hour's counts and sums. Test: `test_metrics_1h_counts_a_twice_delivered_batch_once`; guard `metrics_1h_dedup`. |
+| A11 | 1 | §8.2 | Numeric rules pinned (window closed, baseline half-open, arithmetic mean of cited rows, ε = 1e-6, inclusive comparisons, case-insensitive substring, descent via `parent_span_id`, gold-claim threshold margins), exactly as `recorder/gold.py` implements them. | Gold claims are generated before the Phase 2 verifier exists; both must apply identical arithmetic or a true gold claim is rejected (a verifier false negative). |
+| A12 | 1 | §1.2 | Alert-to-incident target `< 30 s` applies to fast-onset faults; slow-onset faults (`memory_leak`) are measured and reported separately with no target. | A leak has no onset instant to detect: latency rises gradually, and the alert fires when it crosses the rule's floors (47.2 s in `memory_leak_001`). Tuning the leak until it alerts like a step change would test nothing. |
+| A13 | 1 | §3, §12.1 | `label.json` may carry an optional `notes` string explaining a label that is not obvious. `noisy_neighbor` labels state that `batchjob` has no trace edges, is outside every scope by design, and that `INSUFFICIENT_EVIDENCE` is the expected, honest outcome (ADR-006). | Without it, a reader of the fixture sees a named root cause with an outcome that says no cause was found, and may "fix" one of them. |

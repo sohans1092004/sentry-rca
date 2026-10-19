@@ -4,6 +4,7 @@ from common import synthetic
 from processors.convert import LOG_COLUMNS, METRIC_COLUMNS, SPAN_COLUMNS, convert_logs, convert_metrics, convert_traces
 from recorder.archive import archive
 from recorder.dataset import read_parquet
+from recorder.downsample import downsample
 
 
 def test_archive_day_six_once_and_prune_after_90_days(ch_db, tmp_path):
@@ -27,13 +28,28 @@ def test_archive_day_six_once_and_prune_after_90_days(ch_db, tmp_path):
     assert not stale.exists()
 
 
-def test_metrics_1h_downsample(ch_db):
+def _1h(ch, metric):
+    return ch.query(
+        "SELECT sum(points), round(sum(sum_value), 6), min(min_value), max(max_value) FROM metrics_1h FINAL "
+        "WHERE service = 'payments' AND metric = {m:String}",
+        parameters={"m": metric},
+    ).result_rows[0]
+
+
+def test_metrics_1h_counts_a_twice_delivered_batch_once(ch_db):
     ch, _ = ch_db
-    hour = datetime.now(UTC).replace(minute=0, second=0, microsecond=0) - timedelta(hours=2)
-    rows = convert_metrics(synthetic.metrics("payments", 20, ts_ns=int(hour.timestamp() * 1e9)).SerializeToString())
-    ch.insert("metrics", rows.rows, column_names=METRIC_COLUMNS)
-    [(points, avg, lo, hi)] = ch.query(
-        "SELECT sum(points), avgMerge(avg_value), min(min_value), max(max_value) FROM metrics_1h "
-        "WHERE service = 'payments' AND metric = 'synthetic.gauge'"
-    ).result_rows
-    assert (points, avg, lo, hi) == (20, 9.5, 0.0, 19.0)
+    now = datetime.now(UTC)
+    hour = now.replace(minute=0, second=0, microsecond=0) - timedelta(hours=2)
+    batch = convert_metrics(synthetic.metrics("payments", 20, ts_ns=int(hour.timestamp() * 1e9)).SerializeToString())
+    ch.insert("metrics", batch.rows, column_names=METRIC_COLUMNS)
+    ch.insert("metrics", batch.rows, column_names=METRIC_COLUMNS)  # redelivered after a crash
+    current = convert_metrics(synthetic.metrics("payments", 5).SerializeToString())  # the open hour
+    ch.insert("metrics", current.rows, column_names=METRIC_COLUMNS)
+
+    assert hour in downsample(ch, now)
+    assert _1h(ch, "synthetic.gauge") == (20, 190.0, 0.0, 19.0)  # 20 points once, not 40
+    downsample(ch, now)  # the job re-runs over recent hours: a recompute replaces, never adds
+    assert _1h(ch, "synthetic.gauge") == (20, 190.0, 0.0, 19.0)
+    open_hour = now.replace(minute=0, second=0, microsecond=0)
+    assert ch.query("SELECT count() FROM metrics_1h WHERE hour = {h:DateTime}",
+                    parameters={"h": open_hour}).result_rows[0][0] == 0  # fmt: skip

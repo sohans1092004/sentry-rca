@@ -5,10 +5,10 @@ from datetime import UTC, datetime, timedelta
 import pyarrow.parquet as pq
 import pytest
 
-from common import synthetic
+from common import deploys, synthetic
 from common.config import DEMO_TENANT_ID
 from processors.convert import LOG_COLUMNS, METRIC_COLUMNS, SPAN_COLUMNS, convert_logs, convert_metrics, convert_traces
-from recorder.dataset import DatasetMismatch, export, read_ch, read_deploys
+from recorder.dataset import DatasetMismatch, export, read_ch
 from recorder.load import load
 from tests.integration.conftest import ch_client
 
@@ -22,16 +22,15 @@ def _seed(ch, pg, now):
     ):
         for i, svc in enumerate(("gateway", "orders", "inventory")):
             ch.insert(table, convert(build(svc, 50, ts_ns=ts + i * 10**9).SerializeToString()).rows, column_names=cols)
-    pg.execute(
-        "INSERT INTO deploys VALUES (%s, %s, 'orders', 'orders-v1.2.0', %s, %s)",
-        (str(uuid.uuid4()), DEMO_TENANT_ID, now - timedelta(seconds=30), now - timedelta(seconds=10)),
-    )
+    deploys.record(ch, {"id": str(uuid.uuid4()), "tenant_id": DEMO_TENANT_ID, "service": "orders",
+                        "version": "orders-v1.2.0", "started_at": now - timedelta(seconds=30),
+                        "finished_at": now - timedelta(seconds=10)})  # fmt: skip
 
 
 def _record(ch, pg, out, now):
     start, end = now - timedelta(minutes=5), now + timedelta(minutes=5)
     tables = {t: read_ch(ch, t, DEMO_TENANT_ID, start, end) for t in ("metrics", "logs", "spans")}
-    tables["deploys"] = read_deploys(pg, DEMO_TENANT_ID, start, end)
+    tables["deploys"] = deploys.recent(ch, DEMO_TENANT_ID, start, end)
     return export(out, tables)
 
 

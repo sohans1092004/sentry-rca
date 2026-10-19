@@ -12,10 +12,10 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from common import config, db
+from common import config, db, deploys
 from injector import scenarios
 from recorder import gold
-from recorder.dataset import export, read_ch, read_deploys
+from recorder.dataset import export, read_ch
 
 PRE, POST = timedelta(minutes=15), timedelta(minutes=5)  # Amendment A7
 ROOT = Path(__file__).resolve().parent.parent
@@ -45,6 +45,18 @@ CAMPAIGN: list[tuple[str, str, int, str | None]] = [
     ("dependency_outage_ambiguous_001", "dependency_outage", 1, "ambiguous"),
     ("slow_query_002", "slow_query", 2, None),
 ]
+
+
+def make_label(fixture_id: str, plan: scenarios.Plan, claims: list[dict[str, Any]]) -> dict[str, Any]:
+    """label.json in the SPEC §3 schema, plus `notes` when the scenario has one (Amendment A13)."""
+    label = {
+        "fixture_id": fixture_id, "scenario": plan.scenario, "root_cause": plan.root_cause,
+        "acceptable_alternatives": plan.acceptable_alternatives, "symptom_services": plan.symptom_services,
+        "expected_outcome": plan.expected_outcome, "planted_injection": plan.planted_injection, "gold_claims": claims,
+    }  # fmt: skip
+    if plan.notes:
+        label["notes"] = plan.notes
+    return label
 
 
 def _log(**f: Any) -> None:
@@ -118,14 +130,10 @@ def record_one(fixture_id: str, scenario: str, seed: int, variant: str | None) -
         time.sleep(10)
     w0, w1 = inc["first_anomaly_at"] - PRE, until
     tables = {t: read_ch(ch, t, config.DEMO_TENANT_ID, w0, w1) for t in ("metrics", "logs", "spans")}
-    tables["deploys"] = read_deploys(pg, config.DEMO_TENANT_ID, w0 - timedelta(hours=1), w1)
+    tables["deploys"] = deploys.recent(ch, config.DEMO_TENANT_ID, w0 - timedelta(hours=1), w1)
 
     claims = gold.for_run(run, tables)
-    label = {
-        "fixture_id": fixture_id, "scenario": scenario, "root_cause": plan.root_cause,
-        "acceptable_alternatives": plan.acceptable_alternatives, "symptom_services": plan.symptom_services,
-        "expected_outcome": plan.expected_outcome, "planted_injection": plan.planted_injection, "gold_claims": claims,
-    }  # fmt: skip
+    label = make_label(fixture_id, plan, claims)
     out = DATA / fixture_id / VERSION
     manifest = export(out, tables)
     manifest.update({"fixture_id": fixture_id, "version": VERSION, "window": [w0, w1]})

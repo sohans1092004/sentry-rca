@@ -1,5 +1,5 @@
 """Cold retention (SPEC §4.4, Amendment A5): archive logs and spans to local Parquet before the
-7-day TTL can delete them, keep archives 90 days. metrics_1h needs no job (materialised view).
+7-day TTL can delete them, keep archives 90 days; and compute metrics_1h (recorder/downsample.py).
 
 Day D's rows start expiring at D + 7 days, so the job archives D on day D + 6, when D is complete
 and nothing has expired yet. Day D - 7 is caught up too if a run was missed; it may already be
@@ -48,10 +48,13 @@ def archive(ch: Client, today: date, root: Path = ARCHIVE, tenant: str = config.
 
 
 if __name__ == "__main__":
+    from recorder.downsample import downsample
+
     while True:
-        print(
-            json.dumps({"event": "archived", "files": archive(db.clickhouse(), datetime.now(UTC).date())}), flush=True
-        )
+        now = datetime.now(UTC)
+        ch = db.clickhouse()
+        hours = [h.isoformat() for h in downsample(ch, now)]
+        print(json.dumps({"event": "retention", "archived": archive(ch, now.date()), "downsampled": hours}), flush=True)
         if "--loop" not in sys.argv:
             break
-        time.sleep(6 * 3600)  # runs several times a day; each day is archived once
+        time.sleep(3600)  # hourly: metrics_1h closes every hour; each day is archived once

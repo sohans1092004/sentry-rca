@@ -34,18 +34,13 @@ TABLES: dict[str, dict[str, Any]] = {
                              ("attrs", STRMAP)]),
         "key": "trace_id, span_id", "time": "start_ts",
     },
-    # deploys come from Postgres but load into the isolated ClickHouse database next to the
-    # telemetry, so an eval reads one self-contained database
+    # deploys live in ClickHouse too (Amendment A9), so an eval reads one self-contained database
     "deploys": {
         "schema": pa.schema([("id", pa.string()), ("tenant_id", pa.string()), ("service", pa.string()),
                              ("version", pa.string()), ("started_at", TS), ("finished_at", TS)]),
         "key": "id", "time": "finished_at",
     },
 }  # fmt: skip
-DEPLOYS_DDL = (
-    "CREATE TABLE IF NOT EXISTS deploys (id String, tenant_id String, service String, version String, "
-    "started_at DateTime64(3), finished_at DateTime64(3)) ENGINE = ReplacingMergeTree ORDER BY id"
-)
 
 
 def _norm(v: Any) -> Any:
@@ -144,13 +139,3 @@ def verify_hashes(dataset: Path, ch: Client, database: str) -> None:
         got = {"rows": len(rows), "sha256": content_hash(rows, cols)}
         if got != expected:
             raise DatasetMismatch(f"{dataset.name}/{name}: manifest {expected}, loaded {got}")
-
-
-def read_deploys(pg: Any, tenant: str, start: datetime, end: datetime) -> list[dict[str, Any]]:
-    cur = pg.execute(
-        "SELECT id::text, tenant_id::text, service, version, started_at, finished_at FROM deploys "
-        "WHERE tenant_id = %s AND finished_at >= %s AND started_at <= %s ORDER BY id",
-        (tenant, start, end),
-    )
-    cols = [d.name for d in cur.description]
-    return [dict(zip(cols, r, strict=True)) for r in cur.fetchall()]

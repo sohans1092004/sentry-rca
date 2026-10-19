@@ -62,13 +62,29 @@ def migrate_clickhouse(client: Client, database: str) -> list[str]:
     return applied
 
 
+def move_deploys(conn: psycopg.Connection[tuple[object, ...]], client: Client, database: str) -> int:
+    """Copy deploys still in Postgres into ClickHouse (Amendment A9) before the Postgres migration
+    that drops them. Idempotent: ReplacingMergeTree keyed by id absorbs a repeated copy."""
+    exists = conn.execute("SELECT to_regclass('public.deploys') IS NOT NULL").fetchone()
+    if not exists or not exists[0]:
+        return 0
+    rows = conn.execute(
+        "SELECT id::text, tenant_id::text, service, version, started_at, finished_at FROM deploys"
+    ).fetchall()
+    if rows:
+        cols = ["id", "tenant_id", "service", "version", "started_at", "finished_at"]
+        client.insert(f"`{database}`.deploys", [list(r) for r in rows], column_names=cols)
+    return len(rows)
+
+
 def main() -> None:
     from common import config
 
-    with db.postgres() as conn:
-        print("postgres applied:", migrate_postgres(conn) or "nothing new")
     client = db.clickhouse(database="default")
     print("clickhouse applied:", migrate_clickhouse(client, config.CH_DATABASE) or "nothing new")
+    with db.postgres() as conn:
+        print("deploys copied from postgres:", move_deploys(conn, client, config.CH_DATABASE))
+        print("postgres applied:", migrate_postgres(conn) or "nothing new")
 
 
 if __name__ == "__main__":
