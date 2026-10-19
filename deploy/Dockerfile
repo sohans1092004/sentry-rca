@@ -11,4 +11,7 @@ COPY alerting alerting
 COPY services services
 COPY injector injector
 COPY recorder recorder
+COPY investigation investigation
+COPY evals evals
+COPY runbooks runbooks
 RUN uv sync --frozen --no-dev

@@ -74,7 +74,7 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:16.10-alpine
+    image: pgvector/pgvector:0.8.1-pg16 # runbooks need pgvector (Phase 2)
     environment: { POSTGRES_USER: sentry, POSTGRES_PASSWORD: sentry, POSTGRES_DB: sentry }
     volumes: [postgres:/var/lib/postgresql/data]
     ports: ["5434:5432"] # 5432 is often taken by other local stacks
@@ -109,6 +109,14 @@ services:
     <<: *app
     command: ["python", "-m", "alerting.engine"]
     mem_limit: 160m
+
+  orchestrator: # Phase 2: consumes incidents.opened, runs the baseline, as the restricted app role
+    <<: *app
+    command: ["python", "-m", "investigation.orchestrator"]
+    environment:
+      <<: *app-env
+      APP_PG_DSN: postgresql://sentry_app:sentry_app@postgres:5432/sentry
+    mem_limit: 256m
 
   archiver: # cold retention, Amendment A5
     <<: *app

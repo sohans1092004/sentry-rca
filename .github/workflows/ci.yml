@@ -24,7 +24,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
         with: { version: "0.12.16" }
       - run: uv sync --frozen
-      - run: uv run mypy common processors alerting services injector recorder
+      - run: uv run mypy common processors alerting services injector recorder investigation evals
 
   unit:
     runs-on: ubuntu-24.04
@@ -45,3 +45,34 @@ jobs:
         with: { version: "0.12.16" }
       - run: uv sync --frozen
       - run: uv run pytest tests/integration -q
+
+  baseline-eval:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.1-pg16
+        env: { POSTGRES_USER: sentry, POSTGRES_PASSWORD: sentry, POSTGRES_DB: sentry }
+        ports: ["5434:5432"]
+        options: --health-cmd "pg_isready -U sentry" --health-interval 2s --health-retries 30
+      clickhouse:
+        image: clickhouse/clickhouse-server:25.8.33.6
+        env: { CLICKHOUSE_USER: sentry, CLICKHOUSE_PASSWORD: sentry, CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1" }
+        ports: ["8123:8123"]
+        options: --health-cmd "wget -qO- http://localhost:8123/ping" --health-interval 3s --health-retries 40
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with: { version: "0.12.16" }
+      - run: uv sync --frozen
+      - uses: actions/cache@v5
+        with:
+          path: data/fixtures
+          key: fixtures-${{ hashFiles('fixtures/index.json') }}
+      - run: uv run python -m common.migrate
+      - run: uv run rca fixtures fetch # sha256-verified; skips what the cache restored
+      - run: uv run rca runbooks load # replays the committed embedding cassette; a miss fails loudly
+      - run: uv run rca eval --n 5 --out eval.json # exits 1 when the §12.5 gate blocks
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with: { name: baseline-eval, path: eval.json }
