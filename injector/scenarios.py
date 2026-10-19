@@ -305,9 +305,10 @@ def _restore(p: Plan, http: httpx.Client, touched: set[str]) -> None:
         http.delete(service_url(svc) + "/_fault").raise_for_status()
 
 
-def run(p: Plan, runs_dir: Path = Path("runs"), sleep: Any = time.sleep) -> dict[str, Any]:
+def run(p: Plan, runs_dir: Path = Path("runs"), sleep: Any = time.sleep, precheck: Any = None) -> dict[str, Any]:
     """Execute the plan in real time; returns (and writes) the run record. Offsets are relative to
-    the first fault; a confounder with a negative offset runs that long before it."""
+    the first fault; a confounder with a negative offset runs that long before it. `precheck`, if
+    given, runs just before the first fault step; if it raises, everything applied is undone."""
     sleep(p.delay_s)
     start = _now()
     record: dict[str, Any] = {
@@ -327,6 +328,7 @@ def run(p: Plan, runs_dir: Path = Path("runs"), sleep: Any = time.sleep) -> dict
         events.append((-base, "deploy", p.deploy))
     if p.confounder_deploy is not None:
         events.append((p.confounder_deploy["at_s"] - base, "confounder_deploy", p.confounder_deploy))
+    checked = precheck is None
     try:
         with httpx.Client(timeout=10) as http:
             for at, what, item in sorted(events, key=lambda e: (e[0], e[1] != "deploy")):
@@ -345,6 +347,13 @@ def run(p: Plan, runs_dir: Path = Path("runs"), sleep: Any = time.sleep) -> dict
                     }
                     continue
                 step: Step = item
+                if not checked and step.role == "cause":
+                    checked = True
+                    try:
+                        precheck()
+                    except Exception:
+                        _restore(p, http, touched)
+                        raise
                 _apply(step, http, threads)
                 if step.kind not in INJECTOR_SIDE:
                     touched.add(step.service)

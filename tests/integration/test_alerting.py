@@ -98,3 +98,33 @@ def test_engine_opens_exactly_one_incident_and_publishes(pg, ch_db, kafka_bootst
     assert event["service"] == "gateway"
     first = pg.execute("SELECT first_anomaly_at FROM incidents").fetchone()[0]
     assert first == now  # the first breaching evaluation, not the second (which opened it)
+
+
+def test_a_previous_incident_does_not_hide_a_new_fault_in_the_baseline(pg, ch_db, kafka_bootstrap, topics):
+    """A29: the previous fixture's fault covers 19 of the 30 baseline minutes, at the same latency as the
+    new fault. Counted as normal, it makes the new fault look ordinary (z ~ 0, no alert). Excluded as the
+    resolved incident's period, the 11 clean minutes are the baseline and the new fault alerts."""
+    ch, _ = ch_db
+    [topic] = topics("incidents.opened")
+    now = datetime.now(UTC).replace(microsecond=0)
+    before = now - timedelta(minutes=31)
+    old_fault_end = now - timedelta(minutes=12)
+    rows = [r for r in _latency_rows("gateway", before, 32, now - timedelta(seconds=20))
+            if not (r[4] < old_fault_end and r[4] >= before)]  # fmt: skip
+    rows += _latency_rows("gateway", before, 19, before)  # the old fault: slow from its first point
+    ch.insert("metrics", rows, column_names=METRIC_COLUMNS)
+    pg.execute(  # the old fault's incident, resolved RESOLVE_AFTER (3 min) after it was last seen
+        "INSERT INTO incidents (id, tenant_id, fingerprint, service, status, opened_at, first_anomaly_at, last_seen) "
+        "SELECT %s, %s, 'gateway|slo|' || id::text, 'gateway', 'resolved', %s, %s, %s FROM alert_rules",
+        (
+            str(uuid.uuid4()),
+            DEMO_TENANT_ID,
+            before + timedelta(seconds=20),
+            before,
+            old_fault_end - timedelta(minutes=3),
+        ),
+    )
+    engine = Engine(pg, ch, Producer({"bootstrap.servers": kafka_bootstrap, "acks": "all"}), topic)
+    for i in range(6):
+        engine.tick(now + timedelta(seconds=5 * i))
+    assert open_incidents(pg) == 1, "the new fault was hidden by the previous fault in the baseline"

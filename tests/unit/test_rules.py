@@ -50,3 +50,27 @@ def test_latency_fires_only_with_baseline_and_all_floors():
     assert check(CONDITION, healthy(buckets=slow, baseline_p95_ms=[50.0] * 9)) is None  # warming up
     # z is huge on a flat 5 ms baseline, but +8 ms is under the 20 ms absolute floor
     assert check(CONDITION, healthy(buckets={0.005: 50, 0.013: 50, INF: 0}, baseline_p95_ms=[5.0] * 20)) is None
+
+
+def test_baseline_minutes_inside_an_incident_period_are_excluded():
+    """A29: a minute that overlaps an incident's period (first anomaly to resolution) is not baseline;
+    one that only touches its edges is."""
+    from datetime import UTC, datetime, timedelta
+
+    from alerting.rules import outside_incidents
+
+    t0 = datetime(2026, 10, 19, 10, 0, tzinfo=UTC)
+    minutes = {t0 + timedelta(minutes=i): i for i in range(30)}
+    period = (t0 + timedelta(minutes=5, seconds=30), t0 + timedelta(minutes=20))
+    kept = outside_incidents(minutes, [period])
+    assert sorted(kept.values()) == list(range(0, 5)) + list(range(20, 30))
+    assert outside_incidents(minutes, []) == minutes
+
+
+def test_excluding_the_previous_fault_lets_a_new_one_alert():
+    """With 19 of 30 baseline minutes at the previous fault's 600 ms, a new 600 ms fault looks normal;
+    with them excluded it does not."""
+    slow = {0.05: 0, 0.75: 300, INF: 0}
+    contaminated = [600.0] * 19 + [48.0, 50.0, 52.0] * 4
+    assert check(CONDITION, healthy(buckets=slow, baseline_p95_ms=contaminated)) is None
+    assert check(CONDITION, healthy(buckets=slow, baseline_p95_ms=contaminated[19:]))["kind"] == "latency_zscore"

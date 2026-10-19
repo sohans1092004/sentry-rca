@@ -247,6 +247,32 @@ GUARDS_PHASE2: dict[str, dict] = {
         "edits": [("    return [] if logged else [", "    return [] if True else [")],
         "tests": [U + "test_eval_rules.py::test_a_baseline_change_after_test_results_needs_a_post_hoc_amendment"],
     },
+    "alert_baseline_exclusion": {
+        "property": "Alert baseline (A29): minutes inside an incident's period are not baseline",
+        "file": "alerting/rules.py",
+        "edits": [("for m, v in minutes.items() if not any(", "for m, v in minutes.items() if True or not any(")],
+        "tests": [
+            U + "test_rules.py::test_baseline_minutes_inside_an_incident_period_are_excluded",
+            IT + "test_alerting.py::test_a_previous_incident_does_not_hide_a_new_fault_in_the_baseline",
+        ],
+    },
+    "alert_baseline_wiring": {
+        "property": "Alert baseline (A29): the engine applies the exclusion to what it reads",
+        "file": "alerting/engine.py",
+        "edits": [("        per_minute = outside_incidents(per_minute, exclude or [])\n", "")],
+        "tests": [IT + "test_alerting.py::test_a_previous_incident_does_not_hide_a_new_fault_in_the_baseline"],
+    },
+    "recorder_clean_start": {
+        "property": "Recorder (A29): no fault starts with an incident in the alert baseline",
+        "file": "recorder/record.py",
+        "edits": [
+            (
+                '    return f"{row[0]} incidents in the alert baseline',
+                '    return None if True else f"{row[0]} incidents in the alert baseline',
+            )
+        ],
+        "tests": [IT + "test_recorder.py::test_fault_start_is_refused_while_an_incident_lies_in_the_alert_baseline"],
+    },
     "eval_db_hash": {
         "property": "Eval read-only (A16): a write to the eval database fails the eval",
         "file": "evals/harness.py",

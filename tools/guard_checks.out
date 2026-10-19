@@ -560,3 +560,46 @@ E           Failed: DID NOT RAISE EvalFailed
 $ uv run pytest -vv -p no:cacheprovider tests/integration/test_phase2.py::test_eval_fails_when_the_database_changes
 ============================= 1 passed in 25.79s ==============================
 
+=== alert_baseline_exclusion @ 2026-10-19T10:10:27+00:00 -> PASS
+property: Alert baseline (A29): minutes inside an incident's period are not baseline
+guard removed in alerting/rules.py: [('for m, v in minutes.items() if not any(', 'for m, v in minutes.items() if True or not any(')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_rules.py::test_baseline_minutes_inside_an_incident_period_are_excluded tests/integration/test_alerting.py::test_a_previous_incident_does_not_hide_a_new_fault_in_the_baseline
+E       assert [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29] == [0, 1, 2, 3, 4, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+E         
+E         At index 5 diff: 5 != 20
+E         Left contains 15 more items, first extra item: 15
+E         
+E         Full diff:
+E           [
+E               0,
+============================= 2 failed in 24.08s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_rules.py::test_baseline_minutes_inside_an_incident_period_are_excluded tests/integration/test_alerting.py::test_a_previous_incident_does_not_hide_a_new_fault_in_the_baseline
+============================= 2 passed in 20.32s ==============================
+
+=== alert_baseline_wiring @ 2026-10-19T10:11:15+00:00 -> PASS
+property: Alert baseline (A29): the engine applies the exclusion to what it reads
+guard removed in alerting/engine.py: [('        per_minute = outside_incidents(per_minute, exclude or [])\n', '')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_alerting.py::test_a_previous_incident_does_not_hide_a_new_fault_in_the_baseline
+E       AssertionError: the new fault was hidden by the previous fault in the baseline
+E       assert 0 == 1
+E        +  where 0 = open_incidents(<psycopg.Connection [IDLE] (host=localhost port=50932 user=sentry database=t_d89c14b19f82) at 0x2a4f932d8b0>)
+============================= 1 failed in 20.99s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_alerting.py::test_a_previous_incident_does_not_hide_a_new_fault_in_the_baseline
+============================= 1 passed in 19.68s ==============================
+
+=== recorder_clean_start @ 2026-10-19T10:11:42+00:00 -> PASS
+property: Recorder (A29): no fault starts with an incident in the alert baseline
+guard removed in recorder/record.py: [('    return f"{row[0]} incidents in the alert baseline', '    return None if True else f"{row[0]} incidents in the alert baseline')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_recorder.py::test_fault_start_is_refused_while_an_incident_lies_in_the_alert_baseline
+E       AssertionError: a fault would start with a dirty baseline
+E       assert (None is not None)
+============================== 1 failed in 7.97s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/integration/test_recorder.py::test_fault_start_is_refused_while_an_incident_lies_in_the_alert_baseline
+============================= 1 passed in 11.77s ==============================
+

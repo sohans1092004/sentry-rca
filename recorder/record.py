@@ -141,6 +141,10 @@ def build_label(fixture_id: str, plan: scenarios.Plan, run: dict[str, Any], inci
     return label
 
 
+class DirtyStart(Exception):
+    pass
+
+
 def _log(**f: Any) -> None:
     print(json.dumps({"ts": datetime.now(UTC).isoformat(timespec="seconds"), **f}, default=str), flush=True)
 
@@ -154,19 +158,42 @@ def _last_activity(pg: Any) -> datetime | None:
     return max(last) if last else None
 
 
+def alert_baseline(pg: Any) -> timedelta:
+    """How far back the alert rules look at a fault's start: their window plus the latency baseline."""
+    rows = pg.execute("SELECT condition FROM alert_rules WHERE enabled").fetchall()
+    return max((timedelta(seconds=c["window_s"] + max((x.get("baseline_s", 0) for x in c["any_of"]), default=0))
+                for (c,) in rows), default=timedelta(0))  # fmt: skip
+
+
+def incident_in_baseline(pg: Any, now: datetime) -> str | None:
+    """A29: why `now` is not a clean fault start, or None. No incident may be open, and none of an
+    incident's period (first anomaly to resolution, last_seen + RESOLVE_AFTER) may lie in the alert
+    baseline window before `now`."""
+    from alerting.engine import RESOLVE_AFTER
+
+    open_ = pg.execute("SELECT count(*) FROM incidents WHERE status <> 'resolved'").fetchone()[0]
+    if open_:
+        return f"{open_} incidents open"
+    since = now - alert_baseline(pg)
+    row = pg.execute("SELECT count(*), max(last_seen) + %s FROM incidents WHERE last_seen + %s > %s AND "
+                     "fingerprint NOT LIKE 'eval:%%'", (RESOLVE_AFTER, RESOLVE_AFTER, since)).fetchone()  # fmt: skip
+    return f"{row[0]} incidents in the alert baseline (last resolved {row[1]})" if row[0] else None
+
+
 def wait_quiet(pg: Any, ch: Any) -> None:
     """The pre-margin must hold only background traffic: no open incident, no fault and no incident
-    activity for PRE, and at least PRE of telemetry in ClickHouse."""
+    activity for PRE, at least PRE of telemetry in ClickHouse, and (A29) no incident period anywhere in
+    the alert baseline the fault will be judged against."""
     while True:
         now = datetime.now(UTC)
-        open_ = pg.execute("SELECT count(*) FROM incidents WHERE status <> 'resolved'").fetchone()[0]
         last = _last_activity(pg)
         oldest = ch.query("SELECT min(ts) FROM metrics").result_rows[0][0]
         oldest = oldest.replace(tzinfo=UTC) if oldest and oldest.tzinfo is None else oldest
-        quiet = open_ == 0 and (last is None or now - last >= PRE) and oldest and now - oldest >= PRE
+        dirty = incident_in_baseline(pg, now)
+        quiet = dirty is None and (last is None or now - last >= PRE) and oldest and now - oldest >= PRE
         if quiet:
             return
-        _log(event="waiting_quiet", open_incidents=open_, last_activity=last)
+        _log(event="waiting_quiet", baseline=dirty, last_activity=last)
         time.sleep(30)
 
 
@@ -185,7 +212,16 @@ def record_one(entry: Entry) -> dict[str, Any]:
     quiet_until = datetime.now(UTC)
     plan = scenarios.plan(scenario, seed, variant, partner, confounded)
     _log(event="inject", fixture=fixture_id, delay_s=plan.delay_s, confounded=confounded)
-    run = scenarios.run(plan, RUNS)
+
+    def clean_start() -> None:  # A29: checked again at the moment the first fault is applied
+        if (why := incident_in_baseline(pg, datetime.now(UTC))) is not None:
+            raise DirtyStart(why)
+
+    try:
+        run = scenarios.run(plan, RUNS, precheck=clean_start)
+    except DirtyStart as e:
+        _log(event="fixture_failed", fixture_id=fixture_id, reason=f"not a clean fault start: {e}")
+        return {"fixture_id": fixture_id, "recorded": False, "error": f"not a clean fault start: {e}"}
     fault_start = min(datetime.fromisoformat(a["at"]) for a in run["applied"] if a["role"] == "cause")
 
     deadline = time.monotonic() + 15 * 60  # wait until every incident from this run has resolved

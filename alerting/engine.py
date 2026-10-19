@@ -15,7 +15,7 @@ import psycopg
 from clickhouse_connect.driver.client import Client
 from confluent_kafka import KafkaException, Producer
 
-from alerting.rules import Window, check, quantile_ms
+from alerting.rules import Window, check, outside_incidents, quantile_ms
 from common import config, db
 
 EVAL_INTERVAL_S = 5.0
@@ -48,7 +48,21 @@ def load_rules(conn: psycopg.Connection[tuple[Any, ...]]) -> list[Rule]:
     return [Rule(*r) for r in rows]
 
 
-def read_window(ch: Client, rule: Rule, now: datetime) -> Window:
+def incident_periods(conn: psycopg.Connection[tuple[Any, ...]], rule: Rule, start: datetime, now: datetime,
+                     ) -> list[tuple[datetime, datetime]]:  # fmt: skip
+    """A29: [first anomaly, resolution] of this rule's incidents that overlap [start, now]. Resolution is
+    last_seen + RESOLVE_AFTER (when resolve_stale closes it); an open incident runs until now."""
+    rows = conn.execute(
+        "SELECT first_anomaly_at, CASE WHEN status = 'resolved' THEN last_seen + %s ELSE %s END FROM incidents "
+        "WHERE tenant_id = %s AND fingerprint = %s AND first_anomaly_at < %s "
+        "AND (status <> 'resolved' OR last_seen + %s > %s)",
+        (RESOLVE_AFTER, now, rule.tenant_id, rule.fingerprint, now, RESOLVE_AFTER, start),
+    ).fetchall()
+    return [(a, b) for a, b in rows]
+
+
+def read_window(ch: Client, rule: Rule, now: datetime, exclude: list[tuple[datetime, datetime]] | None = None,
+                ) -> Window:  # fmt: skip
     c = rule.condition
     window_start = now - timedelta(seconds=c["window_s"])
     params = {"t": rule.tenant_id, "s": rule.service, "start": window_start, "end": now}
@@ -73,7 +87,8 @@ def read_window(ch: Client, rule: Rule, now: datetime) -> Window:
             parameters={**params, "m": bm, "start": window_start - timedelta(seconds=baseline_s), "end": window_start},
         ).result_rows
         for minute, le, n in rows:
-            per_minute.setdefault(minute, {})[le] = n
+            per_minute.setdefault(minute.replace(tzinfo=UTC) if minute.tzinfo is None else minute, {})[le] = n
+        per_minute = outside_incidents(per_minute, exclude or [])
     q = next((x["quantile"] for x in c["any_of"] if x["kind"] == "latency_zscore"), 0.95)
     baseline = [v for b in per_minute.values() if (v := quantile_ms(b, q)) is not None]
     return Window(
@@ -158,7 +173,10 @@ class Engine:
 
     def tick(self, now: datetime) -> None:
         for rule in load_rules(self.conn):
-            breach = check(rule.condition, read_window(self.ch, rule, now))
+            baseline_s = max((x.get("baseline_s", 0) for x in rule.condition["any_of"]), default=0)
+            start = now - timedelta(seconds=rule.condition["window_s"] + baseline_s)
+            periods = incident_periods(self.conn, rule, start, now)
+            breach = check(rule.condition, read_window(self.ch, rule, now, periods))
             if breach is None:
                 self.streak.pop(rule.id, None)
                 continue
