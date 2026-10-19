@@ -1,0 +1,62 @@
+{
+  "run": {
+    "run_id": "memory_leak-1-20261018T233259",
+    "plan": {
+      "scenario": "memory_leak",
+      "variant": null,
+      "seed": 1,
+      "delay_s": 39,
+      "root_cause": {
+        "service": "payments",
+        "cause_kind": "memory_leak"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "orders",
+        "gateway"
+      ],
+      "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "payments",
+          "kind": "memory_leak",
+          "params": {
+            "objects": 2572
+          },
+          "duration_s": 292
+        }
+      ],
+      "deploy": null
+    },
+    "injection_start": "2026-10-18T23:32:59.645+00:00",
+    "applied": [
+      {
+        "at": "2026-10-18T23:33:00.136+00:00",
+        "at_s": 0,
+        "service": "payments",
+        "kind": "memory_leak",
+        "params": {
+          "objects": 2572
+        },
+        "duration_s": 292
+      }
+    ],
+    "deploy_row": null,
+    "injection_end": "2026-10-18T23:37:51.706+00:00"
+  },
+  "incident": {
+    "id": "c8870d11-9a20-4463-a31c-d9c6fe4844f9",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-18 23:33:47.378015+00:00",
+    "first_anomaly_at": "2026-10-18 23:33:42.283080+00:00",
+    "last_seen": "2026-10-18 23:38:37.270338+00:00",
+    "alert_count": 32,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 47.242015,
+  "onset_to_open_s": 5.094935,
+  "variant": null
+}

@@ -1,0 +1,103 @@
+{
+  "run": {
+    "run_id": "slow_query-ambiguous-1-20261018T235443",
+    "plan": {
+      "scenario": "slow_query",
+      "variant": "ambiguous",
+      "seed": 1,
+      "delay_s": 59,
+      "root_cause": {
+        "service": "orders",
+        "cause_kind": "slow_query"
+      },
+      "acceptable_alternatives": [
+        {
+          "service": "inventory",
+          "cause_kind": "bad_deploy"
+        }
+      ],
+      "symptom_services": [
+        "gateway",
+        "payments"
+      ],
+      "expected_outcome": "CONFLICTING_EVIDENCE",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "orders",
+          "kind": "slow_query",
+          "params": {
+            "query": "insert_order",
+            "delay_ms": 299
+          },
+          "duration_s": 246
+        },
+        {
+          "at_s": 45,
+          "service": "inventory",
+          "kind": "bad_deploy",
+          "params": {
+            "version": "inventory-v1.41.0",
+            "mode": "slow",
+            "delay_ms": 362
+          },
+          "duration_s": 267
+        }
+      ],
+      "deploy": {
+        "service": "inventory",
+        "version": "inventory-v1.41.0",
+        "rollout_s": 8
+      }
+    },
+    "injection_start": "2026-10-18T23:54:43.039+00:00",
+    "applied": [
+      {
+        "at": "2026-10-18T23:54:51.585+00:00",
+        "at_s": 0,
+        "service": "orders",
+        "kind": "slow_query",
+        "params": {
+          "query": "insert_order",
+          "delay_ms": 299
+        },
+        "duration_s": 246
+      },
+      {
+        "at": "2026-10-18T23:55:28.070+00:00",
+        "at_s": 45,
+        "service": "inventory",
+        "kind": "bad_deploy",
+        "params": {
+          "version": "inventory-v1.41.0",
+          "mode": "slow",
+          "delay_ms": 362
+        },
+        "duration_s": 267
+      }
+    ],
+    "deploy_row": {
+      "id": "0b536ed0-72ac-4a23-ba6e-1bdf7e3791bf",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "inventory",
+      "version": "inventory-v1.41.0",
+      "started_at": "2026-10-18T23:54:43.039+00:00",
+      "finished_at": "2026-10-18T23:54:51.516+00:00"
+    },
+    "injection_end": "2026-10-18T23:59:55.101+00:00"
+  },
+  "incident": {
+    "id": "f5677e4f-3745-4801-8106-f23a8f6eb2a3",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-18 23:55:07.285891+00:00",
+    "first_anomaly_at": "2026-10-18 23:55:02.227133+00:00",
+    "last_seen": "2026-10-19 00:00:52.212098+00:00",
+    "alert_count": 70,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 15.700891,
+  "onset_to_open_s": 5.058758,
+  "variant": "ambiguous"
+}

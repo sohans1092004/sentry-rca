@@ -1,0 +1,26 @@
+{
+  "tables": {
+    "metrics": {
+      "rows": 181749,
+      "sha256": "071a3fd72a5bdacaa3f5cf69d27b7d0d9eef8868a2e2bd9ae0c25434c66f2469"
+    },
+    "logs": {
+      "rows": 3070,
+      "sha256": "75b1e95876013ba2077cb020a91dabe514fdb14a65b50221c5b5dd73e813aa2b"
+    },
+    "spans": {
+      "rows": 118855,
+      "sha256": "5404ef14b676c2181f8c373784c14a5881c544a19da9c84092531e82ac4ccb62"
+    },
+    "deploys": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "fixture_id": "noisy_neighbor_001",
+  "version": "v1",
+  "window": [
+    "2026-10-18 22:56:37.332511+00:00",
+    "2026-10-18 23:22:12.314880+00:00"
+  ]
+}

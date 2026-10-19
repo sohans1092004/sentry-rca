@@ -92,10 +92,13 @@ def read_ch(ch: Client, table: str, tenant: str, start: datetime, end: datetime)
     ))  # fmt: skip
 
 
-def write_parquet(path: Path, table: str, rows: list[dict[str, Any]]) -> None:
+def arrow_table(table: str, rows: list[dict[str, Any]]) -> pa.Table:
     schema = TABLES[table]["schema"]
-    data = {c: [_arrow(r[c]) for r in rows] for c in schema.names}
-    pq.write_table(pa.table(data, schema=schema), path, compression="zstd")
+    return pa.table({c: [_arrow(r[c]) for r in rows] for c in schema.names}, schema=schema)
+
+
+def write_parquet(path: Path, table: str, rows: list[dict[str, Any]]) -> None:
+    pq.write_table(arrow_table(table, rows), path, compression="zstd")
 
 
 def _arrow(v: Any) -> Any:

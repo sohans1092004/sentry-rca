@@ -1,0 +1,77 @@
+{
+  "run": {
+    "run_id": "bad_deploy-1-20261018T214656",
+    "plan": {
+      "scenario": "bad_deploy",
+      "variant": null,
+      "seed": 1,
+      "delay_s": 56,
+      "root_cause": {
+        "service": "payments",
+        "cause_kind": "bad_deploy"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "orders",
+        "gateway"
+      ],
+      "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 7,
+          "service": "payments",
+          "kind": "bad_deploy",
+          "params": {
+            "version": "payments-v1.78.0",
+            "mode": "slow",
+            "delay_ms": 367
+          },
+          "duration_s": 292
+        }
+      ],
+      "deploy": {
+        "service": "payments",
+        "version": "payments-v1.78.0",
+        "rollout_s": 7
+      }
+    },
+    "injection_start": "2026-10-18T21:46:56.261+00:00",
+    "applied": [
+      {
+        "at": "2026-10-18T21:47:03.801+00:00",
+        "at_s": 7,
+        "service": "payments",
+        "kind": "bad_deploy",
+        "params": {
+          "version": "payments-v1.78.0",
+          "mode": "slow",
+          "delay_ms": 367
+        },
+        "duration_s": 292
+      }
+    ],
+    "deploy_row": {
+      "id": "de7e446f-cc71-4b21-a6b6-0103a8ace0e7",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "payments",
+      "version": "payments-v1.78.0",
+      "started_at": "2026-10-18T21:46:56.261+00:00",
+      "finished_at": "2026-10-18T21:47:03.751+00:00"
+    },
+    "injection_end": "2026-10-18T21:51:55.303+00:00"
+  },
+  "incident": {
+    "id": "cdcd6618-e9d6-4f61-9be5-55211a687bb9",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-18 21:47:22.649135+00:00",
+    "first_anomaly_at": "2026-10-18 21:47:17.579922+00:00",
+    "last_seen": "2026-10-18 21:52:52.563338+00:00",
+    "alert_count": 67,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 18.848135,
+  "onset_to_open_s": 5.069213,
+  "variant": null
+}

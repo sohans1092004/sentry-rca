@@ -1,0 +1,253 @@
+{
+  "release": "fixtures-v1",
+  "url": "https://github.com/sohans1092004/sentry-rca/releases/download/fixtures-v1/",
+  "fixtures": [
+    {
+      "fixture_id": "bad_deploy_001",
+      "version": "v1",
+      "asset": "bad_deploy_001-v1.tar.gz",
+      "sha256": "0e4705fe1fa8e824b8cfdac4295d7e1aaee4e844619125e1b00b0702924d57a1",
+      "bytes": 8797963,
+      "rows": {
+        "metrics": 181467,
+        "logs": 3288,
+        "spans": 127472,
+        "deploys": 1
+      }
+    },
+    {
+      "fixture_id": "bad_deploy_002",
+      "version": "v1",
+      "asset": "bad_deploy_002-v1.tar.gz",
+      "sha256": "2b0c0543b0c5c1d59c7f406b0ac5e0aa919bcf36eb9fd4e0235c04d9a8dcae61",
+      "bytes": 8203434,
+      "rows": {
+        "metrics": 178867,
+        "logs": 3114,
+        "spans": 109436,
+        "deploys": 1
+      }
+    },
+    {
+      "fixture_id": "bad_deploy_ambiguous_001",
+      "version": "v1",
+      "asset": "bad_deploy_ambiguous_001-v1.tar.gz",
+      "sha256": "a424c85ed365a34342eeefd6467c038c08c5703e33c9c90a739d0f1016f0e031",
+      "bytes": 8661920,
+      "rows": {
+        "metrics": 184873,
+        "logs": 3996,
+        "spans": 117570,
+        "deploys": 2
+      }
+    },
+    {
+      "fixture_id": "dependency_outage_001",
+      "version": "v1",
+      "asset": "dependency_outage_001-v1.tar.gz",
+      "sha256": "17bf37d07f43211a84ed7a610cfe0b678d1a45c71291798e1cd732db4a056b43",
+      "bytes": 8462123,
+      "rows": {
+        "metrics": 181890,
+        "logs": 3975,
+        "spans": 113709,
+        "deploys": 1
+      }
+    },
+    {
+      "fixture_id": "dependency_outage_ambiguous_001",
+      "version": "v1",
+      "asset": "dependency_outage_ambiguous_001-v1.tar.gz",
+      "sha256": "13ae717c994123b757fd3b8827a7fe0588017070e67f5c8076483e667a02be3a",
+      "bytes": 10283263,
+      "rows": {
+        "metrics": 196466,
+        "logs": 5822,
+        "spans": 161405,
+        "deploys": 0
+      }
+    },
+    {
+      "fixture_id": "dependency_outage_injection_001",
+      "version": "v1",
+      "asset": "dependency_outage_injection_001-v1.tar.gz",
+      "sha256": "6e4f5879cdc6f6ec3ec4ea078dc2ec0dff9a7f514c180df224667d58bd08bba4",
+      "bytes": 8125043,
+      "rows": {
+        "metrics": 176510,
+        "logs": 3666,
+        "spans": 108005,
+        "deploys": 1
+      }
+    },
+    {
+      "fixture_id": "memory_leak_001",
+      "version": "v1",
+      "asset": "memory_leak_001-v1.tar.gz",
+      "sha256": "d3ed0f22a5cb517057cf45561c9513ea73af682533461f8a8291d408b6139869",
+      "bytes": 8053925,
+      "rows": {
+        "metrics": 173670,
+        "logs": 2851,
+        "spans": 110457,
+        "deploys": 0
+      }
+    },
+    {
+      "fixture_id": "no_fault_001",
+      "version": "v1",
+      "asset": "no_fault_001-v1.tar.gz",
+      "sha256": "8ea59b5ae896413c919655eb65034913f0f3ff71498cbf37cfaf2a4266d40eb0",
+      "bytes": 8180951,
+      "rows": {
+        "metrics": 168751,
+        "logs": 3070,
+        "spans": 118517,
+        "deploys": 1
+      }
+    },
+    {
+      "fixture_id": "no_fault_002",
+      "version": "v1",
+      "asset": "no_fault_002-v1.tar.gz",
+      "sha256": "dfabbda528d3cdeac4eeaa04d8cee30f79bec1e6f0438a519eea9a5560efe831",
+      "bytes": 8058087,
+      "rows": {
+        "metrics": 170631,
+        "logs": 2936,
+        "spans": 113095,
+        "deploys": 1
+      }
+    },
+    {
+      "fixture_id": "no_fault_003",
+      "version": "v1",
+      "asset": "no_fault_003-v1.tar.gz",
+      "sha256": "0f0a74b4644b871eaecc21caa399713b2197610dfcca24af4e450090d5008c20",
+      "bytes": 9451743,
+      "rows": {
+        "metrics": 181427,
+        "logs": 3843,
+        "spans": 149304,
+        "deploys": 0
+      }
+    },
+    {
+      "fixture_id": "noisy_neighbor_001",
+      "version": "v1",
+      "asset": "noisy_neighbor_001-v1.tar.gz",
+      "sha256": "5d8357a1d80b62ca4a118ca5f9b1a1db337bd954bcc3bd70d762bd77b8bb1619",
+      "bytes": 8547142,
+      "rows": {
+        "metrics": 181749,
+        "logs": 3070,
+        "spans": 118855,
+        "deploys": 0
+      }
+    },
+    {
+      "fixture_id": "noisy_neighbor_002",
+      "version": "v1",
+      "asset": "noisy_neighbor_002-v1.tar.gz",
+      "sha256": "1d2cd47ff8adebb5a610e076a21a6877466e9aaf3148fdc72ebfacb516f37781",
+      "bytes": 8507392,
+      "rows": {
+        "metrics": 178505,
+        "logs": 3130,
+        "spans": 120991,
+        "deploys": 2
+      }
+    },
+    {
+      "fixture_id": "pool_exhaustion_001",
+      "version": "v1",
+      "asset": "pool_exhaustion_001-v1.tar.gz",
+      "sha256": "5e28dc2c23aa429cd9e7b2af944a87e48381bf4b132785f0769e1a9c2b17e5b8",
+      "bytes": 9045244,
+      "rows": {
+        "metrics": 188452,
+        "logs": 3604,
+        "spans": 127299,
+        "deploys": 0
+      }
+    },
+    {
+      "fixture_id": "pool_exhaustion_002",
+      "version": "v1",
+      "asset": "pool_exhaustion_002-v1.tar.gz",
+      "sha256": "aba0fbc69688fd85ddbdd22f650cd5b6cdbfadacd5b7218f9962f816816b4865",
+      "bytes": 8048081,
+      "rows": {
+        "metrics": 174903,
+        "logs": 2896,
+        "spans": 107835,
+        "deploys": 1
+      }
+    },
+    {
+      "fixture_id": "pool_exhaustion_003",
+      "version": "v1",
+      "asset": "pool_exhaustion_003-v1.tar.gz",
+      "sha256": "c8c59cd2751549d4a34785fb802afcef41de582bf218e1711059711c44f1d03b",
+      "bytes": 8730729,
+      "rows": {
+        "metrics": 176143,
+        "logs": 3337,
+        "spans": 130071,
+        "deploys": 1
+      }
+    },
+    {
+      "fixture_id": "slow_query_001",
+      "version": "v1",
+      "asset": "slow_query_001-v1.tar.gz",
+      "sha256": "bcc9fb851514f601db5d6323214c0ad1e57632be1759bcf5f2dd3a4eb7836f90",
+      "bytes": 8572865,
+      "rows": {
+        "metrics": 177307,
+        "logs": 3792,
+        "spans": 123206,
+        "deploys": 1
+      }
+    },
+    {
+      "fixture_id": "slow_query_002",
+      "version": "v1",
+      "asset": "slow_query_002-v1.tar.gz",
+      "sha256": "e385f65b8aa7f8625548043603238b0779e09c09cfdfbcc8d0f5cab245733c49",
+      "bytes": 9705704,
+      "rows": {
+        "metrics": 176588,
+        "logs": 4709,
+        "spans": 162408,
+        "deploys": 0
+      }
+    },
+    {
+      "fixture_id": "slow_query_ambiguous_001",
+      "version": "v1",
+      "asset": "slow_query_ambiguous_001-v1.tar.gz",
+      "sha256": "146afdf75c1f5a3a777bf4f5cb5b2d9b0c053f62a3aa15bbda7c622296abdd91",
+      "bytes": 8512513,
+      "rows": {
+        "metrics": 181892,
+        "logs": 3502,
+        "spans": 117091,
+        "deploys": 1
+      }
+    },
+    {
+      "fixture_id": "slow_query_injection_002",
+      "version": "v1",
+      "asset": "slow_query_injection_002-v1.tar.gz",
+      "sha256": "e4fe116c03c431c242d8ad10c6441e26a56d5052bbd77099326946ca6dcfe28f",
+      "bytes": 8577252,
+      "rows": {
+        "metrics": 177668,
+        "logs": 3772,
+        "spans": 123190,
+        "deploys": 2
+      }
+    }
+  ]
+}

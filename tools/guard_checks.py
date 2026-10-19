@@ -138,7 +138,8 @@ def check(name: str) -> bool:
     g = GUARDS[name]
     changes = [(g["file"], *e) for e in g["edits"]] + list(g.get("extra", []))
     originals = {f: (ROOT / f).read_bytes() for f, *_ in changes}
-    texts = {f: b.decode() for f, b in originals.items()}
+    # working copies on Windows may be CRLF; git stores LF, so match and write LF
+    texts = {f: b.decode().replace("\r\n", "\n") for f, b in originals.items()}
     for f, *edit in changes:
         texts[f] = _apply(texts[f], tuple(edit), f"{name} in {f}")
     try:

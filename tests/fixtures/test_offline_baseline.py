@@ -20,7 +20,11 @@ from recorder.relabel import build
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = Path(os.environ.get("SENTRY_FIXTURES", ROOT / "data" / "fixtures"))
-FIXTURES = sorted(p.name for p in DATA.iterdir() if (p / "v1" / "label.json").exists()) if DATA.exists() else []
+FIXTURES = (
+    sorted(p.name for p in DATA.iterdir() if (p / "v1" / "parquet").exists() or (p / "v1" / "label.json").exists())
+    if DATA.exists()
+    else []
+)
 
 
 @pytest.fixture(scope="module", params=FIXTURES)
