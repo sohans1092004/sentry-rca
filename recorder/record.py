@@ -295,9 +295,14 @@ def main() -> None:
         record_one(entry)
         return
     split = sys.argv[2] if len(sys.argv) > 2 else "dev"
-    with (RUNS / f"campaign-{VERSION}-{split}.jsonl").open("a") as log:
+    log_path = RUNS / f"campaign-{VERSION}-{split}.jsonl"
+    with log_path.open("a") as log:
         for attempt in range(PASSES):  # a failed fixture is retried on the next pass
             todo = [e for e in SPLITS[split] if not (LABELS / e[0] / VERSION / "label.json").exists()]
+            log.flush()
+            failed = {r["fixture_id"] for line in log_path.read_text().splitlines() if line.strip()
+                      and not (r := json.loads(line)).get("recorded")}  # fmt: skip
+            todo.sort(key=lambda e: e[0] in failed)  # retry failures last (memory_leak_001: weak at night)
             if not todo:
                 break
             _log(event="campaign_pass", attempt=attempt + 1, todo=[e[0] for e in todo])
