@@ -6,7 +6,6 @@ import hashlib
 import logging
 import os
 import random
-import time
 
 import httpx
 from fastapi import HTTPException
@@ -44,18 +43,20 @@ async def _with_retries(what: str, call: object) -> None:
             await asyncio.sleep(0.05 * 2**attempt)
 
 
-def _provider_down() -> bool:
-    """The provider blips for a second every ten minutes, failing fast (a 2 s blip with 200 ms timeouts
-    doubled gateway p95 for a minute and opened incidents on healthy traffic); dependency_outage makes it
-    fail for real."""
+def _provider_down(doomed: bool) -> bool:
+    """dependency_outage makes the provider fail for real. In healthy traffic about 1 charge in 500 is
+    refused on every attempt (a declined card the provider times out on), so the retry and give-up
+    lines appear one request at a time. A time-based blip (1-2 s every 10 min) slowed every charge in
+    it and, at the overnight traffic minimum, opened incidents (23:50 UTC)."""
     if (outage := svc.faults.get("dependency_outage")) is not None:
         return bool(random.random() < outage["error_rate"])
-    return time.time() % 600 < 1.0
+    return doomed
 
 
 @app.post("/charge")
 async def charge(body: dict[str, object]) -> dict[str, object]:
     amount = float(str(body["amount"])) * RATES[str(body.get("currency", "USD"))]
+    doomed = random.random() < 0.002
 
     async def confirm_hold() -> None:
         _sign(str(body))
@@ -70,7 +71,7 @@ async def charge(body: dict[str, object]) -> dict[str, object]:
         with tracer.start_as_current_span(
             "provider.charge", kind=trace.SpanKind.CLIENT, attributes={"peer.service": "provider"}
         ) as span:  # fmt: skip
-            if _provider_down():
+            if _provider_down(doomed):
                 outage = svc.faults.get("dependency_outage")
                 await asyncio.sleep((outage["timeout_ms"] if outage else 50) / 1000)
                 span.set_status(trace.StatusCode.ERROR, "timed out")
