@@ -1,0 +1,140 @@
+{
+  "run": {
+    "run_id": "no_fault-3-20261020T071220",
+    "plan": {
+      "scenario": "no_fault",
+      "variant": null,
+      "seed": 3,
+      "delay_s": 34,
+      "root_cause": null,
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "gateway",
+        "orders",
+        "payments",
+        "inventory"
+      ],
+      "expected_outcome": "INSUFFICIENT_EVIDENCE",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "gateway",
+          "kind": "jitter",
+          "params": {
+            "p": 0.26,
+            "max_ms": 310
+          },
+          "duration_s": 262,
+          "role": "cause"
+        },
+        {
+          "at_s": 0,
+          "service": "orders",
+          "kind": "jitter",
+          "params": {
+            "p": 0.26,
+            "max_ms": 310
+          },
+          "duration_s": 262,
+          "role": "cause"
+        },
+        {
+          "at_s": 0,
+          "service": "payments",
+          "kind": "jitter",
+          "params": {
+            "p": 0.26,
+            "max_ms": 310
+          },
+          "duration_s": 262,
+          "role": "cause"
+        },
+        {
+          "at_s": 0,
+          "service": "inventory",
+          "kind": "jitter",
+          "params": {
+            "p": 0.26,
+            "max_ms": 310
+          },
+          "duration_s": 262,
+          "role": "cause"
+        }
+      ],
+      "deploy": null,
+      "notes": null,
+      "confounded": false,
+      "sampling": null,
+      "confounder_deploy": null
+    },
+    "injection_start": "2026-10-20T07:12:20.432+00:00",
+    "applied": [
+      {
+        "at": "2026-10-20T07:12:21.852+00:00",
+        "at_s": 0,
+        "service": "gateway",
+        "kind": "jitter",
+        "params": {
+          "p": 0.26,
+          "max_ms": 310
+        },
+        "duration_s": 262,
+        "role": "cause"
+      },
+      {
+        "at": "2026-10-20T07:12:21.872+00:00",
+        "at_s": 0,
+        "service": "orders",
+        "kind": "jitter",
+        "params": {
+          "p": 0.26,
+          "max_ms": 310
+        },
+        "duration_s": 262,
+        "role": "cause"
+      },
+      {
+        "at": "2026-10-20T07:12:21.882+00:00",
+        "at_s": 0,
+        "service": "payments",
+        "kind": "jitter",
+        "params": {
+          "p": 0.26,
+          "max_ms": 310
+        },
+        "duration_s": 262,
+        "role": "cause"
+      },
+      {
+        "at": "2026-10-20T07:12:21.895+00:00",
+        "at_s": 0,
+        "service": "inventory",
+        "kind": "jitter",
+        "params": {
+          "p": 0.26,
+          "max_ms": 310
+        },
+        "duration_s": 262,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": null,
+    "confounder_deploy_row": null,
+    "injection_end": "2026-10-20T07:16:42.487+00:00"
+  },
+  "incident": {
+    "id": "9378aef0-28e6-47d3-b7c8-8f357d9ba768",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-20 07:12:39.113331+00:00",
+    "first_anomaly_at": "2026-10-20 07:12:34.009340+00:00",
+    "last_seen": "2026-10-20 07:17:38.995518+00:00",
+    "alert_count": 61,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 17.261331,
+  "onset_to_open_s": 5.103991,
+  "variant": null,
+  "partner": null
+}

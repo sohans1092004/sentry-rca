@@ -603,3 +603,17 @@ E       assert (None is not None)
 $ uv run pytest -vv -p no:cacheprovider tests/integration/test_recorder.py::test_fault_start_is_refused_while_an_incident_lies_in_the_alert_baseline
 ============================= 1 passed in 11.77s ==============================
 
+=== conflict_margin @ 2026-10-20T12:31:11+00:00 -> PASS
+property: Conflict margin (§7.5): two causes within the margin give CONFLICTING_EVIDENCE
+guard removed in investigation/outcome.py: [('        if different and top["score"] - other["score"] <= margin:', '        if False:')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_scope_tools.py::test_outcome_rules_and_conflict_margin
+E       AssertionError: assert 'ROOT_CAUSE_IDENTIFIED' == 'CONFLICTING_EVIDENCE'
+E         
+E         - CONFLICTING_EVIDENCE
+E         + ROOT_CAUSE_IDENTIFIED
+============================== 1 failed in 1.75s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_scope_tools.py::test_outcome_rules_and_conflict_margin
+============================== 1 passed in 1.29s ==============================
+

@@ -1,0 +1,26 @@
+{
+  "tables": {
+    "metrics": {
+      "rows": 235890,
+      "sha256": "1511687ad5adf4b7a398536be1b326ca48a5fb5b394bb1890d0e7958a89ec6ed"
+    },
+    "logs": {
+      "rows": 6859,
+      "sha256": "3bc5cd0948db744799c02ba01f9a773a2e9f13db3228d114589572869e584dca"
+    },
+    "spans": {
+      "rows": 128616,
+      "sha256": "15d6e9878d0fd3303b97a63aa76cf7842424e5ebfb73f7dbd03eec3499381a68"
+    },
+    "deploys": {
+      "rows": 1,
+      "sha256": "b0175db9f576752c82091b599eec7e4f4424e04e41c00e63242c1199f7a953fe"
+    }
+  },
+  "fixture_id": "dependency_outage_ambiguous_001",
+  "version": "v3",
+  "window": [
+    "2026-10-20 09:41:23.558961+00:00",
+    "2026-10-20 10:07:08.548018+00:00"
+  ]
+}

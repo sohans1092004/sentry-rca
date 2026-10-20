@@ -1,0 +1,75 @@
+{
+  "run": {
+    "run_id": "slow_query-2-20261020T082928",
+    "plan": {
+      "scenario": "slow_query",
+      "variant": null,
+      "seed": 2,
+      "delay_s": 49,
+      "root_cause": {
+        "service": "orders",
+        "cause_kind": "slow_query"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "gateway"
+      ],
+      "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "orders",
+          "kind": "lock_wait",
+          "params": {
+            "query": "insert_order",
+            "table": "orders",
+            "op": "INSERT",
+            "delay_ms": 595
+          },
+          "duration_s": 196,
+          "role": "cause"
+        }
+      ],
+      "deploy": null,
+      "notes": null,
+      "confounded": false,
+      "sampling": null,
+      "confounder_deploy": null
+    },
+    "injection_start": "2026-10-20T08:29:28.187+00:00",
+    "applied": [
+      {
+        "at": "2026-10-20T08:29:29.349+00:00",
+        "at_s": 0,
+        "service": "orders",
+        "kind": "lock_wait",
+        "params": {
+          "query": "insert_order",
+          "table": "orders",
+          "op": "INSERT",
+          "delay_ms": 595
+        },
+        "duration_s": 196,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": null,
+    "confounder_deploy_row": null,
+    "injection_end": "2026-10-20T08:32:44.225+00:00"
+  },
+  "incident": {
+    "id": "107868aa-e43a-41ca-898c-b44ba9c0cdf3",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-20 08:29:43.918372+00:00",
+    "first_anomaly_at": "2026-10-20 08:29:38.839718+00:00",
+    "last_seen": "2026-10-20 08:33:43.828085+00:00",
+    "alert_count": 49,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 14.569372,
+  "onset_to_open_s": 5.078654,
+  "variant": null,
+  "partner": null
+}

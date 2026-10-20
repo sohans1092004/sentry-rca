@@ -1,0 +1,114 @@
+{
+  "run": {
+    "run_id": "bad_deploy-ambiguous-1-20261020T041940",
+    "plan": {
+      "scenario": "bad_deploy",
+      "variant": "ambiguous",
+      "seed": 1,
+      "delay_s": 31,
+      "root_cause": {
+        "service": "inventory",
+        "cause_kind": "bad_deploy"
+      },
+      "acceptable_alternatives": [
+        {
+          "service": "payments",
+          "cause_kind": "dependency_outage"
+        }
+      ],
+      "symptom_services": [
+        "gateway",
+        "orders",
+        "payments"
+      ],
+      "expected_outcome": "CONFLICTING_EVIDENCE",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 17,
+          "service": "inventory",
+          "kind": "bad_deploy",
+          "params": {
+            "version": "inventory-v1.28.0",
+            "mode": "slow",
+            "delay_ms": 668
+          },
+          "duration_s": 272,
+          "role": "cause"
+        },
+        {
+          "at_s": 11,
+          "service": "payments",
+          "kind": "dependency_outage",
+          "params": {
+            "error_rate": 0.7,
+            "timeout_ms": 223
+          },
+          "duration_s": 247,
+          "role": "cause"
+        }
+      ],
+      "deploy": {
+        "service": "inventory",
+        "version": "inventory-v1.28.0",
+        "rollout_s": 17
+      },
+      "notes": null,
+      "confounded": false,
+      "sampling": null,
+      "confounder_deploy": null
+    },
+    "injection_start": "2026-10-20T04:19:40.477+00:00",
+    "applied": [
+      {
+        "at": "2026-10-20T04:19:57.988+00:00",
+        "at_s": 11,
+        "service": "payments",
+        "kind": "dependency_outage",
+        "params": {
+          "error_rate": 0.7,
+          "timeout_ms": 223
+        },
+        "duration_s": 247,
+        "role": "cause"
+      },
+      {
+        "at": "2026-10-20T04:19:57.996+00:00",
+        "at_s": 17,
+        "service": "inventory",
+        "kind": "bad_deploy",
+        "params": {
+          "version": "inventory-v1.28.0",
+          "mode": "slow",
+          "delay_ms": 668
+        },
+        "duration_s": 272,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": {
+      "id": "93d1e91e-27e3-495c-8e8d-8583296eeb5d",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "inventory",
+      "version": "inventory-v1.28.0",
+      "started_at": "2026-10-20T04:19:40.726+00:00",
+      "finished_at": "2026-10-20T04:19:57.726+00:00"
+    },
+    "confounder_deploy_row": null,
+    "injection_end": "2026-10-20T04:24:29.534+00:00"
+  },
+  "incident": {
+    "id": "c2b398b2-142b-448e-b877-ee5224c78cdb",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-20 04:20:14.397756+00:00",
+    "first_anomaly_at": "2026-10-20 04:20:09.349138+00:00",
+    "last_seen": "2026-10-20 04:25:29.335993+00:00",
+    "alert_count": 64,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 16.409756,
+  "onset_to_open_s": 5.048618,
+  "variant": "ambiguous",
+  "partner": null
+}

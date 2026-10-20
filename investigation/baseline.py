@@ -26,13 +26,15 @@ Call = Callable[[str, dict[str, Any]], CallRecord]
 Row = dict[str, Any]
 
 LATENCY = "http.server.request.duration.mean"
-PATTERNS = {  # log text -> cause kind, checked in this order
-    "pool acquire timeout": "pool_exhaustion",
-    "slow query": "slow_query",
+PATTERNS = {  # log text (lower case) -> cause kind; the services' v3 vocabulary (A21), same three rules
+    "queuepool limit": "pool_exhaustion",
+    "duration:": "slow_query",
     "provider charge failed": "dependency_outage",
 }
 KIND_PRIORITY = ["bad_deploy", "pool_exhaustion", "slow_query", "dependency_outage", "memory_leak"]
 MIN_LOG_HITS = 3
+MIN_LOG_RATIO = 2.0  # A24: a pattern counts as evidence only when it at least doubled
+LOG_WINDOWS = (timedelta(seconds=120), timedelta(seconds=60), timedelta(seconds=30))  # halved under the row cap
 DOMINANT = 0.5
 MAX_DEPLOY_GAP = timedelta(minutes=30)
 BASELINE = timedelta(minutes=15)
@@ -84,26 +86,41 @@ def _metric_claim(rec: CallRecord, service: str, metric: str, start: datetime, e
     }
 
 
-def _log_claim(
-    recs: list[CallRecord], service: str, pattern: str, start: datetime, end: datetime
-) -> dict[str, Any] | None:
-    cites = []
-    total = 0
-    for rec in recs:
-        hits = [r["row_id"] for r in rec.rows if pattern in r["body"].lower() and start <= parse(r["ts"]) <= end][:20]
-        if hits:
-            cites.append({"tool_call_seq": rec.seq, "row_ids": hits})
-            total += len(hits)
-    if total < MIN_LOG_HITS:
-        return None
-    return {
-        "type": "log_pattern",
-        "service": service,
-        "window": [iso(start), iso(end)],
-        "pattern": pattern,
-        "min_count": total,
-        "cites": cites,
-    }
+def _requests(rows: list[Row]) -> int:
+    """Distinct requests among log rows: by trace id, or each row on its own when it has none."""
+    return len({r["trace_id"] or r["row_id"] for r in rows})
+
+
+def _log_claim(call: Call, service: str, pattern: str, onset: datetime, end: datetime) -> dict[str, Any] | None:
+    """A24: count `pattern` in [onset, onset + L] and in the equal-length window before, from ONE query
+    over both; a claim only when it rose at least MIN_LOG_RATIO and appeared MIN_LOG_HITS times. L is
+    halved while the row cap truncates the answer."""
+    for length in LOG_WINDOWS:
+        w_end = min(end, onset + length)
+        pre = onset - (w_end - onset)
+        rec = call("query_logs", {"service": service, "start": iso(pre), "end": iso(w_end), "contains": pattern,
+                                  "limit": 500})  # fmt: skip
+        if rec.truncated:
+            continue
+        hits = [r for r in rec.rows if pattern in r["body"].lower() and onset <= parse(r["ts"]) <= w_end]
+        before = [r for r in rec.rows if pattern in r["body"].lower() and pre <= parse(r["ts"]) < onset]
+        ratio = len(hits) / max(len(before), 1)
+        # evidence counts failing requests, not lines: one request that retries logs the pattern once per
+        # attempt (a single healthy provider decline = 4 lines, which read as a 4x rise from nothing)
+        events, events_before = _requests(hits), _requests(before)
+        if events < MIN_LOG_HITS or events / max(events_before, 1) < MIN_LOG_RATIO or ratio < MIN_LOG_RATIO:
+            return None
+        cited = hits[:20]
+        return {
+            "type": "log_pattern",
+            "service": service,
+            "window": [iso(onset), iso(w_end)],
+            "pattern": pattern,
+            "min_count": len(cited),
+            "min_ratio": max(MIN_LOG_RATIO, _floor(ratio * 0.8, 1)),
+            "cites": [{"tool_call_seq": rec.seq, "row_ids": [r["row_id"] for r in cited]}],
+        }
+    return None
 
 
 Dominance = tuple[float, str, int, str, str]  # (share, trace_id, tool call seq, root span, service span)
@@ -213,21 +230,8 @@ def rank(scope: Scope, call: Call, runbook_search: bool = True) -> list[dict[str
                     ],
                 }
             )
-        logs = [
-            call(
-                "query_logs",
-                {
-                    "service": svc,
-                    "start": iso(start - timedelta(minutes=1)),
-                    "end": iso(end),
-                    "severity": sev,
-                    "limit": 500,
-                },
-            )
-            for sev in ("WARN", "ERROR")  # OTel exports logging.WARNING as WARN
-        ]
         for pattern, kind in PATTERNS.items():
-            if (c := _log_claim(logs, svc, pattern, start, end)) is not None:
+            if (c := _log_claim(call, svc, pattern, start, end)) is not None:
                 evidence[kind].append(c)
         if "memory_mib" in signals:
             mem = call(

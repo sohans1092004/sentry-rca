@@ -1,0 +1,86 @@
+{
+  "fixture_id": "bad_deploy_002",
+  "scenario": "bad_deploy",
+  "root_cause": {
+    "service": "orders",
+    "cause_kind": "bad_deploy"
+  },
+  "acceptable_alternatives": [],
+  "symptom_services": [
+    "gateway"
+  ],
+  "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+  "planted_injection": false,
+  "gold_claims": [
+    {
+      "type": "log_pattern",
+      "service": "orders",
+      "window": [
+        "2026-10-20T03:40:16.026Z",
+        "2026-10-20T03:44:03.851Z"
+      ],
+      "pattern": "Exception in ASGI application",
+      "min_count": 20,
+      "min_ratio": 112.8,
+      "cites": [
+        {
+          "tool": "query_logs",
+          "args": {
+            "service": "orders",
+            "start": "2026-10-20T03:36:28.201Z",
+            "end": "2026-10-20T03:44:03.851Z",
+            "contains": "Exception in ASGI application",
+            "limit": 500
+          },
+          "row_ids": [
+            "15bb56a6-06ca-5b8b-a109-5f72545e401d",
+            "9f53d0fd-5475-5829-b14e-6ace87883554",
+            "54ac1040-916f-5ca5-a8df-3777324fe9f3",
+            "a8b34979-fddd-503f-ae0d-d4ebabbb3e60",
+            "d11fab1d-156e-5417-9d3d-ecab93890853",
+            "d1430dd3-02a9-5814-a207-a83b5153d94f",
+            "02cd07c7-ea0c-58b0-85cd-35a912f1ce01",
+            "6198cc38-b6c9-57d0-bf03-53b8a3607bdc",
+            "422e73b9-c6eb-5dee-91a7-0d6ca6908088",
+            "5f7995a3-df2c-59c4-8843-0034bb0a7575",
+            "f46d2f81-480e-5717-9adb-44dc0c294f0b",
+            "a6be8b9e-998d-57d4-9693-35c81652a5b7",
+            "444af917-1c00-553a-b541-4ffb99ceaa47",
+            "8bd8f99b-99ba-51a3-94e5-959723cfb0d5",
+            "6538d945-389d-5fcb-a062-fd8343cfc82c",
+            "fde05055-a59e-5ddf-bd2b-fe6a712a7e27",
+            "3fedd93e-3123-5978-b595-10c6dd1893cc",
+            "969c1376-99d1-5e1a-b594-8c439666288a",
+            "467a1736-35e6-5a1e-90bd-bdee8dd98f2b",
+            "8d33c789-0545-5c00-beed-82a9ec7e463b"
+          ]
+        }
+      ]
+    }
+  ],
+  "split": "dev",
+  "sampling": {
+    "traces": 0.5,
+    "logs": 0.7
+  },
+  "confounders": [
+    {
+      "kind": "deploy",
+      "service": "inventory",
+      "at": "2026-10-20T03:35:42.072+00:00",
+      "in_scope": true
+    },
+    {
+      "kind": "client_errors",
+      "service": "gateway",
+      "at": "2026-10-20T03:36:48.805+00:00",
+      "in_scope": true
+    }
+  ],
+  "scope_services": [
+    "gateway",
+    "inventory",
+    "orders",
+    "payments"
+  ]
+}

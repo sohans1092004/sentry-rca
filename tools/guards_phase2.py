@@ -170,10 +170,10 @@ GUARDS_PHASE2: dict[str, dict] = {
         "tests": [IT + "test_phase2.py::test_app_role_cannot_update_or_delete_audit_rows"],
     },
     "conflict_margin": {
-        "property": "Conflict margin (§7.5): an ambiguous fixture reports CONFLICTING_EVIDENCE",
+        "property": "Conflict margin (§7.5): two causes within the margin give CONFLICTING_EVIDENCE",
         "file": "investigation/outcome.py",
         "edits": [('        if different and top["score"] - other["score"] <= margin:', "        if False:")],
-        "tests": [F + "test_offline_baseline.py::test_ambiguous_fixture_reports_conflicting_evidence"],
+        "tests": [U + "test_scope_tools.py::test_outcome_rules_and_conflict_margin"],
     },
     # --- Phase 2.5 (A23-A28) ---
     "verifier_log_ratio": {
