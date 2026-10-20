@@ -198,7 +198,10 @@ def wait_quiet(pg: Any, ch: Any) -> None:
             continue
         oldest = oldest.replace(tzinfo=UTC) if oldest and oldest.tzinfo is None else oldest
         dirty = incident_in_baseline(pg, now)
-        quiet = dirty is None and (last is None or now - last >= PRE) and oldest and now - oldest >= PRE
+        # A29: the last injection, too, must lie before the alert baseline: a fault that opened no
+        # incident (memory_leak_001 at 00:25 UTC) has no incident period to exclude
+        gap = max(PRE, alert_baseline(pg))
+        quiet = dirty is None and (last is None or now - last >= gap) and oldest and now - oldest >= PRE
         if quiet:
             return
         _log(event="waiting_quiet", baseline=dirty, last_activity=last)
