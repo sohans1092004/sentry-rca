@@ -101,4 +101,10 @@ GUARDS_PHASE3: dict[str, dict] = {
             U + "test_verifier.py::test_a_root_cause_must_be_in_scope_and_have_evidence_about_itself",
         ],  # fmt: skip
     },
+    "secret_scan": {
+        "property": "No key in the repo or recorded LLM data: a planted key in a cassette is found",
+        "file": "tools/secret_scan.py",
+        "edits": [("            for name, rx in PATTERNS.items():\n", "            for name, rx in {}.items():\n")],
+        "tests": [U + "test_secrets.py::test_a_planted_key_in_a_cassette_is_found_without_echoing_it"],
+    },
 }

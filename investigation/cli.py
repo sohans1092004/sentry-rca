@@ -122,7 +122,8 @@ def _eval(args: argparse.Namespace) -> int:
     labels = {d.parent.name: json.loads((d / "label.json").read_text()) for d in datasets}
     split = {fid: lab.get("split", "dev") for fid, lab in labels.items()}
     datasets = [d for d in datasets if args.split in ("all", split[d.parent.name])]
-    if args.ranker == "agent" and any(split[d.parent.name] == "test" for d in datasets):
+    # a live agent run on test fixtures needs the freeze; replaying recorded exchanges (CI) runs no model
+    if args.ranker == "agent" and args.llm == "record" and any(split[d.parent.name] == "test" for d in datasets):
         tags = subprocess.run(["git", "tag", "--points-at", "HEAD"], capture_output=True, text=True, cwd=ROOT).stdout
         if "agent-frozen" not in tags.split():
             sys.exit("refused: the agent runs on test fixtures only at the agent-frozen tag (Phase 3 discipline)")

@@ -1,0 +1,184 @@
+{
+ "digest": "hosted:https://generativelanguage.googleapis.com/v1beta/openai",
+ "entries": {
+  "0848d6ffe6167d3079a925ab825b8c43eeb7043259d51389d50c8bc9b0ea32ef": {
+   "response": {
+    "content": "",
+    "latency_ms": 5641,
+    "tokens_in": 3320,
+    "tokens_out": 323,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-19T13:56:00.867Z",
+       "service": "inventory",
+       "start": "2026-10-19T13:30:25.880Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TNgcfKTGkw8nGYVeBHiXYQ6ZJERk3JKwLR71u9mv6/s7VBTjAcXc8RViuLMOowibtERRXIysCENGNBHZ+C+QHbw3liSPlCPpbQSAyLd2PS6xsklCJIo3wRpM="
+       }
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-19T13:56:00.867Z",
+       "service": "inventory",
+       "start": "2026-10-19T13:30:25.880Z"
+      },
+      "name": "query_logs"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-19T13:56:00.867Z",
+       "metric": "db.pool.wait.mean",
+       "service": "inventory",
+       "start": "2026-10-19T13:30:25.880Z"
+      },
+      "name": "query_metrics"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-19T13:56:00.867Z",
+       "metric": "container.cpu.utilization",
+       "service": "inventory",
+       "start": "2026-10-19T13:30:25.880Z"
+      },
+      "name": "query_metrics"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 2
+  },
+  "144da531e79eb306e5a59d34cbeebdb51930a4dad9aae69d48a8b9574141f831": {
+   "response": {
+    "content": "",
+    "latency_ms": 5328,
+    "tokens_in": 6449,
+    "tokens_out": 24,
+    "tool_calls": [
+     {
+      "arguments": {
+       "query": "QueuePool limit size overflow connection timed out"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0Tea+hJXhUrYn637s3fjWmFlv8ioLE9qh33SfwaJtnOFYr9OyLKXHsaEcPhk10k12xOD2Hi94F1lcR0+UVeIblHcZ8q6bxHkLXPJbWK5b4U7Z8+HpmpkOqR7o="
+       }
+      },
+      "name": "search_runbooks"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 3
+  },
+  "175c9fd2409c5e2b94884ed42479018a95fdb291a6f0970dda96c21f40d0133c": {
+   "response": {
+    "content": "",
+    "latency_ms": 5765,
+    "tokens_in": 8398,
+    "tokens_out": 86,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-19T13:56:00.867Z",
+       "metric": "db.pool.wait.mean",
+       "service": "inventory",
+       "start": "2026-10-19T13:30:25.880Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TKRo3JRIsOv4Z152jX6CO5evqakqweXrngYzwp+muEBXYISRbj+naynrohoGJtlbo43+6fQ8u0TQ7bBSovZTIAwVklGIsG7p1aCNXYTDCPW87Lak0/ArOFzI="
+       }
+      },
+      "name": "query_metrics"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 5
+  },
+  "21a9d7c2caac4354c938fd9ced3e85a669ee9e421e0f3694008d3b71b8cf79c9": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"inventory\", \"cause_kind\": \"pool_exhaustion\", \"score\": 0.95, \"claims\": [{\"type\": \"metric_change\", \"service\": \"inventory\", \"metric\": \"db.pool.wait.mean\", \"window\": [\"2026-10-19T13:45:20.441Z\", \"2026-10-19T13:56:00.867Z\"], \"direction\": \"up\", \"min_magnitude\": 0.5, \"cites\": [{\"tool_call_seq\": 4, \"rows\": \"all\"}]}, {\"type\": \"log_pattern\", \"service\": \"inventory\", \"window\": [\"2026-10-19T13:45:20.441Z\", \"2026-10-19T13:56:00.867Z\"], \"pattern\": \"QueuePool limit of size 10 overflow 0 reached, connection timed out\", \"min_count\": 10, \"min_ratio\": 2.0, \"cites\": [{\"tool_call_seq\": 3, \"rows\": \"all\"}]}, {\"type\": \"metric_change\", \"service\": \"inventory\", \"metric\": \"container.cpu.utilization\", \"window\": [\"2026-10-19T13:45:20.441Z\", \"2026-10-19T13:56:00.867Z\"], \"direction\": \"up\", \"min_magnitude\": 0.0, \"cites\": [{\"tool_call_seq\": 5, \"rows\": \"all\"}]}], \"narrative\": \"The inventory service experienced database connection pool exhaustion, leading to connection timeouts and elevated latency.\"}]}",
+    "latency_ms": 4125,
+    "tokens_in": 7876,
+    "tokens_out": 444,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 4
+  },
+  "58d2db99a9f7a23421edac36b91a78b99a071c1defddd8fc3242601009fab070": {
+   "response": {
+    "content": "",
+    "latency_ms": 5734,
+    "tokens_in": 9460,
+    "tokens_out": 86,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-19T13:46:00.867Z",
+       "metric": "db.pool.wait.mean",
+       "service": "inventory",
+       "start": "2026-10-19T13:44:00.867Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TcgtHXkh6FZIQjjv25Y3+FOfDy/LLJg/f002D+KTZgr5exhFJQDRmlu/JXfXHKhn1we9R6SBzBRJFUNZhEXtAFmPS24zYzm4YGMXeL29ckUWGm3FU1QGnCjU="
+       }
+      },
+      "name": "query_metrics"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 6
+  },
+  "a3c56b31d7fa2968cd9ea3da0d78cad96c44bc09eee308150f891ff6ec8affcf": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"inventory\", \"cause_kind\": \"pool_exhaustion\", \"score\": 0.95, \"claims\": [{\"type\": \"metric_change\", \"service\": \"inventory\", \"metric\": \"db.pool.wait.mean\", \"window\": [\"2026-10-19T13:45:20.441Z\", \"2026-10-19T13:46:00.867Z\"], \"direction\": \"up\", \"min_magnitude\": 0.5, \"cites\": [{\"tool_call_seq\": 8, \"rows\": \"all\"}]}, {\"type\": \"metric_change\", \"service\": \"inventory\", \"metric\": \"container.cpu.utilization\", \"window\": [\"2026-10-19T13:45:20.441Z\", \"2026-10-19T13:56:00.867Z\"], \"direction\": \"up\", \"min_magnitude\": 0.0, \"cites\": [{\"tool_call_seq\": 5, \"rows\": \"all\"}]}], \"narrative\": \"The inventory service experienced database connection pool exhaustion, leading to connection timeouts and elevated latency.\"}]}",
+    "latency_ms": 7859,
+    "tokens_in": 10483,
+    "tokens_out": 314,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 7
+  },
+  "f912325009bbab1f94aa046086fffdc3c11885496ede7e41b80835d2f969ac77": {
+   "response": {
+    "content": "",
+    "latency_ms": 2156,
+    "tokens_in": 2273,
+    "tokens_out": 88,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-19T13:56:00.867Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-19T13:30:25.880Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TW1jKTb6H+S1/ZKCh2T34ptYjgMQtzrokwjfDZe/rpeX/ruuB3KxS/HGqL3eBPTFbCAmUvciQMrQouDTFN9lQWdebbQ65lgGLCD4MNKY8FqrsnZT0zyc0Leg="
+       }
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  }
+ },
+ "model": "gemini-3.5-flash-lite"
+}

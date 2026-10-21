@@ -1,7 +1,8 @@
 # ADR-000: LLM provider and model
 
-**Status:** Accepted (Phase 3, model selection), corrected the same day (see *Correction*). Raw numbers:
-`docs/measurements/phase3/selection/`.
+**Status:** Accepted (Phase 3), revised twice: the local choice was corrected (see *Correction*), and the
+evaluated agent moved to a free-tier hosted model by the user's decision when no local model produced a
+verified hypothesis (see *Hosted model*). Raw numbers: `docs/measurements/phase3/`.
 
 ## Context
 
@@ -25,8 +26,10 @@ below 1 GB.
   only (A35).
 - **Optional hosted provider:** an OpenAI-compatible one exists. It is off unless `LLM_API_KEY` is set,
   and none is required.
-- **Model: `qwen2.5:3b`** (Q4_K_M, digest in the cassettes). The first version of this ADR chose
-  `llama3.2:3b`; see *Correction*.
+- **Local model: `qwen2.5:3b`** (Q4_K_M, digest in the cassettes), the zero-cost default. The first
+  version of this ADR chose `llama3.2:3b`; see *Correction*.
+- **Evaluated agent: `gemini-3.5-flash-lite`** on the Gemini API free tier, through the OpenAI-compatible
+  provider (user's decision, 21 Oct). See *Hosted model*.
 
 ## Candidates and measurements
 
@@ -94,8 +97,43 @@ The baseline in the same investigations scores top-1 0.842 (16/19), as it did in
 - **qwen2.5:7b did not fit on a 16 GB laptop running the full stack.** The rule was to try it only if
   Available exceeded 6.5 GB after cleanup. It was 3,788 MB, with WSL capped at 4 GB and ClickHouse and
   Postgres running. It was not attempted.
-- **The free-tier hosted comparison (DEV only)** has not been run. No `LLM_API_KEY` is configured. If one
-  is set, it is run once and reported apart from the local model, never as the chosen agent.
+- **N=5 evals with the hosted model.** The free tier allows 500 requests a day for this model, and an
+  investigation takes about 17. N=5 on dev and test would need about 3,200 requests, roughly a week of quota.
+  The user chose N=1 on dev and test instead, with no paid tier (see *Hosted model*).
+
+## Hosted model
+
+- **Why it was added:** after model selection and two dev iterations, no local model had produced a single
+  verified hypothesis. There were 145 agent hypotheses, all rejected. The user decided to evaluate a
+  free-tier hosted model as the agent and to report the local result alongside it.
+- **Which model:** `gemini-3.5-flash-lite` was the only current Gemini model that answered a tool call
+  (21 Oct, 21:45 IST). The 2.5 models are closed to new keys. Gemini 3.x Flash, 3.1 Flash Lite and
+  Gemma 4 31B returned 503 or 500.
+- **Free-tier limits (AI Studio):** 15 requests per minute, 250K input tokens per minute, and **500
+  requests per day**.
+  - The client waits at least 4 s between calls and honours `Retry-After` (A41).
+  - The daily limit is what restricts the evals to N=1.
+- **Dev N=1, before iteration C:**
+  - top-1 0.421 judged, 0.526 service-only, against the baseline's 0.842;
+  - 5 of 10 agent hypotheses verified;
+  - 4 runs degraded on the 150k-token budget;
+  - paired by fixture: 2 wins, 10 losses, 7 ties.
+
+  Raw numbers: `docs/measurements/phase3/hosted/dev-n1.json`.
+- **Data sent to the provider:**
+  - **It may keep it.** Free-tier Gemini API requests may be kept and used by Google to improve its
+    products, under the API's free-tier terms. Paid-tier data is treated differently.
+  - **What is sent:** every request carries the prompt, which is tool results drawn from the fixtures.
+  - **The fixture data is entirely synthetic.** The telemetry of the demo services under injected faults
+    is from this project's own test system: no real users, customers or production systems.
+  - **No secrets are sent.** No credential or key is in any request body. The key travels only in the
+    HTTP `Authorization` header.
+  - **Checks:** `tools/secret_scan.py` and its test fail if a key-shaped string reaches the repository or
+    a cassette, and a remove-the-guard check covers the scan.
+  - **Production use:** a deployment on real telemetry would need a provider under paid or enterprise
+    terms, or the local model.
+- **Replay:** the model has no digest. Its name and endpoint stand in for one in the replay key. The
+  provider can change the model behind the name, so recorded cassettes, not a re-run, are the reference.
 
 ## Memory notes
 
