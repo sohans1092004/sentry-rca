@@ -313,3 +313,19 @@ def test_outcome_rules_and_conflict_margin():
         outcome.decide([h("inventory", "slow_query", 0.8), h("inventory", "slow_query", 0.79)])
         == "ROOT_CAUSE_IDENTIFIED"
     )
+
+
+def test_offline_edges_count_every_span_in_the_buckets_that_overlap_the_window():
+    """A33: as ClickHouse's service_edges (bucket >= start's bucket AND bucket <= end), so a CLIENT span
+    later in the last bucket counts; one in the next bucket does not; each span once (exact count)."""
+    from investigation.backend import OfflineBackend
+
+    def span(sid, ts):
+        return {"tenant_id": A, "service": "orders", "span_id": sid, "start_ts": ts,
+                "attrs": {"span.kind": "CLIENT", "peer.service": "payments"}}  # fmt: skip
+
+    t = datetime(2026, 10, 21, 10, 0, tzinfo=UTC)
+    spans = [span("a", t + timedelta(minutes=1)), span("a", t + timedelta(minutes=1)),
+             span("b", t + timedelta(minutes=8)), span("c", t + timedelta(minutes=10))]  # fmt: skip
+    edges = OfflineBackend({"spans": spans}).edges(A, t + timedelta(minutes=2), t + timedelta(minutes=6))
+    assert edges == [("orders", "payments", 2)]  # a (once) and b (after end, same bucket); not c

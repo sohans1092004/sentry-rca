@@ -91,12 +91,17 @@ class ClickHouseBackend:
 
     def edges(self, tenant: str, start: datetime, end: datetime) -> list[tuple[str, str, int]]:
         rows = self.ch.query(
-            "SELECT parent_service, child_service, toUInt64(uniqMerge(calls)) FROM service_edges "
+            "SELECT parent_service, child_service, toUInt64(uniqExactMerge(calls)) FROM service_edges "
             "WHERE tenant_id = {t:String} AND bucket >= toStartOfFiveMinutes({a:DateTime64(3)}) "
             "AND bucket <= {b:DateTime64(3)} GROUP BY parent_service, child_service ORDER BY 1, 2",
             parameters={"t": tenant, "a": start, "b": end},
         ).result_rows
         return [(str(p), str(c), int(n)) for p, c, n in rows]
+
+
+def _bucket(t: datetime) -> datetime:
+    """toStartOfFiveMinutes."""
+    return t.replace(minute=t.minute - t.minute % 5, second=0, microsecond=0)
 
 
 def _in(t: datetime, a: datetime, b: datetime) -> bool:
@@ -154,12 +159,17 @@ class OfflineBackend:
         return _first_by(sorted(rows, key=lambda r: (r["finished_at"], r["id"])), lambda r: r["id"])
 
     def edges(self, tenant: str, start: datetime, end: datetime) -> list[tuple[str, str, int]]:
-        """As the service_edges view derives them: one edge per CLIENT span naming its callee, in the
-        5-minute buckets that overlap the window."""
-        lo = start.replace(minute=start.minute - start.minute % 5, second=0, microsecond=0)
+        """As the service_edges view derives them: one edge per CLIENT span naming its callee, counted
+        exactly, over every span whose 5-minute bucket overlaps the window (so a span in the last
+        bucket counts even when it starts after `end`, as ClickHouse's bucket filter has it; A33)."""
+        lo = _bucket(start)
         calls: dict[tuple[str, str], set[str]] = defaultdict(set)
         for s in self.t["spans"]:
-            if s["tenant_id"] != tenant or s["attrs"].get("span.kind") != "CLIENT" or not lo <= s["start_ts"] <= end:
+            if (
+                s["tenant_id"] != tenant
+                or s["attrs"].get("span.kind") != "CLIENT"
+                or not lo <= _bucket(s["start_ts"]) <= end
+            ):
                 continue
             child = s["attrs"].get("peer.service") or s["attrs"].get("server.address", "")
             if child and child != s["service"]:
