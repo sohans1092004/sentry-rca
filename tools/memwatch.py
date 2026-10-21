@@ -60,7 +60,8 @@ def main(pid: int, log: str, floor_mb: int = 1024, interval_s: float = 30.0) -> 
             if event:
                 return
             time.sleep(interval_s)
-        w.writerow([datetime.now(UTC).isoformat(timespec="seconds"), available_mb(), "", "", "", "watched process ended"])
+        end = [datetime.now(UTC).isoformat(timespec="seconds"), available_mb(), "", "", "", "watched process ended"]
+        w.writerow(end)
 
 
 if __name__ == "__main__":
