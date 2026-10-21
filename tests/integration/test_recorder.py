@@ -67,3 +67,27 @@ def test_loader_rejects_tampered_dataset(ch_db, ch_container, pg, tmp_path):
     with pytest.raises(DatasetMismatch, match="logs"):
         load(tmp_path, ch_client(ch_container), f"fx_{uuid.uuid4().hex[:8]}")
     assert json.loads((tmp_path / "manifest.json").read_text())["tables"]["logs"]["rows"] == 150
+
+
+def test_fault_start_is_refused_while_an_incident_lies_in_the_alert_baseline(pg):
+    """A29: an incident resolved 10 minutes ago lies inside the 31-minute alert baseline, so this is not
+    a clean fault start; once it lies before the baseline, it is."""
+    from recorder.record import alert_baseline, incident_in_baseline
+
+    now = datetime.now(UTC)
+    assert alert_baseline(pg) == timedelta(seconds=60 + 1800)
+    assert incident_in_baseline(pg, now) is None
+    pg.execute(
+        "INSERT INTO incidents (id, tenant_id, fingerprint, service, status, first_anomaly_at, last_seen) "
+        "VALUES (%s, %s, 'gateway|slo|x', 'gateway', 'resolved', %s, %s)",
+        (str(uuid.uuid4()), DEMO_TENANT_ID, now - timedelta(minutes=20), now - timedelta(minutes=13)),
+    )
+    reason = incident_in_baseline(pg, now)
+    assert reason is not None and "in the alert baseline" in reason, "a fault would start with a dirty baseline"
+    assert incident_in_baseline(pg, now + timedelta(minutes=30)) is None  # resolved 40 min before then
+    pg.execute(
+        "INSERT INTO incidents (id, tenant_id, fingerprint, service, status, first_anomaly_at, last_seen) "
+        "VALUES (%s, %s, 'gateway|slo|y', 'gateway', 'open', %s, %s)",
+        (str(uuid.uuid4()), DEMO_TENANT_ID, now, now),
+    )
+    assert incident_in_baseline(pg, now + timedelta(minutes=30)) == "1 incidents open"

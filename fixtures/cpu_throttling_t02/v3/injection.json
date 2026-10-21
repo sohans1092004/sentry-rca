@@ -1,0 +1,70 @@
+{
+  "run": {
+    "run_id": "cpu_throttling-102-20261020T203014",
+    "plan": {
+      "scenario": "cpu_throttling",
+      "variant": null,
+      "seed": 102,
+      "delay_s": 38,
+      "root_cause": {
+        "service": "payments",
+        "cause_kind": "cpu_throttling"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "orders",
+        "gateway"
+      ],
+      "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "payments",
+          "kind": "cpu_quota",
+          "params": {
+            "cpus": 0.08
+          },
+          "duration_s": 266,
+          "role": "cause"
+        }
+      ],
+      "deploy": null,
+      "notes": null,
+      "confounded": false,
+      "sampling": null,
+      "confounder_deploy": null
+    },
+    "injection_start": "2026-10-20T20:30:14.978+00:00",
+    "applied": [
+      {
+        "at": "2026-10-20T20:30:15.680+00:00",
+        "at_s": 0,
+        "service": "payments",
+        "kind": "cpu_quota",
+        "params": {
+          "cpus": 0.08
+        },
+        "duration_s": 266,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": null,
+    "confounder_deploy_row": null,
+    "injection_end": "2026-10-20T20:34:41.073+00:00"
+  },
+  "incident": {
+    "id": "2b9cbe91-28da-4a2a-a5f9-7d707af23a68",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-20 20:30:42.390017+00:00",
+    "first_anomaly_at": "2026-10-20 20:30:37.326666+00:00",
+    "last_seen": "2026-10-20 20:35:22.315295+00:00",
+    "alert_count": 57,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 26.710017,
+  "onset_to_open_s": 5.063351,
+  "variant": null,
+  "partner": null
+}

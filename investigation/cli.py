@@ -1,7 +1,7 @@
 """rca: the Phase 2 command line.
 
 rca show <investigation_id>          scope, tool calls, hypotheses with per-claim results, outcome
-rca eval [--n 5] [fixture ...]       baseline eval on fixtures, with the §12.5 gate
+rca eval [--n 5] [--split dev|test|all] [fixture ...]   baseline eval, dev and test apart, §12.5 gate
 rca runbooks load [--live]           embed (replay, or record with --live) and load the corpus
 rca runbooks verify-embeddings       re-embed with the live model; report drift
 rca fixtures fetch                   download and verify the fixture datasets
@@ -87,17 +87,28 @@ def _eval(args: argparse.Namespace) -> int:
     from investigation.runbooks import PgRunbookIndex
 
     datasets = [d for d in fetch.fetch() if not args.fixtures or d.parent.name in args.fixtures]
+    labels = {d.parent.name: json.loads((d / "label.json").read_text()) for d in datasets}
+    split = {fid: lab.get("split", "dev") for fid, lab in labels.items()}
+    datasets = [d for d in datasets if args.split in ("all", split[d.parent.name])]
+    dev_labels = {fid: lab for fid, lab in labels.items() if split[fid] == "dev"}  # only dev has postmortems
     run_id = str(uuid.uuid4())
     conn = psycopg.connect(APP_DSN, autocommit=True)
     admin = db.clickhouse("default")
     runbooks = PgRunbookIndex(conn, Cassette()) if not args.no_runbooks else None
-    results = []
+    by_split: dict[str, list[Any]] = {}
     for d in datasets:
-        print(f"{d.parent.name} ...", flush=True)
-        results.append(harness.eval_fixture(d, conn, admin, (config.CH_HOST, config.CH_PORT), run_id, args.n, runbooks))
-    summary = harness.summarise(results)
-    ids = [r.investigation_id for fr in results for r in fr.runs]
-    summary["rejection_by_claim_type"] = harness.rejection_rates(conn, ids)
+        fid = d.parent.name
+        print(f"{fid} ({split[fid]}) ...", flush=True)
+        excluded = harness.related_postmortems(labels[fid], dev_labels)
+        by_split.setdefault(split[fid], []).append(harness.eval_fixture(
+            d, conn, admin, (config.CH_HOST, config.CH_PORT), run_id, args.n, runbooks, excluded=excluded))  # fmt: skip
+    summaries: dict[str, Any] = {}
+    for name, res in by_split.items():
+        summaries[name] = harness.summarise(res)
+        ids = [r.investigation_id for fr in res for r in fr.runs]
+        summaries[name]["rejection_by_claim_type"] = harness.rejection_rates(conn, ids)
+    results = [fr for res in by_split.values() for fr in res]
+    summary: dict[str, Any] = {"splits": summaries, "baseline_sha256": harness.baseline_sha256()}
     sha = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=ROOT).stdout.strip()
     with psycopg.connect(config.PG_DSN, autocommit=True) as owner:  # eval_runs: written by the owner role
         owner.execute(
@@ -116,40 +127,46 @@ def _eval(args: argparse.Namespace) -> int:
                         i,
                         r.investigation_id,
                         r.outcome,
-                        fr.correct(r, 1),
-                        fr.correct(r, 3),
+                        fr.correct(r, 1, "judged"),
+                        fr.correct(r, 3, "judged"),
                         fr.influenced[i] if fr.influenced else None,
-                        json.dumps({"latency_ms": r.latency_ms, "tool_calls": r.tool_calls}),
+                        json.dumps(
+                            {
+                                "latency_ms": r.latency_ms,
+                                "tool_calls": r.tool_calls,
+                                "split": split[fr.fixture_id],
+                                "top1_exact": fr.correct(r, 1, "exact"),
+                                "top1_service": fr.correct(r, 1, "service"),
+                            }
+                        ),  # fmt: skip
                     ),
                 )
     out = Path(args.out or ROOT / "runs" / f"eval-{run_id[:8]}.json")
     out.parent.mkdir(exist_ok=True)
     out.write_text(json.dumps({"eval_run_id": run_id, "git_sha": sha, **summary}, indent=2, default=str))
     accepted = json.loads(ACCEPTED.read_text()) if ACCEPTED.exists() else None
-    blocked = harness.gate(summary, accepted)
-    print(
-        json.dumps(
-            {
-                k: summary[k]
-                for k in (
-                    "fixtures",
-                    "n_runs",
-                    "top1",
-                    "top3",
-                    "confusion",
-                    "gold_claims",
-                    "gold_rejected",
-                    "out_of_scope_evidence",
-                    "out_of_scope_allowed",
-                    "injection_influence",
-                )
-            },
-            indent=2,
-        )
+    if accepted is not None and "splits" not in accepted:
+        accepted = None  # a Phase 2 (v2, unsplit) acceptance is not comparable with v3 dev and test
+    blocked = harness.posthoc_reasons(
+        accepted, summary["baseline_sha256"], (ROOT / "docs" / "SPEC.md").read_text("utf-8")
     )
+    keys = ("fixtures", "n_runs", "top1", "top3", "top1_exact", "top1_service", "confusion", "gold_claims",
+            "gold_rejected", "out_of_scope_evidence", "out_of_scope_allowed", "injection_influence",
+            "tool_calls_checked", "backend_mismatches", "clean", "confounded")  # fmt: skip
+    for name, s in summaries.items():
+        prior = (accepted or {}).get("splits", {}).get(name)
+        blocked += [f"{name}: {r}" for r in harness.gate(s, prior)]
+        print(f"=== {name}")
+        print(json.dumps({k: s[k] for k in keys if k in s}, indent=2))
     print(f"written {out}")
     if args.accept and not blocked:
-        ACCEPTED.write_text(json.dumps(summary, indent=2, default=str) + "\n")
+        new = {
+            "splits": {**(accepted or {}).get("splits", {}), **summaries},
+            "baseline_sha256": summary["baseline_sha256"],
+        }
+        new["test_baseline_sha256"] = (accepted or {}).get("test_baseline_sha256") or (
+            summary["baseline_sha256"] if "test" in summaries else None)  # fmt: skip
+        ACCEPTED.write_text(json.dumps(new, indent=2, default=str) + "\n")
     print("gate:", "PASS" if not blocked else "BLOCKED: " + "; ".join(blocked))
     return 1 if blocked else 0
 
@@ -162,6 +179,7 @@ def main() -> None:
     e = sub.add_parser("eval")
     e.add_argument("fixtures", nargs="*")
     e.add_argument("--n", type=int, default=5)
+    e.add_argument("--split", choices=["dev", "test", "all"], default="all")
     e.add_argument("--out")
     e.add_argument("--accept", action="store_true", help="record this eval as the accepted baseline for the gate")
     e.add_argument("--no-runbooks", action="store_true")

@@ -1,0 +1,129 @@
+{
+  "run": {
+    "run_id": "noisy_neighbor-1-20261020T103702",
+    "plan": {
+      "scenario": "noisy_neighbor",
+      "variant": null,
+      "seed": 1,
+      "delay_s": 48,
+      "root_cause": {
+        "service": "batchjob",
+        "cause_kind": "noisy_neighbor"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "payments",
+        "inventory",
+        "orders",
+        "gateway"
+      ],
+      "expected_outcome": "INSUFFICIENT_EVIDENCE",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "batchjob",
+          "kind": "cpu_burn",
+          "params": {
+            "workers": 7
+          },
+          "duration_s": 288,
+          "role": "cause"
+        },
+        {
+          "at_s": -550,
+          "service": "gateway",
+          "kind": "deploy",
+          "params": {
+            "version": "gateway-v1.43.0"
+          },
+          "duration_s": 1,
+          "role": "confounder"
+        },
+        {
+          "at_s": -199,
+          "service": "gateway",
+          "kind": "client_errors",
+          "params": {
+            "n": 24
+          },
+          "duration_s": 30,
+          "role": "confounder"
+        }
+      ],
+      "deploy": null,
+      "notes": "batchjob shares a CPU core with payments and inventory but has no trace edges: no span connects it to any service, so it never appears in service_edges and is outside every investigation scope (SPEC 5.2) by design. No claim about it can be cited, so INSUFFICIENT_EVIDENCE is the expected, honest outcome; a ranker that blames payments or inventory (the victims) is wrong. See ADR-006.",
+      "confounded": true,
+      "sampling": {
+        "traces": 0.5,
+        "logs": 0.7
+      },
+      "confounder_deploy": {
+        "service": "gateway",
+        "version": "gateway-v1.43.0",
+        "at_s": -550,
+        "rollout_s": 12
+      }
+    },
+    "injection_start": "2026-10-20T10:37:02.732+00:00",
+    "applied": [
+      {
+        "at": "2026-10-20T10:37:03.665+00:00",
+        "at_s": -550,
+        "service": "gateway",
+        "kind": "deploy",
+        "params": {
+          "version": "gateway-v1.43.0"
+        },
+        "duration_s": 1,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T10:42:53.735+00:00",
+        "at_s": -199,
+        "service": "gateway",
+        "kind": "client_errors",
+        "params": {
+          "n": 24
+        },
+        "duration_s": 30,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T10:46:13.134+00:00",
+        "at_s": 0,
+        "service": "batchjob",
+        "kind": "cpu_burn",
+        "params": {
+          "workers": 7
+        },
+        "duration_s": 288,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": null,
+    "confounder_deploy_row": {
+      "id": "621b1b3b-b31c-4828-abc8-4a490b0ce56b",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "gateway",
+      "version": "gateway-v1.43.0",
+      "started_at": "2026-10-20T10:36:51.665+00:00",
+      "finished_at": "2026-10-20T10:37:03.665+00:00"
+    },
+    "injection_end": "2026-10-20T10:51:00.754+00:00"
+  },
+  "incident": {
+    "id": "3370e2ec-2f7a-46aa-bd98-b7ae659dba25",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-20 10:46:38.564378+00:00",
+    "first_anomaly_at": "2026-10-20 10:46:33.506946+00:00",
+    "last_seen": "2026-10-20 10:51:53.490962+00:00",
+    "alert_count": 64,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 25.430378,
+  "onset_to_open_s": 5.057432,
+  "variant": null,
+  "partner": null
+}

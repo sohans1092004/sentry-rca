@@ -46,23 +46,33 @@ def test_metric_change_agrees_with_gold(before, inside, mm):
 
 
 words = st.sampled_from(["pool", "acquire", "timeout", "TIMEOUT", "Pool", "ok", "slow", "query", "x"])
+bodies = st.lists(st.lists(words, min_size=1, max_size=6).map(" ".join), min_size=0, max_size=30)
 
 
 @settings(max_examples=300, deadline=None)
-@given(bodies=st.lists(st.lists(words, min_size=1, max_size=6).map(" ".join), min_size=1, max_size=30),
-       pattern=st.sampled_from(["pool acquire", "timeout", "slow query", "Pool"]))  # fmt: skip
-def test_log_pattern_gold_claims_pass_and_tightened_ones_fail(bodies, pattern):
-    lg = [{"row_id": f"l{i}", "log_id": f"l{i}", "service": "s", "ts": T0 + timedelta(seconds=i), "body": b}
-          for i, b in enumerate(bodies)]  # fmt: skip
+@given(inside=bodies, before=bodies, pattern=st.sampled_from(["pool acquire", "timeout", "slow query", "Pool"]))
+def test_log_pattern_gold_claims_pass_and_tightened_ones_fail(inside, before, pattern):
+    """A24 in both implementations: a claim exists exactly when the pattern rose >= 2x against the
+    equal-length window before (an empty one counting as 1); the verifier passes gold's claims and
+    fails them once min_count or min_ratio is tightened past the data."""
+    lg = [{"row_id": f"l{i}", "log_id": f"l{i}", "service": "s", "ts": T0 + timedelta(seconds=10 * i), "body": b}
+          for i, b in enumerate(inside)]  # fmt: skip
+    lg += [{"row_id": f"p{i}", "log_id": f"p{i}", "service": "s", "ts": T0 - timedelta(seconds=10 * (i + 1)),
+            "body": b} for i, b in enumerate(before)]  # fmt: skip
+    n_win = sum(pattern.lower() in b.lower() for b in inside)
+    n_pre = sum(pattern.lower() in b.lower() for b in before)
     claim = gold.log_pattern(lg, "s", pattern, T0, END)
+    assert (claim is not None) == (n_win >= 3 and gold.log_ratio(n_win, n_pre) >= gold.MIN_LOG_RATIO)
     if claim is None:
-        assert not any(pattern.lower() in b.lower() for b in bodies)
         return
-    calls = {1: call(1, "query_logs", _as_snapshot(lg))}
+    rows = [r for r in lg if pattern.lower() in r["body"].lower()]  # the query used `contains`
+    executed = {"service": "s", "start": claim["cites"][0]["args"]["start"], "end": claim["window"][1]}
+    calls = {1: call(1, "query_logs", _as_snapshot(rows), executed=executed)}
     claim = {**claim, "cites": [{"tool_call_seq": 1, "row_ids": claim["cites"][0]["row_ids"]}]}
     assert verify_claim(0, claim, calls, "baseline").passed
-    tighter = {**claim, "min_count": claim["min_count"] + 1}
-    assert not verify_claim(0, tighter, calls, "baseline").passed
+    assert not verify_claim(0, {**claim, "min_count": claim["min_count"] + 1}, calls, "baseline").passed
+    over = gold.log_ratio(n_win, n_pre) + 0.01
+    assert not verify_claim(0, {**claim, "min_ratio": over}, calls, "baseline").passed
 
 
 @st.composite

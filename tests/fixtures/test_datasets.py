@@ -36,9 +36,14 @@ def test_content_hashes_match_manifest(fid):
 @pytest.mark.parametrize("fid", FIXTURES)
 def test_label_is_well_formed(fid):
     label = json.loads((dataset(fid) / "label.json").read_text())
+    v3 = {"split", "confounders", "sampling", "scope_services"}  # A22
     assert (
-        LABEL_KEYS <= set(label) <= LABEL_KEYS | {"notes", "out_of_scope_evidence", "planted_row_ids"}
-    )  # A13, A14, A19
+        LABEL_KEYS <= set(label) <= LABEL_KEYS | {"notes", "out_of_scope_evidence", "planted_row_ids"} | v3
+    )  # A13, A14, A19, A22
+    if VERSIONS[fid] == "v3":
+        assert v3 <= set(label) and label["split"] in ("dev", "test")
+        assert all(c["in_scope"] for c in label["confounders"]), "a confounder outside the scope confounds nothing"
+        assert bool(label["confounders"]) == (label["sampling"] is not None)
     assert label["fixture_id"] == fid and label["expected_outcome"] in OUTCOMES
     assert label["gold_claims"], "every fixture has at least one gold claim"
     assert len({json.dumps(c, sort_keys=True) for c in label["gold_claims"]}) == len(label["gold_claims"])

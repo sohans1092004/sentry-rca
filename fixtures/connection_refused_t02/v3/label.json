@@ -1,0 +1,88 @@
+{
+  "fixture_id": "connection_refused_t02",
+  "scenario": "connection_refused",
+  "root_cause": {
+    "service": "inventory",
+    "cause_kind": "connection_refused"
+  },
+  "acceptable_alternatives": [],
+  "symptom_services": [
+    "payments",
+    "orders",
+    "gateway"
+  ],
+  "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+  "planted_injection": false,
+  "gold_claims": [
+    {
+      "type": "log_pattern",
+      "service": "orders",
+      "window": [
+        "2026-10-20T19:50:46.505Z",
+        "2026-10-20T19:54:39.505Z"
+      ],
+      "pattern": "inventory call failed",
+      "min_count": 20,
+      "min_ratio": 152.0,
+      "cites": [
+        {
+          "tool": "query_logs",
+          "args": {
+            "service": "orders",
+            "start": "2026-10-20T19:46:53.505Z",
+            "end": "2026-10-20T19:54:39.505Z",
+            "contains": "inventory call failed",
+            "limit": 500
+          },
+          "row_ids": [
+            "7fdc603e-da10-5b80-82f1-b0149c34d29c",
+            "7cd9a6c5-253b-5d69-87bf-665eb94f9024",
+            "3c43a972-870a-530c-b137-b5617cb46cfd",
+            "be1c2cad-fe3d-5faa-8e25-15ed2193775e",
+            "5e06f59c-fd11-5628-9454-9376f2778008",
+            "7c483e91-5b75-5b1d-9f68-82e48441ee40",
+            "d8bc31a7-7dce-5aba-9976-e28e20923336",
+            "244a1087-2f91-576f-b502-7fde701419ff",
+            "783310ec-c609-584a-9ea5-c329b047c720",
+            "a3b0e333-fb9a-5c25-8c72-ac20f9101b0c",
+            "0966267e-c3b1-5e53-b8f4-fccc883533ab",
+            "d233ae1b-182f-5948-8566-3160d2dc4ea4",
+            "f84e5d59-cbf6-54c8-9aa7-9fdfa7691f70",
+            "9ba3ba6b-ce63-5c92-8ea4-fdd9ba79ba5c",
+            "41444b41-1be7-575b-8164-fd9b783a975d",
+            "c169f527-afa9-5815-af53-78d9e7072589",
+            "f897f139-33d9-5b1e-b2d3-0d3f2cab2001",
+            "90ea8837-5764-5719-846c-e7ca484cb3f8",
+            "06f5089f-8cd0-50e4-aca8-3865000cb572",
+            "862684ef-eb60-513a-88c7-4d8f4b8ebd2d"
+          ]
+        }
+      ]
+    }
+  ],
+  "split": "test",
+  "sampling": {
+    "traces": 0.5,
+    "logs": 0.7
+  },
+  "confounders": [
+    {
+      "kind": "deploy",
+      "service": "payments",
+      "at": "2026-10-20T19:48:42.971+00:00",
+      "in_scope": true
+    },
+    {
+      "kind": "memory_step",
+      "service": "gateway",
+      "at": "2026-10-20T19:48:44.536+00:00",
+      "in_scope": true
+    }
+  ],
+  "scope_services": [
+    "gateway",
+    "inventory",
+    "orders",
+    "payments"
+  ]
+}

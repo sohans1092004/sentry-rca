@@ -37,7 +37,7 @@ TENANT_ARGS = {"tenant", "tenant_id"}
 
 
 class RunbookIndex(Protocol):
-    def search(self, tenant: str, query: str, top_k: int, exclude_fixture: str | None) -> list[Row]: ...
+    def search(self, tenant: str, query: str, top_k: int, exclude: tuple[str, ...]) -> list[Row]: ...
 
 
 class Rejected(Exception):
@@ -161,7 +161,7 @@ def fetch(
     t = scope.tenant_id
     if tool == "search_runbooks":
         assert runbooks is not None
-        return runbooks.search(t, ex["query"], ex["top_k"], scope.excluded_fixture), False
+        return runbooks.search(t, ex["query"], ex["top_k"], scope.excluded()), False
     start, end = parse(ex["start"]), parse(ex["end"])
     limit = ex.get("limit", scope.max_rows)
     if tool == "get_incident_timeline":

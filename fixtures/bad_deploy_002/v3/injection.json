@@ -1,0 +1,141 @@
+{
+  "run": {
+    "run_id": "bad_deploy-2-20261020T033541",
+    "plan": {
+      "scenario": "bad_deploy",
+      "variant": null,
+      "seed": 2,
+      "delay_s": 40,
+      "root_cause": {
+        "service": "orders",
+        "cause_kind": "bad_deploy"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "gateway"
+      ],
+      "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 17,
+          "service": "orders",
+          "kind": "bad_deploy",
+          "params": {
+            "version": "orders-v1.88.0",
+            "mode": "errors",
+            "error_rate": 0.32
+          },
+          "duration_s": 228,
+          "role": "cause"
+        },
+        {
+          "at_s": -257,
+          "service": "inventory",
+          "kind": "deploy",
+          "params": {
+            "version": "inventory-v1.48.0"
+          },
+          "duration_s": 1,
+          "role": "confounder"
+        },
+        {
+          "at_s": -190,
+          "service": "gateway",
+          "kind": "client_errors",
+          "params": {
+            "n": 20
+          },
+          "duration_s": 30,
+          "role": "confounder"
+        }
+      ],
+      "deploy": {
+        "service": "orders",
+        "version": "orders-v1.88.0",
+        "rollout_s": 17
+      },
+      "notes": null,
+      "confounded": true,
+      "sampling": {
+        "traces": 0.5,
+        "logs": 0.7
+      },
+      "confounder_deploy": {
+        "service": "inventory",
+        "version": "inventory-v1.48.0",
+        "at_s": -257,
+        "rollout_s": 7
+      }
+    },
+    "injection_start": "2026-10-20T03:35:41.808+00:00",
+    "applied": [
+      {
+        "at": "2026-10-20T03:35:42.072+00:00",
+        "at_s": -257,
+        "service": "inventory",
+        "kind": "deploy",
+        "params": {
+          "version": "inventory-v1.48.0"
+        },
+        "duration_s": 1,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T03:36:48.805+00:00",
+        "at_s": -190,
+        "service": "gateway",
+        "kind": "client_errors",
+        "params": {
+          "n": 20
+        },
+        "duration_s": 30,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T03:40:16.026+00:00",
+        "at_s": 17,
+        "service": "orders",
+        "kind": "bad_deploy",
+        "params": {
+          "version": "orders-v1.88.0",
+          "mode": "errors",
+          "error_rate": 0.32
+        },
+        "duration_s": 228,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": {
+      "id": "288ffd48-8a6f-40fb-a64c-00d8b2fee23b",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "orders",
+      "version": "orders-v1.88.0",
+      "started_at": "2026-10-20T03:39:58.807+00:00",
+      "finished_at": "2026-10-20T03:40:15.807+00:00"
+    },
+    "confounder_deploy_row": {
+      "id": "175f74af-27d8-4e6e-adc7-17289f7c892e",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "inventory",
+      "version": "inventory-v1.48.0",
+      "started_at": "2026-10-20T03:35:35.072+00:00",
+      "finished_at": "2026-10-20T03:35:42.072+00:00"
+    },
+    "injection_end": "2026-10-20T03:44:03.851+00:00"
+  },
+  "incident": {
+    "id": "2fc916f5-cd5f-48a8-91a4-6b1a419cefc9",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-20 03:40:34.489364+00:00",
+    "first_anomaly_at": "2026-10-20 03:40:29.437135+00:00",
+    "last_seen": "2026-10-20 03:44:54.427617+00:00",
+    "alert_count": 53,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 18.463364,
+  "onset_to_open_s": 5.052229,
+  "variant": null,
+  "partner": null
+}

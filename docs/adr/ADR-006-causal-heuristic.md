@@ -78,3 +78,28 @@ fixture's investigation.
   `slow_query_ambiguous_001` both injected causes are found and verified but scored 0.45 apart, so the
   baseline reports one root cause instead of `CONFLICTING_EVIDENCE`: an error-mode fault barely shows
   in slow traces, so trace dominance favours the slow cause.
+
+## Why trace-dominated scores underweight error-mode faults (left unfixed, Phase 2.5)
+
+The Phase 2 eval missed both `dependency_outage_ambiguous_001` and `slow_query_ambiguous_001` in all
+five runs: each time both injected causes were found and verified, and each time they scored more
+than the 0.1 conflict margin apart. The cause is structural, not a tuning accident:
+
+- **Trace dominance measures where time goes.** 0.4 of the score is the share of slow or failing
+  traces whose time is dominated by the candidate (step 3 above). A latency fault (a slow handler, a
+  lock wait) adds hundreds of milliseconds inside its service's spans, so it dominates nearly every
+  slow trace it touches.
+- **An error-mode fault fails fast.** A provider timeout after retries, a 500 from a bad deploy, a
+  refused connection: the failing child span is short, and the walk (failing child first) reaches it
+  only in the traces that actually failed, a minority of the window. Where it fails slowly (the
+  provider timeout), the retries spread its time over several short spans, none holding half the root.
+- **So when the two co-occur, the latency fault takes most of the 0.4,** both have their own kind
+  evidence (0.3 each), precedence is a near tie (onsets within one 5 s export tick), and the gap is
+  typically 0.2–0.45: far past the 0.1 margin, so the outcome is `ROOT_CAUSE_IDENTIFIED`, naming the
+  latency fault, instead of `CONFLICTING_EVIDENCE`.
+
+It is left unfixed on purpose (item 2.5/9): weighting failures by count instead of time, or scoring
+each fault mode against its own kind of trace, would be tuning the weights to these two labels. The
+v3 test set carries three equal-strength ambiguous pairs, one of them two error-mode faults
+(dependency_outage + connection_refused), so the effect is measured on fixtures the baseline was not
+tuned on. The Phase 3 agent should be judged on exactly these.

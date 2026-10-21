@@ -1,0 +1,132 @@
+{
+  "run": {
+    "run_id": "pool_exhaustion-3-20261020T062752",
+    "plan": {
+      "scenario": "pool_exhaustion",
+      "variant": null,
+      "seed": 3,
+      "delay_s": 25,
+      "root_cause": {
+        "service": "inventory",
+        "cause_kind": "pool_exhaustion"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "payments",
+        "orders",
+        "gateway"
+      ],
+      "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "inventory",
+          "kind": "conn_leak",
+          "params": {
+            "p": 0.28,
+            "hold_s": 22
+          },
+          "duration_s": 239,
+          "role": "cause"
+        },
+        {
+          "at_s": -275,
+          "service": "payments",
+          "kind": "deploy",
+          "params": {
+            "version": "payments-v1.51.0"
+          },
+          "duration_s": 1,
+          "role": "confounder"
+        },
+        {
+          "at_s": -193,
+          "service": "gateway",
+          "kind": "jitter",
+          "params": {
+            "p": 0.03,
+            "max_ms": 40
+          },
+          "duration_s": 89,
+          "role": "confounder"
+        }
+      ],
+      "deploy": null,
+      "notes": null,
+      "confounded": true,
+      "sampling": {
+        "traces": 0.5,
+        "logs": 0.7
+      },
+      "confounder_deploy": {
+        "service": "payments",
+        "version": "payments-v1.51.0",
+        "at_s": -275,
+        "rollout_s": 9
+      }
+    },
+    "injection_start": "2026-10-20T06:27:52.151+00:00",
+    "applied": [
+      {
+        "at": "2026-10-20T06:27:52.858+00:00",
+        "at_s": -275,
+        "service": "payments",
+        "kind": "deploy",
+        "params": {
+          "version": "payments-v1.51.0"
+        },
+        "duration_s": 1,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T06:29:14.169+00:00",
+        "at_s": -193,
+        "service": "gateway",
+        "kind": "jitter",
+        "params": {
+          "p": 0.03,
+          "max_ms": 40
+        },
+        "duration_s": 89,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T06:32:27.186+00:00",
+        "at_s": 0,
+        "service": "inventory",
+        "kind": "conn_leak",
+        "params": {
+          "p": 0.28,
+          "hold_s": 22
+        },
+        "duration_s": 239,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": null,
+    "confounder_deploy_row": {
+      "id": "5a423d02-1bb3-4cfd-901a-9e227d22dc34",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "payments",
+      "version": "payments-v1.51.0",
+      "started_at": "2026-10-20T06:27:43.858+00:00",
+      "finished_at": "2026-10-20T06:27:52.858+00:00"
+    },
+    "injection_end": "2026-10-20T06:36:26.223+00:00"
+  },
+  "incident": {
+    "id": "6b94e660-ebf8-4992-9fac-b7312d828d15",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-20 06:32:49.133576+00:00",
+    "first_anomaly_at": "2026-10-20 06:32:44.051661+00:00",
+    "last_seen": "2026-10-20 06:37:24.039823+00:00",
+    "alert_count": 56,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 21.947576,
+  "onset_to_open_s": 5.081915,
+  "variant": null,
+  "partner": null
+}

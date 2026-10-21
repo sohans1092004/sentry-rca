@@ -11,7 +11,9 @@ from common import db
 from injector import scenarios
 from recorder import gold
 from recorder.dataset import TABLES, read_parquet
-from recorder.record import DATA, LABELS, VERSION, make_label
+from recorder.record import DATA, LABELS, make_label
+
+VERSION = "v1"  # regold rewrote the Phase 1 labels; v3 labels are built by record.py itself
 
 
 def regold(fixture_id: str) -> int:

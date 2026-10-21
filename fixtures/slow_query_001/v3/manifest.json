@@ -1,0 +1,26 @@
+{
+  "tables": {
+    "metrics": {
+      "rows": 194659,
+      "sha256": "1a033273393579b80b0dd9c1a074e64947d973e7a07704233661a755efcdcb91"
+    },
+    "logs": {
+      "rows": 2875,
+      "sha256": "99feafedfbfb2f9e93e0a6fa21d7450469d095015d7e36faebd8341d99ffdec8"
+    },
+    "spans": {
+      "rows": 59679,
+      "sha256": "618e0004c7a2a3f2a9c050abb2638905aae520e9c5b483febe9ed4beda546ec4"
+    },
+    "deploys": {
+      "rows": 1,
+      "sha256": "f9225860fd83f48676cb4a4b4459974e3a46a30d8a10c3f3ef8f9c22bb65ab3b"
+    }
+  },
+  "fixture_id": "slow_query_001",
+  "version": "v3",
+  "window": [
+    "2026-10-19 21:41:20.246033+00:00",
+    "2026-10-19 22:06:35.235640+00:00"
+  ]
+}

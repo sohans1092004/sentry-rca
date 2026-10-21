@@ -1,0 +1,26 @@
+{
+  "tables": {
+    "metrics": {
+      "rows": 199426,
+      "sha256": "3f7391eaab5c7515a266dd51fd8d7f802271ce37841e7a0f52c4ef1991a6909a"
+    },
+    "logs": {
+      "rows": 4052,
+      "sha256": "156536562607fffc7ca9fc30de9671bf725f147c22c84ca110032b141daeb328"
+    },
+    "spans": {
+      "rows": 138620,
+      "sha256": "aa6422913a39dfcc6c0a4135413e98ff3b27dc1880664a8b617fc75eebe5f29d"
+    },
+    "deploys": {
+      "rows": 1,
+      "sha256": "ac2b0c7239659d474b78cac906f1bae5bff39b48766e30d8c5160d4e9cf9caf7"
+    }
+  },
+  "fixture_id": "cpu_throttling_t02",
+  "version": "v3",
+  "window": [
+    "2026-10-20 20:15:37.326666+00:00",
+    "2026-10-20 20:40:22.315295+00:00"
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "fixture_id": "config_change_t01",
+  "scenario": "config_change",
+  "root_cause": {
+    "service": "orders",
+    "cause_kind": "config_change"
+  },
+  "acceptable_alternatives": [],
+  "symptom_services": [
+    "gateway"
+  ],
+  "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+  "planted_injection": false,
+  "gold_claims": [
+    {
+      "type": "log_pattern",
+      "service": "orders",
+      "window": [
+        "2026-10-20T12:32:23.119Z",
+        "2026-10-20T12:33:23.119Z"
+      ],
+      "pattern": "payments call failed",
+      "min_count": 20,
+      "min_ratio": 212.0,
+      "cites": [
+        {
+          "tool": "query_logs",
+          "args": {
+            "service": "orders",
+            "start": "2026-10-20T12:31:23.119Z",
+            "end": "2026-10-20T12:33:23.119Z",
+            "contains": "payments call failed",
+            "limit": 500
+          },
+          "row_ids": [
+            "780847d5-91c5-5a6b-aea5-6f012e6265b4",
+            "f8c9c06a-051b-5d89-8f97-540d46465ab3",
+            "18532926-eefa-5392-af8e-6b5aae188d19",
+            "83740137-e601-5ff4-bee5-6b12ef0588ab",
+            "553c0ff2-73d5-5d68-a788-1bff9a53dd8f",
+            "399226e7-c268-5d52-b3fe-5945d8b6100b",
+            "686733c5-c987-5258-a55d-e329de3f01b4",
+            "2d63e90a-4327-5bbb-840e-fe29ae15b24b",
+            "5aabdd2a-5120-5243-abec-21477cb25df4",
+            "d437d472-9278-5b24-bc16-c69b1e24901b",
+            "5119ddc5-f7d8-56a9-954a-a7ef857aeaac",
+            "64383fef-41ac-5333-ad2e-78b3d11fbefd",
+            "f7a1607d-e610-5d38-858f-2edacda7b3b0",
+            "f9a8e290-0127-5bec-bf7d-d880a7c152f1",
+            "7a83fcbc-f15e-5e11-9351-231cb82c2f07",
+            "4163ef4b-bf40-5921-9679-b5fb3647472d",
+            "c696e620-f3df-5258-83ae-c40f1718a197",
+            "fede22e6-3956-52be-8b26-cc55c119824b",
+            "f207dc56-318e-5f96-8b33-3e09940f1a9c",
+            "340f84a1-835a-5c35-b4ca-d784ddde4876"
+          ]
+        }
+      ]
+    }
+  ],
+  "split": "test",
+  "sampling": null,
+  "confounders": [],
+  "scope_services": [
+    "gateway",
+    "inventory",
+    "orders",
+    "payments"
+  ]
+}

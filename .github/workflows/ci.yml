@@ -48,7 +48,7 @@ jobs:
 
   fixtures:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 60  # 35 v3 fixtures (dev 19 + test 16)
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v7
@@ -64,7 +64,7 @@ jobs:
 
   baseline-eval:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 90  # 35 v3 fixtures (dev 19 + test 16)
     services:
       postgres:
         image: pgvector/pgvector:0.8.1-pg16

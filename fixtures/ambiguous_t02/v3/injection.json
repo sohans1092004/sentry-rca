@@ -1,0 +1,123 @@
+{
+  "run": {
+    "run_id": "dependency_outage-ambiguous-101-20261020T183351",
+    "plan": {
+      "scenario": "dependency_outage",
+      "variant": "ambiguous",
+      "seed": 101,
+      "delay_s": 58,
+      "root_cause": {
+        "service": "payments",
+        "cause_kind": "dependency_outage"
+      },
+      "acceptable_alternatives": [
+        {
+          "service": "inventory",
+          "cause_kind": "connection_refused"
+        }
+      ],
+      "symptom_services": [
+        "gateway",
+        "orders"
+      ],
+      "expected_outcome": "CONFLICTING_EVIDENCE",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "payments",
+          "kind": "dependency_outage",
+          "params": {
+            "error_rate": 0.75,
+            "timeout_ms": 217
+          },
+          "duration_s": 266,
+          "role": "cause"
+        },
+        {
+          "at_s": 3,
+          "service": "orders",
+          "kind": "refused",
+          "params": {
+            "period_s": 9,
+            "on_s": 5
+          },
+          "duration_s": 191,
+          "role": "cause"
+        },
+        {
+          "at_s": 3,
+          "service": "payments",
+          "kind": "refused",
+          "params": {
+            "period_s": 9,
+            "on_s": 5
+          },
+          "duration_s": 191,
+          "role": "cause"
+        }
+      ],
+      "deploy": null,
+      "notes": null,
+      "confounded": false,
+      "sampling": null,
+      "confounder_deploy": null
+    },
+    "injection_start": "2026-10-20T18:33:51.221+00:00",
+    "applied": [
+      {
+        "at": "2026-10-20T18:33:51.504+00:00",
+        "at_s": 0,
+        "service": "payments",
+        "kind": "dependency_outage",
+        "params": {
+          "error_rate": 0.75,
+          "timeout_ms": 217
+        },
+        "duration_s": 266,
+        "role": "cause"
+      },
+      {
+        "at": "2026-10-20T18:33:54.236+00:00",
+        "at_s": 3,
+        "service": "orders",
+        "kind": "refused",
+        "params": {
+          "period_s": 9,
+          "on_s": 5
+        },
+        "duration_s": 191,
+        "role": "cause"
+      },
+      {
+        "at": "2026-10-20T18:33:54.283+00:00",
+        "at_s": 3,
+        "service": "payments",
+        "kind": "refused",
+        "params": {
+          "period_s": 9,
+          "on_s": 5
+        },
+        "duration_s": 191,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": null,
+    "confounder_deploy_row": null,
+    "injection_end": "2026-10-20T18:38:17.250+00:00"
+  },
+  "incident": {
+    "id": "c526bca0-0284-47b6-9b53-23568ad675dc",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-20 18:34:07.710334+00:00",
+    "first_anomaly_at": "2026-10-20 18:34:02.607162+00:00",
+    "last_seen": "2026-10-20 18:39:17.594241+00:00",
+    "alert_count": 63,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 16.206334,
+  "onset_to_open_s": 5.103172,
+  "variant": "ambiguous",
+  "partner": "connection_refused"
+}

@@ -1,0 +1,26 @@
+{
+  "tables": {
+    "metrics": {
+      "rows": 215282,
+      "sha256": "35506cda39337328450c8fa71369336e724ddbcb507c68a68c49f6e7fb041f87"
+    },
+    "logs": {
+      "rows": 5180,
+      "sha256": "762a232a892068a89b178b570447a5180ffa00d9f259b04d67e437bbae9b6eec"
+    },
+    "spans": {
+      "rows": 104608,
+      "sha256": "f4cf885bea0198e89447989e44438325b2a25347a58fdbee8d6ae20c5cc94a6e"
+    },
+    "deploys": {
+      "rows": 2,
+      "sha256": "a2f2c91b7c6556a0c7c044b43fc7b36a52e19ea8489110e17c3e1311f559fa05"
+    }
+  },
+  "fixture_id": "config_change_t02",
+  "version": "v3",
+  "window": [
+    "2026-10-20 16:39:47.865370+00:00",
+    "2026-10-20 17:05:32.850205+00:00"
+  ]
+}

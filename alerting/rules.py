@@ -3,7 +3,10 @@
 import math
 import statistics
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from typing import Any
+
+MINUTE = timedelta(minutes=1)
 
 
 @dataclass
@@ -13,6 +16,12 @@ class Window:
     status_counts: dict[str, float] = field(default_factory=dict)  # status code -> requests in window
     buckets: dict[float, float] = field(default_factory=dict)  # bucket upper bound (s) -> count in window
     baseline_p95_ms: list[float] = field(default_factory=list)  # one value per baseline minute
+
+
+def outside_incidents(minutes: dict[datetime, Any], periods: list[tuple[datetime, datetime]]) -> dict[datetime, Any]:
+    """A29: baseline minutes that overlap no incident period. An incident's period runs from its first
+    anomaly to its resolution, so the fault that opened it and its recovery never become "normal"."""
+    return {m: v for m, v in minutes.items() if not any(m < end and m + MINUTE > start for start, end in periods)}
 
 
 def quantile_ms(buckets: dict[float, float], q: float) -> float | None:

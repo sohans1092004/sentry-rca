@@ -39,7 +39,14 @@ class Scope:
     depth: int = DEPTH
     max_rows: int = MAX_ROWS
     max_bytes: int = MAX_BYTES
-    excluded_fixture: str | None = None  # SPEC §12.2: this fixture's postmortems are never returned
+    excluded_fixture: str | None = None  # SPEC §12.2: the fixture under evaluation
+    # A25: every fixture whose postmortem describes the same scenario (the evaluated one included)
+    excluded_postmortems: tuple[str, ...] = ()
+
+    def excluded(self) -> tuple[str, ...]:
+        """Fixture ids whose postmortems search_runbooks never returns and no claim may cite."""
+        own = (self.excluded_fixture,) if self.excluded_fixture else ()
+        return tuple(sorted(set(own) | set(self.excluded_postmortems)))
 
     def to_json(self) -> dict[str, Any]:
         d = asdict(self)
@@ -48,7 +55,8 @@ class Scope:
 
     @staticmethod
     def from_json(d: dict[str, Any]) -> "Scope":
-        return Scope(**{**d, "services": tuple(d["services"]), "start": parse(d["start"]), "end": parse(d["end"])})
+        return Scope(**{**d, "services": tuple(d["services"]), "start": parse(d["start"]), "end": parse(d["end"]),
+                        "excluded_postmortems": tuple(d.get("excluded_postmortems", ()))})  # fmt: skip
 
 
 def allowed_services(edges: list[tuple[str, str, int]], root: str, depth: int) -> tuple[str, ...]:
@@ -70,11 +78,13 @@ def allowed_services(edges: list[tuple[str, str, int]], root: str, depth: int) -
 
 
 def compute(backend: Backend, incident: dict[str, Any], *, depth: int = DEPTH,
-            clamp: tuple[datetime, datetime] | None = None, excluded_fixture: str | None = None) -> Scope:  # fmt: skip
+            clamp: tuple[datetime, datetime] | None = None, excluded_fixture: str | None = None,
+            excluded_postmortems: tuple[str, ...] = ()) -> Scope:  # fmt: skip
     start, end = incident["first_anomaly_at"] - BEFORE, incident["last_seen"] + AFTER
     if clamp is not None:
         start, end = max(start, clamp[0]), min(end, clamp[1])
     edges = backend.edges(str(incident["tenant_id"]), start - GRAPH_LOOKBACK, end)
     services = allowed_services(edges, incident["service"], depth)
     return Scope(str(incident["tenant_id"]), incident["service"], services, start, end, depth,
-                 excluded_fixture=excluded_fixture)  # fmt: skip
+                 excluded_fixture=excluded_fixture,
+                 excluded_postmortems=tuple(sorted(excluded_postmortems)))  # fmt: skip

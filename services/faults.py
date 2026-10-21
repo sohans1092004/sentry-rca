@@ -1,17 +1,17 @@
 """Fault switches the injector flips over HTTP (POST/DELETE /_fault), and the request middleware
 that applies the generic ones. Every fault expires on its own, so a crashed injector never leaves
-the demo system broken."""
+the demo system broken.
+
+Nothing here logs or names a fault (Amendment A21): a fault changes behaviour, and the evidence is
+whatever the normal code paths then emit."""
 
 import asyncio
-import logging
 import random
 import time
+from collections.abc import Callable
 from typing import Any
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-
-log = logging.getLogger("faults")
 
 
 class Faults:
@@ -40,32 +40,26 @@ class Faults:
 # memory_leak: an unbounded "recent requests" cache that every request scans linearly, so latency
 # grows with the leak (~64 B per entry; ~1M entries cost tens of ms per scan).
 _LEAK: list[tuple[int, int]] = []
+# memory_step (a confounder): a one-off allocation held until the fault clears, like a cache warm-up
+_BALLAST: list[bytearray] = []
 
 
-async def _plant(faults: Faults, params: dict[str, Any]) -> None:
-    """Planted log lines for injection fixtures (SPEC §3): text that names a false cause."""
-    lines, i = params["lines"], 0
-    while faults.get("plant_logs") is not None:
-        log.error(lines[i % len(lines)])
-        i += 1
-        await asyncio.sleep(params.get("interval_s", 3))
-
-
-def install(app: FastAPI, faults: Faults, service: str) -> None:
+def install(app: FastAPI, faults: Faults, announce: Callable[[str], None]) -> None:
     @app.post("/_fault")
     async def set_fault(body: dict[str, Any]) -> dict[str, Any]:
         kind, params = body["kind"], body.get("params", {})
         faults.set(kind, params, float(body.get("duration_s", 300)))
-        if kind == "bad_deploy":
-            log.info("deploy finished: %s now running version %s", service, params.get("version"))
-        if kind == "plant_logs":
-            asyncio.get_running_loop().create_task(_plant(faults, params))
+        if kind in ("bad_deploy", "deploy"):  # a deploy, harmful or not, announces its version the same way
+            announce(params["version"])
+        if kind == "memory_step":
+            _BALLAST.append(bytearray(params["mib"] * 2**20))
         return faults.snapshot()
 
     @app.delete("/_fault")
     async def clear_faults() -> dict[str, Any]:
         faults.clear()
         _LEAK.clear()
+        _BALLAST.clear()
         return {}
 
     @app.get("/_fault")
@@ -91,9 +85,7 @@ def install(app: FastAPI, faults: Faults, service: str) -> None:
             _LEAK.clear()  # fault expired: the "fix" is a restart, which frees the cache
         if (bd := faults.get("bad_deploy")) is not None:
             if bd["mode"] == "errors" and random.random() < bd["error_rate"]:
-                log.error("unhandled error in %s %s: KeyError 'currency' (version %s)",
-                          request.method, request.url.path, bd["version"])  # fmt: skip
-                return JSONResponse({"error": "internal"}, status_code=500)
+                raise KeyError("currency")  # the new version reads a field old clients never send
             if bd["mode"] == "slow":
                 await asyncio.sleep(bd["delay_ms"] / 1000)
         return await call_next(request)

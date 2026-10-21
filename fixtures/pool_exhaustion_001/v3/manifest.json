@@ -1,0 +1,26 @@
+{
+  "tables": {
+    "metrics": {
+      "rows": 212603,
+      "sha256": "0b25e1b2484dc22b4865f81275fd0fe3edb3bba9d53bdacb4ce95027bdb6ead6"
+    },
+    "logs": {
+      "rows": 9810,
+      "sha256": "ff3132d82b18ac9b798aea0881cdb7167c7a27f40ef4e2efa1a15924ab664842"
+    },
+    "spans": {
+      "rows": 240234,
+      "sha256": "c9dc113192bfb2d0570bc55e8a60998b8302f0a2a1e09091a34f8b6848e5d502"
+    },
+    "deploys": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "fixture_id": "pool_exhaustion_001",
+  "version": "v3",
+  "window": [
+    "2026-10-19 13:30:25.880621+00:00",
+    "2026-10-19 13:56:00.867630+00:00"
+  ]
+}

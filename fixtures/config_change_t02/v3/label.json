@@ -1,0 +1,86 @@
+{
+  "fixture_id": "config_change_t02",
+  "scenario": "config_change",
+  "root_cause": {
+    "service": "orders",
+    "cause_kind": "config_change"
+  },
+  "acceptable_alternatives": [],
+  "symptom_services": [
+    "gateway"
+  ],
+  "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+  "planted_injection": false,
+  "gold_claims": [
+    {
+      "type": "log_pattern",
+      "service": "orders",
+      "window": [
+        "2026-10-20T16:54:39.595Z",
+        "2026-10-20T16:56:39.595Z"
+      ],
+      "pattern": "payments call failed",
+      "min_count": 20,
+      "min_ratio": 248.8,
+      "cites": [
+        {
+          "tool": "query_logs",
+          "args": {
+            "service": "orders",
+            "start": "2026-10-20T16:52:39.595Z",
+            "end": "2026-10-20T16:56:39.595Z",
+            "contains": "payments call failed",
+            "limit": 500
+          },
+          "row_ids": [
+            "21a1addb-b55c-5256-b407-d1983b30a3b3",
+            "88c99a1f-0644-5404-b79c-7875eb2f648d",
+            "3e426b2e-f3c8-56ff-915f-833515818299",
+            "506173ef-e945-5452-8884-95bc36d96911",
+            "df1921a7-8c30-553b-af4f-b081d386371a",
+            "4a26d449-a780-5186-8210-da74b6c8033c",
+            "0f6714e8-0508-5d96-a5a8-7bffb8122f9b",
+            "d200d208-7448-5024-b0f7-92bdeac716f8",
+            "e35359ea-7eca-5927-92ea-2f85cc07990a",
+            "84d7fdd2-4708-5627-a2d5-b90be3c39128",
+            "50ac7bfd-93d1-5ff0-92ce-9a3671b12257",
+            "cbc8b164-c7b2-5463-849d-b455bbe3459b",
+            "b85afd17-2d43-536a-a975-01df037b5582",
+            "0eb7615e-7db2-5050-98fc-fdb96346c701",
+            "c58a27fc-e031-57bd-999b-1e5b732155d8",
+            "1c041fe9-3a2e-5144-96f9-bd0dc25abd1d",
+            "6d88b71e-3917-54a4-a2c6-906623bb286f",
+            "540b37cb-f2d4-51f7-8da9-7319efe8096e",
+            "5080dc09-9393-528b-8957-31a5bd759598",
+            "d8722dd9-fccc-5b47-aa2b-788f71a68a41"
+          ]
+        }
+      ]
+    }
+  ],
+  "split": "test",
+  "sampling": {
+    "traces": 0.5,
+    "logs": 0.7
+  },
+  "confounders": [
+    {
+      "kind": "deploy",
+      "service": "gateway",
+      "at": "2026-10-20T16:51:33.308+00:00",
+      "in_scope": true
+    },
+    {
+      "kind": "jitter",
+      "service": "gateway",
+      "at": "2026-10-20T16:53:56.596+00:00",
+      "in_scope": true
+    }
+  ],
+  "scope_services": [
+    "gateway",
+    "inventory",
+    "orders",
+    "payments"
+  ]
+}

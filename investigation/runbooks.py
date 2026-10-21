@@ -63,14 +63,14 @@ class PgRunbookIndex:
     def __init__(self, conn: psycopg.Connection[Any], cassette: Cassette):
         self.conn, self.cassette = conn, cassette
 
-    def search(self, tenant: str, query: str, top_k: int, exclude_fixture: str | None) -> list[dict[str, Any]]:
+    def search(self, tenant: str, query: str, top_k: int, exclude: tuple[str, ...]) -> list[dict[str, Any]]:
         q = str(self.cassette.embed(query_text(query)))
         rows = self.conn.execute(
             "SELECT id::text, title, kind, fixture_id, left(body, %s), 1 - (embedding <=> %s::vector) AS similarity "
             "FROM runbooks WHERE tenant_id = %s "
-            "AND (fixture_id IS NULL OR fixture_id <> COALESCE(%s, '')) "  # SPEC §12.2 contamination rule
+            "AND (fixture_id IS NULL OR NOT fixture_id = ANY(%s)) "  # SPEC §12.2 contamination rule (A25)
             "ORDER BY embedding <=> %s::vector, id LIMIT %s",
-            (EXCERPT, q, tenant, exclude_fixture, q, top_k),
+            (EXCERPT, q, tenant, list(exclude), q, top_k),
         ).fetchall()
         return [{"row_id": i, "doc_id": i, "title": t, "kind": k, "fixture_id": f, "excerpt": b, "similarity": s}
                 for i, t, k, f, b, s in rows]  # fmt: skip
@@ -84,12 +84,12 @@ class MemoryRunbookIndex:
         self.cassette = cassette
         self.vecs = {d.id: cassette.embed(d.text) for d in docs}
 
-    def search(self, tenant: str, query: str, top_k: int, exclude_fixture: str | None) -> list[dict[str, Any]]:
+    def search(self, tenant: str, query: str, top_k: int, exclude: tuple[str, ...]) -> list[dict[str, Any]]:
         q = self.cassette.embed(query_text(query))
         scored = []
         for d in self.docs:
-            if d.fixture_id is not None and d.fixture_id == (exclude_fixture or ""):
-                continue  # SPEC §12.2 contamination rule
+            if d.fixture_id is not None and d.fixture_id in exclude:
+                continue  # SPEC §12.2 contamination rule (A25)
             v = self.vecs[d.id]
             sim = sum(a * b for a, b in zip(q, v, strict=True)) / (math.hypot(*q) * math.hypot(*v))
             scored.append((-sim, d.id, d, sim))

@@ -1,0 +1,26 @@
+{
+  "tables": {
+    "metrics": {
+      "rows": 200349,
+      "sha256": "02ab8ec8ce96d4f9ffc254c26db3b9cff4e2e6f8a4664533ac5bf7d11cad224e"
+    },
+    "logs": {
+      "rows": 6488,
+      "sha256": "56aef3ff97161ee0ff9aff3150689da178c365a8073ea592c2c1dfb56003659c"
+    },
+    "spans": {
+      "rows": 221718,
+      "sha256": "35e56557b7cfe16c08616699c8e82987b77b6ac72512c8eec51fd5e463aed993"
+    },
+    "deploys": {
+      "rows": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "fixture_id": "memory_leak_001",
+  "version": "v3",
+  "window": [
+    "2026-10-20 08:56:08.682250+00:00",
+    "2026-10-20 09:19:13.672969+00:00"
+  ]
+}

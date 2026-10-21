@@ -1,0 +1,126 @@
+{
+  "run": {
+    "run_id": "cpu_throttling-101-20261020T143519",
+    "plan": {
+      "scenario": "cpu_throttling",
+      "variant": null,
+      "seed": 101,
+      "delay_s": 56,
+      "root_cause": {
+        "service": "orders",
+        "cause_kind": "cpu_throttling"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "gateway"
+      ],
+      "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "orders",
+          "kind": "cpu_quota",
+          "params": {
+            "cpus": 0.1
+          },
+          "duration_s": 274,
+          "role": "cause"
+        },
+        {
+          "at_s": -158,
+          "service": "payments",
+          "kind": "deploy",
+          "params": {
+            "version": "payments-v1.23.0"
+          },
+          "duration_s": 1,
+          "role": "confounder"
+        },
+        {
+          "at_s": -186,
+          "service": "payments",
+          "kind": "memory_step",
+          "params": {
+            "mib": 56
+          },
+          "duration_s": 900,
+          "role": "confounder"
+        }
+      ],
+      "deploy": null,
+      "notes": null,
+      "confounded": true,
+      "sampling": {
+        "traces": 0.5,
+        "logs": 0.7
+      },
+      "confounder_deploy": {
+        "service": "payments",
+        "version": "payments-v1.23.0",
+        "at_s": -158,
+        "rollout_s": 15
+      }
+    },
+    "injection_start": "2026-10-20T14:35:19.071+00:00",
+    "applied": [
+      {
+        "at": "2026-10-20T14:35:19.618+00:00",
+        "at_s": -186,
+        "service": "payments",
+        "kind": "memory_step",
+        "params": {
+          "mib": 56
+        },
+        "duration_s": 900,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T14:35:47.099+00:00",
+        "at_s": -158,
+        "service": "payments",
+        "kind": "deploy",
+        "params": {
+          "version": "payments-v1.23.0"
+        },
+        "duration_s": 1,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T14:38:25.346+00:00",
+        "at_s": 0,
+        "service": "orders",
+        "kind": "cpu_quota",
+        "params": {
+          "cpus": 0.1
+        },
+        "duration_s": 274,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": null,
+    "confounder_deploy_row": {
+      "id": "6aa20146-595b-4f0c-becc-42c34038f1eb",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "payments",
+      "version": "payments-v1.23.0",
+      "started_at": "2026-10-20T14:35:32.099+00:00",
+      "finished_at": "2026-10-20T14:35:47.099+00:00"
+    },
+    "injection_end": "2026-10-20T14:42:59.218+00:00"
+  },
+  "incident": {
+    "id": "22399ee0-59c4-4701-a575-8576edc84ba5",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-20 14:38:38.339756+00:00",
+    "first_anomaly_at": "2026-10-20 14:38:33.267533+00:00",
+    "last_seen": "2026-10-20 14:43:48.253074+00:00",
+    "alert_count": 63,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 12.993756,
+  "onset_to_open_s": 5.072223,
+  "variant": null,
+  "partner": null
+}

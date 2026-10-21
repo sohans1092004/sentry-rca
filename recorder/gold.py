@@ -12,6 +12,8 @@ from typing import Any
 
 EPS = 1e-6
 BASELINE = timedelta(minutes=15)  # §8.2: the 15 minutes before the claim window
+MIN_LOG_RATIO = 2.0  # §8.2 (A24): a log_pattern must at least double against the window before it
+MAX_ROWS = 500  # the tool's row cap: a truncated answer cannot prove a count
 
 
 def _iso(t: datetime) -> str:
@@ -62,20 +64,50 @@ def metric_change(metrics: list[dict[str, Any]], service: str, metric: str, star
     }  # fmt: skip
 
 
+def log_ratio(n_window: int, n_pre: int) -> float:
+    """§8.2 (A24): count in the window over the count in the equal-length window just before it; an
+    empty pre-window counts as one line, so a pattern that appears from nothing needs >= 2 lines."""
+    return n_window / max(n_pre, 1)
+
+
+def check_log_pattern(rows: list[dict[str, Any]], pattern: str, start: datetime, end: datetime,
+                      min_count: int, min_ratio: float) -> bool:  # fmt: skip
+    pre_start = start - (end - start)
+    match = [r for r in rows if pattern.lower() in r["body"].lower()]
+    n_win = sum(1 for r in match if _in(r["ts"], start, end))
+    n_pre = sum(1 for r in match if pre_start <= r["ts"] < start)
+    return n_win >= min_count and min_ratio >= MIN_LOG_RATIO and log_ratio(n_win, n_pre) >= min_ratio
+
+
 def log_pattern(logs: list[dict[str, Any]], service: str, pattern: str, start: datetime, end: datetime,
                 ) -> dict[str, Any] | None:  # fmt: skip
-    hits = sorted((r for r in logs if r["service"] == service and _in(r["ts"], start, end)
-                   and pattern.lower() in r["body"].lower()), key=lambda r: r["ts"])[:20]  # fmt: skip
-    if not hits:
-        return None
-    return {
-        "type": "log_pattern", "service": service, "window": [_iso(start), _iso(end)], "pattern": pattern,
-        "min_count": len(hits),
-        "cites": [{"tool": "query_logs",
-                   "args": {"service": service, "start": _iso(start), "end": _iso(end), "contains": pattern,
-                            "limit": 500},
-                   "row_ids": [str(r["log_id"]) for r in hits]}],
-    }  # fmt: skip
+    """A log_pattern claim whose count rose (A24). The window is shortened from the fault start until
+    the query over [pre-window start, end] fits under the row cap."""
+    match = sorted((r for r in logs if r["service"] == service and pattern.lower() in r["body"].lower()),
+                   key=lambda r: r["ts"])  # fmt: skip
+    for length in (end - start, timedelta(seconds=120), timedelta(seconds=60), timedelta(seconds=30)):
+        w_end = min(end, start + length)
+        pre_start = start - (w_end - start)
+        rows = [r for r in match if pre_start <= r["ts"] <= w_end]
+        hits = [r for r in rows if r["ts"] >= start]
+        n_pre = len(rows) - len(hits)
+        if len(rows) >= MAX_ROWS or len(hits) < 3:
+            continue
+        ratio = log_ratio(len(hits), n_pre)
+        if ratio < MIN_LOG_RATIO:
+            return None  # present, but not elevated: not evidence
+        min_ratio = max(MIN_LOG_RATIO, math.floor(ratio * 0.8 * 10) / 10)
+        cited = hits[:20]
+        assert check_log_pattern(rows, pattern, start, w_end, len(cited), min_ratio)
+        return {
+            "type": "log_pattern", "service": service, "window": [_iso(start), _iso(w_end)], "pattern": pattern,
+            "min_count": len(cited), "min_ratio": min_ratio,
+            "cites": [{"tool": "query_logs",
+                       "args": {"service": service, "start": _iso(pre_start), "end": _iso(w_end), "contains": pattern,
+                                "limit": MAX_ROWS},
+                       "row_ids": [str(r["log_id"]) for r in cited]}],
+        }  # fmt: skip
+    return None
 
 
 def trace_dependency(spans: list[dict[str, Any]], parent_service: str, child_service: str, start: datetime,
@@ -129,24 +161,35 @@ def for_fault(kind: str, service: str, params: dict[str, Any], start: datetime, 
     """The claims known true for one injected fault in [start, end]."""
     m, lg, sp = tables["metrics"], tables["logs"], tables["spans"]
     claims: list[dict[str, Any] | None] = []
-    latency_fault = kind in ("slow_query", "pool_exhaustion", "dependency_outage", "memory_leak") or (
+    latency_fault = kind in ("slow_query", "lock_wait", "pool_exhaustion", "conn_leak", "dependency_outage",
+                             "memory_leak", "cache_stampede", "cpu_quota") or (
         kind == "bad_deploy" and params.get("mode") == "slow"
-    )
+    )  # fmt: skip
     if latency_fault:
         claims.append(metric_change(m, service, LATENCY, start, end))
         if service != "gateway":
             claims.append(trace_dependency(sp, "gateway", service, start, end))
+    # v3 vocabulary (A21): what the services' normal code paths log. Labels v1/v2 were built by the
+    # Phase 1 vocabulary (git history); they are kept as recorded and no longer rebuilt.
     if kind == "bad_deploy":
-        claims.append(log_pattern(lg, service, "now running version", start - timedelta(minutes=1), end))
         if params.get("mode") == "errors":
-            claims.append(log_pattern(lg, service, "unhandled error in", start, end))
-    elif kind == "slow_query":
-        claims.append(log_pattern(lg, service, "slow query", start, end))
-    elif kind == "pool_exhaustion":
-        claims.append(log_pattern(lg, service, "pool acquire timeout", start, end))
+            claims.append(log_pattern(lg, service, "Exception in ASGI application", start, end))
+    elif kind == "lock_wait":
+        claims.append(log_pattern(lg, service, "duration:", start, end))
+    elif kind == "conn_leak":
+        claims.append(log_pattern(lg, service, "QueuePool limit", start, end))
         claims.append(metric_change(m, service, "db.pool.wait.mean", start, end))
     elif kind == "dependency_outage":
         claims.append(log_pattern(lg, service, "provider charge failed", start, end))
+    elif kind == "config_change":
+        claims.append(log_pattern(lg, service, "payments call failed", start, end))
+    elif kind == "cache_stampede":
+        claims.append(metric_change(m, service, "cache.requests", start, end))
+    elif kind == "refused":  # applied to the callers; the logs are theirs
+        pattern = "Connection refused" if service == "payments" else "inventory call failed"
+        claims.append(log_pattern(lg, service, pattern, start, end))
+    elif kind == "cpu_quota":
+        claims.append(metric_change(m, service, "container.cpu.throttled", start, end))
     elif kind == "memory_leak":
         claims.append(metric_change(m, service, "container.memory.usage", start, end))
     elif kind == "cpu_burn":  # noisy_neighbor: the job's own CPU, and the symptom at the edge
@@ -168,7 +211,8 @@ def for_run(run: dict[str, Any], tables: dict[str, list[dict[str, Any]]]) -> lis
     end = datetime.fromisoformat(run["injection_end"])
     claims: dict[tuple[Any, ...], dict[str, Any]] = {}
     for a in run["applied"]:
-        if a["kind"] == "plant_logs":  # planted lines are false by construction: never gold
+        # planted lines are false by construction, and confounders are not causes: never gold
+        if a["kind"] == "plant_logs" or a.get("role", "cause") != "cause":
             continue
         at = datetime.fromisoformat(a["at"])
         for c in for_fault(a["kind"], a["service"], a["params"], at, min(end, at + timedelta(seconds=a["duration_s"])),

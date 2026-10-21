@@ -133,15 +133,16 @@ GUARDS_PHASE2: dict[str, dict] = {
         "tests": [V + "test_empty_claim_list"],
     },
     "contamination_sql": {
-        "property": "Contamination rule (§12.2): search_runbooks never returns the evaluated fixture's postmortem",
+        "property": "Contamination rule (§12.2, A25): search_runbooks returns no postmortem of the evaluated "
+        "fixture or of one with the same scenario",
         "file": "investigation/runbooks.py",
         "edits": [
             (
-                "\"AND (fixture_id IS NULL OR fixture_id <> COALESCE(%s, '')) \"",
-                "\"AND (fixture_id IS NULL OR fixture_id <> COALESCE(%s, '') OR TRUE) \"",
+                '"AND (fixture_id IS NULL OR NOT fixture_id = ANY(%s)) "',
+                '"AND (fixture_id IS NULL OR NOT fixture_id = ANY(%s) OR TRUE) "',
             )
         ],
-        "tests": [IT + "test_phase2.py::test_fixtures_own_postmortem_is_not_returned_by_search_runbooks"],
+        "tests": [IT + "test_phase2.py::test_same_scenario_postmortems_are_not_returned_by_search_runbooks"],
     },
     "idempotent_investigation": {
         "property": "Idempotent investigation insert: a redelivered trigger creates no second investigation",
@@ -169,10 +170,108 @@ GUARDS_PHASE2: dict[str, dict] = {
         "tests": [IT + "test_phase2.py::test_app_role_cannot_update_or_delete_audit_rows"],
     },
     "conflict_margin": {
-        "property": "Conflict margin (§7.5): an ambiguous fixture reports CONFLICTING_EVIDENCE",
+        "property": "Conflict margin (§7.5): two causes within the margin give CONFLICTING_EVIDENCE",
         "file": "investigation/outcome.py",
         "edits": [('        if different and top["score"] - other["score"] <= margin:', "        if False:")],
-        "tests": [F + "test_offline_baseline.py::test_ambiguous_fixture_reports_conflicting_evidence"],
+        "tests": [U + "test_scope_tools.py::test_outcome_rules_and_conflict_margin"],
+    },
+    # --- Phase 2.5 (A23-A28) ---
+    "verifier_log_ratio": {
+        "property": "Verifier: a log pattern present but not elevated (A24)",
+        "file": "investigation/verifier.py",
+        "edits": [("_require(ratio >= mr,", "_require(True or ratio >= mr,")],
+        "tests": [V + "test_log_pattern_present_but_not_elevated"],
+    },
+    "verifier_log_ratio_floor": {
+        "property": "Verifier: a log_pattern claiming a ratio under 2 (A24)",
+        "file": "investigation/verifier.py",
+        "edits": [("_require(isinstance(mr, (int, float))", "_require(True or isinstance(mr, (int, float))")],
+        "tests": [V + "test_log_pattern_min_ratio_below_the_floor"],
+    },
+    "verifier_log_coverage": {
+        "property": "Verifier: a log query that skips the window before (A24)",
+        "file": "investigation/verifier.py",
+        "edits": [('_require("start" in ex and "end" in ex', '_require(True or "start" in ex and "end" in ex')],
+        "tests": [V + "test_log_pattern_query_that_skips_the_pre_window"],
+    },
+    "verifier_log_truncated": _v(
+        "counts from a truncated log query", "was truncated", "test_log_pattern_truncated_query"
+    ),
+    "verifier_cause_kind": {
+        "property": "Verifier: a cause kind outside the closed list (A23)",
+        "file": "investigation/verifier.py",
+        "edits": [('    if hypothesis.get("cause_kind") not in CAUSE_KINDS:', "    if False:")],
+        "tests": [V + "test_cause_kind_outside_the_closed_list"],
+    },
+    "cause_kind_schema": {
+        "property": "Schema: hypotheses.cause_kind outside the closed list is refused by Postgres (A23)",
+        "file": "common/migrations/postgres/0006_cause_kinds.sql",
+        "edits": [
+            ("ALTER TABLE hypotheses ADD CONSTRAINT hypotheses_cause_kind_closed\n", "SELECT 1 WHERE false AND\n")
+        ],
+        "tests": [IT + "test_phase2.py::test_schema_rejects_a_cause_kind_outside_the_closed_list"],
+    },
+    "contamination_scenario": {
+        "property": "Contamination (A25): postmortems of every fixture with the same scenario are excluded",
+        "file": "evals/harness.py",
+        "edits": [('other["scenario"] == label["scenario"] or _kinds(other) & mine}', "False}")],
+        "tests": [U + "test_eval_rules.py::test_related_postmortems_cover_the_scenario_and_shared_kinds"],
+    },
+    "backend_agreement": {
+        "property": "Backend agreement (A26): a tool call whose Parquet rows differ from ClickHouse's is reported",
+        "file": "evals/harness.py",
+        "edits": [("            elif snap.id != rec.snapshot_id:\n", "            elif False:\n")],
+        "tests": [IT + "test_phase2.py::test_backend_agreement_holds_and_catches_a_difference"],
+    },
+    "backend_agreement_gate": {
+        "property": "Backend agreement (A26): any mismatch blocks the eval gate",
+        "file": "evals/harness.py",
+        "edits": [('    if current.get("backend_mismatches"):\n', "    if False:\n")],
+        "tests": [U + "test_eval_rules.py::test_gate_blocks_on_any_backend_mismatch"],
+    },
+    "leak_scenario": {
+        "property": "Leak test (A28): an item only one scenario's faults emit is caught",
+        "file": "recorder/leaks.py",
+        "edits": [("        if len(scenarios) == 1 and not confounders:\n", "        if False:\n")],
+        "tests": [U + "test_leaks.py::test_markers_are_caught_and_shared_vocabulary_is_not"],
+    },
+    "leak_confounder": {
+        "property": "Leak test (A28): an item only a confounder emits is caught",
+        "file": "recorder/leaks.py",
+        "edits": [("        elif confounders and not scenarios:\n", "        elif False:\n")],
+        "tests": [U + "test_leaks.py::test_markers_are_caught_and_shared_vocabulary_is_not"],
+    },
+    "posthoc_rule": {
+        "property": "Post-hoc rule (A27): a baseline change after test results needs a logged amendment",
+        "file": "evals/harness.py",
+        "edits": [("    return [] if logged else [", "    return [] if True else [")],
+        "tests": [U + "test_eval_rules.py::test_a_baseline_change_after_test_results_needs_a_post_hoc_amendment"],
+    },
+    "alert_baseline_exclusion": {
+        "property": "Alert baseline (A29): minutes inside an incident's period are not baseline",
+        "file": "alerting/rules.py",
+        "edits": [("for m, v in minutes.items() if not any(", "for m, v in minutes.items() if True or not any(")],
+        "tests": [
+            U + "test_rules.py::test_baseline_minutes_inside_an_incident_period_are_excluded",
+            IT + "test_alerting.py::test_a_previous_incident_does_not_hide_a_new_fault_in_the_baseline",
+        ],
+    },
+    "alert_baseline_wiring": {
+        "property": "Alert baseline (A29): the engine applies the exclusion to what it reads",
+        "file": "alerting/engine.py",
+        "edits": [("        per_minute = outside_incidents(per_minute, exclude or [])\n", "")],
+        "tests": [IT + "test_alerting.py::test_a_previous_incident_does_not_hide_a_new_fault_in_the_baseline"],
+    },
+    "recorder_clean_start": {
+        "property": "Recorder (A29): no fault starts with an incident in the alert baseline",
+        "file": "recorder/record.py",
+        "edits": [
+            (
+                '    return f"{row[0]} incidents in the alert baseline',
+                '    return None if True else f"{row[0]} incidents in the alert baseline',
+            )
+        ],
+        "tests": [IT + "test_recorder.py::test_fault_start_is_refused_while_an_incident_lies_in_the_alert_baseline"],
     },
     "eval_db_hash": {
         "property": "Eval read-only (A16): a write to the eval database fails the eval",

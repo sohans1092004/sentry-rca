@@ -3,8 +3,11 @@ variant must pass."""
 
 import pytest
 
+from common.kinds import CAUSE_KINDS
 from investigation.verifier import verify, verify_claim
 from tests.unit.verifier_helpers import (
+    PRE,
+    W,
     call,
     deploy_claim,
     deploy_rows,
@@ -130,6 +133,51 @@ def test_epsilon_guards_a_zero_baseline():
     rejects(metric_claim(p, mm=1e6 + 1), {1: call(1, "query_metrics", p)}, "rose by")
 
 
+# --- log_pattern: a rise, not mere presence (A24) ------------------------------------------------
+
+
+def test_log_pattern_present_but_not_elevated():
+    lg = logs(n=4, before=4)  # as many lines just before the window as inside it: ratio 1
+    rejects(log_claim(lg), {1: call(1, "query_logs", lg)}, "present but not elevated")
+
+
+def test_log_pattern_rise_exactly_at_and_just_under_the_ratio():
+    lg = logs(n=4, before=2)  # ratio 2.0
+    assert check(log_claim(lg, min_ratio=2.0), {1: call(1, "query_logs", lg)}).passed
+    lg = logs(n=4, before=3)  # ratio 1.33
+    rejects(log_claim(lg, min_ratio=2.0), {1: call(1, "query_logs", lg)}, "present but not elevated")
+
+
+def test_log_pattern_empty_pre_window_counts_as_one():
+    assert check(log_claim(logs(n=2), min_count=2), {1: call(1, "query_logs", logs(n=2))}).passed  # 2 / 1
+    rejects(log_claim(logs(n=1), min_count=1), {1: call(1, "query_logs", logs(n=1))}, "present but not elevated")
+
+
+def test_log_pattern_min_ratio_below_the_floor():
+    lg = logs(n=4, before=4)
+    rejects(log_claim(lg, min_ratio=1.0), {1: call(1, "query_logs", lg)}, "min_ratio must be a number >= 2.0")
+    rejects({**log_claim(lg), "min_ratio": None}, {1: call(1, "query_logs", lg)}, "min_ratio must be")
+
+
+def test_log_pattern_query_that_skips_the_pre_window():
+    """Hiding the earlier lines by querying only the window itself must not prove a rise."""
+    lg = logs(n=4, before=4)
+    inside = [r for r in lg if r["row_id"].startswith("l")]
+    only_window = call(1, "query_logs", inside, executed={"service": "inventory", "start": W[0], "end": W[1]})
+    rejects(log_claim(lg), {1: only_window}, "does not cover the window and the equal-length window before it")
+
+
+def test_log_pattern_truncated_query():
+    lg = logs(n=4)
+    rejects(log_claim(lg), {1: call(1, "query_logs", lg, truncated=True)}, "was truncated")
+
+
+def test_log_pattern_query_filtered_to_one_trace():
+    lg = logs(n=4)
+    ex = {"service": "inventory", "start": PRE, "end": W[1], "trace_id": "t1"}
+    rejects(log_claim(lg), {1: call(1, "query_logs", lg, executed=ex)}, "filtered to one trace")
+
+
 # --- trace_dependency --------------------------------------------------------------------------
 
 
@@ -197,6 +245,21 @@ def test_root_cause_supported_only_by_runbook_match():
     h = verify(hypothesis(runbook_claim()), calls, "baseline")
     assert not h.passed and "beyond a similar past incident" in h.reason
     assert verify(hypothesis(runbook_claim(), role="downstream_symptom"), calls, "baseline").passed
+
+
+@pytest.mark.parametrize("kind", ["latency", "db_overload", "", None, "Pool_Exhaustion"])
+def test_cause_kind_outside_the_closed_list(kind):
+    p = points()
+    h = {**hypothesis(metric_claim(p, mm=1.0)), "cause_kind": kind}
+    r = verify(h, {1: call(1, "query_metrics", p)}, "baseline")
+    assert not r.passed and "not in the closed list" in r.reason
+
+
+def test_every_closed_list_kind_is_accepted():
+    p = points()
+    for kind in CAUSE_KINDS:
+        assert verify({**hypothesis(metric_claim(p, mm=1.0)), "cause_kind": kind}, {1: call(1, "query_metrics", p)},
+                      "baseline").passed, kind  # fmt: skip
 
 
 def test_empty_claim_list():

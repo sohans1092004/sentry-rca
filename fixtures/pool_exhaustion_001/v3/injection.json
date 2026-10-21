@@ -1,0 +1,73 @@
+{
+  "run": {
+    "run_id": "pool_exhaustion-1-20261019T134512",
+    "plan": {
+      "scenario": "pool_exhaustion",
+      "variant": null,
+      "seed": 1,
+      "delay_s": 37,
+      "root_cause": {
+        "service": "inventory",
+        "cause_kind": "pool_exhaustion"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "payments",
+        "orders",
+        "gateway"
+      ],
+      "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "inventory",
+          "kind": "conn_leak",
+          "params": {
+            "p": 0.23,
+            "hold_s": 17
+          },
+          "duration_s": 268,
+          "role": "cause"
+        }
+      ],
+      "deploy": null,
+      "notes": null,
+      "confounded": false,
+      "sampling": null,
+      "confounder_deploy": null
+    },
+    "injection_start": "2026-10-19T13:45:12.980+00:00",
+    "applied": [
+      {
+        "at": "2026-10-19T13:45:13.946+00:00",
+        "at_s": 0,
+        "service": "inventory",
+        "kind": "conn_leak",
+        "params": {
+          "p": 0.23,
+          "hold_s": 17
+        },
+        "duration_s": 268,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": null,
+    "confounder_deploy_row": null,
+    "injection_end": "2026-10-19T13:49:41.002+00:00"
+  },
+  "incident": {
+    "id": "a9bdcc5a-732d-4e67-a483-53a7971167cf",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-19 13:45:30.939425+00:00",
+    "first_anomaly_at": "2026-10-19 13:45:25.880621+00:00",
+    "last_seen": "2026-10-19 13:51:00.867630+00:00",
+    "alert_count": 67,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 16.993425,
+  "onset_to_open_s": 5.058804,
+  "variant": null,
+  "partner": null
+}

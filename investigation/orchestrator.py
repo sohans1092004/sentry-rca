@@ -64,6 +64,7 @@ def _scope(
     inv_id: str,
     clamp: tuple[datetime, datetime] | None,
     excluded_fixture: str | None,
+    excluded_postmortems: tuple[str, ...] = (),
 ) -> scope_mod.Scope:
     """Step 2: compute once; later runs reuse the stored scope (the graph may have grown since)."""
     stored, tenant, service, first, last = conn.execute(
@@ -74,7 +75,8 @@ def _scope(
     if stored:
         return scope_mod.Scope.from_json(stored)
     incident = {"tenant_id": tenant, "service": service, "first_anomaly_at": first, "last_seen": last}
-    sc = scope_mod.compute(backend, incident, clamp=clamp, excluded_fixture=excluded_fixture)
+    sc = scope_mod.compute(backend, incident, clamp=clamp, excluded_fixture=excluded_fixture,
+                           excluded_postmortems=excluded_postmortems)  # fmt: skip
     conn.execute("UPDATE investigations SET scope = %s WHERE id = %s", (json.dumps(sc.to_json()), inv_id))
     return sc
 
@@ -143,6 +145,7 @@ def investigate(
     *,
     clamp: tuple[datetime, datetime] | None = None,
     excluded_fixture: str | None = None,
+    excluded_postmortems: tuple[str, ...] = (),
     rank: Ranker = baseline.rank,
 ) -> str:
     t0 = time.monotonic()
@@ -151,7 +154,7 @@ def investigate(
     ).fetchone()
     if done:
         return str(done[0])
-    sc = _scope(conn, backend, inv_id, clamp, excluded_fixture)
+    sc = _scope(conn, backend, inv_id, clamp, excluded_fixture, excluded_postmortems)
     store = PgStore(conn)
     result = run_ranker(store, backend, runbooks, inv_id, sc, RANKER, rank)
     _crash_point("before_hypotheses")

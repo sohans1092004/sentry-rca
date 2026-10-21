@@ -1,0 +1,144 @@
+{
+  "run": {
+    "run_id": "bad_deploy-1-20261019T175738",
+    "plan": {
+      "scenario": "bad_deploy",
+      "variant": null,
+      "seed": 1,
+      "delay_s": 56,
+      "root_cause": {
+        "service": "payments",
+        "cause_kind": "bad_deploy"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "orders",
+        "gateway"
+      ],
+      "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 7,
+          "service": "payments",
+          "kind": "bad_deploy",
+          "params": {
+            "version": "payments-v1.78.0",
+            "mode": "slow",
+            "delay_ms": 367
+          },
+          "duration_s": 292,
+          "role": "cause"
+        },
+        {
+          "at_s": -442,
+          "service": "orders",
+          "kind": "deploy",
+          "params": {
+            "version": "orders-v1.84.0"
+          },
+          "duration_s": 1,
+          "role": "confounder"
+        },
+        {
+          "at_s": -199,
+          "service": "orders",
+          "kind": "jitter",
+          "params": {
+            "p": 0.03,
+            "max_ms": 40
+          },
+          "duration_s": 64,
+          "role": "confounder"
+        }
+      ],
+      "deploy": {
+        "service": "payments",
+        "version": "payments-v1.78.0",
+        "rollout_s": 7
+      },
+      "notes": null,
+      "confounded": true,
+      "sampling": {
+        "traces": 0.5,
+        "logs": 0.7
+      },
+      "confounder_deploy": {
+        "service": "orders",
+        "version": "orders-v1.84.0",
+        "at_s": -442,
+        "rollout_s": 16
+      }
+    },
+    "injection_start": "2026-10-19T17:57:38.773+00:00",
+    "applied": [
+      {
+        "at": "2026-10-19T17:57:40.130+00:00",
+        "at_s": -442,
+        "service": "orders",
+        "kind": "deploy",
+        "params": {
+          "version": "orders-v1.84.0"
+        },
+        "duration_s": 1,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-19T18:01:41.795+00:00",
+        "at_s": -199,
+        "service": "orders",
+        "kind": "jitter",
+        "params": {
+          "p": 0.03,
+          "max_ms": 40
+        },
+        "duration_s": 64,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-19T18:05:08.055+00:00",
+        "at_s": 7,
+        "service": "payments",
+        "kind": "bad_deploy",
+        "params": {
+          "version": "payments-v1.78.0",
+          "mode": "slow",
+          "delay_ms": 367
+        },
+        "duration_s": 292,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": {
+      "id": "ec8a6e31-c54d-45b4-b7cc-076623164892",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "payments",
+      "version": "payments-v1.78.0",
+      "started_at": "2026-10-19T18:05:00.780+00:00",
+      "finished_at": "2026-10-19T18:05:07.780+00:00"
+    },
+    "confounder_deploy_row": {
+      "id": "65cf792d-a47f-4e79-b2ca-9b0be2bb6266",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "orders",
+      "version": "orders-v1.84.0",
+      "started_at": "2026-10-19T17:57:24.134+00:00",
+      "finished_at": "2026-10-19T17:57:40.134+00:00"
+    },
+    "injection_end": "2026-10-19T18:09:59.797+00:00"
+  },
+  "incident": {
+    "id": "af4817f1-2b57-43d8-9743-418e2bbdd5dc",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-19 18:05:28.559307+00:00",
+    "first_anomaly_at": "2026-10-19 18:05:23.468377+00:00",
+    "last_seen": "2026-10-19 18:10:53.454368+00:00",
+    "alert_count": 66,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 20.504307,
+  "onset_to_open_s": 5.09093,
+  "variant": null,
+  "partner": null
+}

@@ -91,7 +91,11 @@ GUARDS: dict[str, dict] = {
         "property": "metrics_1h: a batch delivered twice is counted once",
         "file": "recorder/downsample.py",
         "edits": [
-            ("  ORDER BY point_id LIMIT 1 BY point_id  -- one row per stable ID: a redelivered copy counts once\n", "")
+            # every row its own group: a redelivered copy is counted again
+            (
+                "  GROUP BY point_id, tenant_id, service, metric  --",
+                "  GROUP BY rand(), point_id, tenant_id, service, metric  --",
+            )
         ],
         "tests": [T + "test_retention.py::test_metrics_1h_counts_a_twice_delivered_batch_once"],
     },

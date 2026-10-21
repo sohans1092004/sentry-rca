@@ -1,0 +1,130 @@
+{
+  "run": {
+    "run_id": "pool_exhaustion-101-20261020T160630",
+    "plan": {
+      "scenario": "pool_exhaustion",
+      "variant": null,
+      "seed": 101,
+      "delay_s": 42,
+      "root_cause": {
+        "service": "inventory",
+        "cause_kind": "pool_exhaustion"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "payments",
+        "orders",
+        "gateway"
+      ],
+      "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "inventory",
+          "kind": "conn_leak",
+          "params": {
+            "p": 0.21,
+            "hold_s": 23
+          },
+          "duration_s": 253,
+          "role": "cause"
+        },
+        {
+          "at_s": -277,
+          "service": "gateway",
+          "kind": "deploy",
+          "params": {
+            "version": "gateway-v1.44.0"
+          },
+          "duration_s": 1,
+          "role": "confounder"
+        },
+        {
+          "at_s": -137,
+          "service": "gateway",
+          "kind": "client_errors",
+          "params": {
+            "n": 33
+          },
+          "duration_s": 30,
+          "role": "confounder"
+        }
+      ],
+      "deploy": null,
+      "notes": null,
+      "confounded": true,
+      "sampling": {
+        "traces": 0.5,
+        "logs": 0.7
+      },
+      "confounder_deploy": {
+        "service": "gateway",
+        "version": "gateway-v1.44.0",
+        "at_s": -277,
+        "rollout_s": 20
+      }
+    },
+    "injection_start": "2026-10-20T16:06:30.943+00:00",
+    "applied": [
+      {
+        "at": "2026-10-20T16:06:31.445+00:00",
+        "at_s": -277,
+        "service": "gateway",
+        "kind": "deploy",
+        "params": {
+          "version": "gateway-v1.44.0"
+        },
+        "duration_s": 1,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T16:08:50.945+00:00",
+        "at_s": -137,
+        "service": "gateway",
+        "kind": "client_errors",
+        "params": {
+          "n": 33
+        },
+        "duration_s": 30,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T16:11:07.978+00:00",
+        "at_s": 0,
+        "service": "inventory",
+        "kind": "conn_leak",
+        "params": {
+          "p": 0.21,
+          "hold_s": 23
+        },
+        "duration_s": 253,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": null,
+    "confounder_deploy_row": {
+      "id": "8af161ed-ca65-4878-89ab-e31c68bd9eca",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "gateway",
+      "version": "gateway-v1.44.0",
+      "started_at": "2026-10-20T16:06:11.445+00:00",
+      "finished_at": "2026-10-20T16:06:31.445+00:00"
+    },
+    "injection_end": "2026-10-20T16:15:20.979+00:00"
+  },
+  "incident": {
+    "id": "be0c07cb-7e7c-48a9-bd5f-d15bac206b6f",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-20 16:11:28.087311+00:00",
+    "first_anomaly_at": "2026-10-20 16:11:22.998200+00:00",
+    "last_seen": "2026-10-20 16:16:22.983572+00:00",
+    "alert_count": 60,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 20.109311,
+  "onset_to_open_s": 5.089111,
+  "variant": null,
+  "partner": null
+}

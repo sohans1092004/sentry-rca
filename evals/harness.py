@@ -5,8 +5,14 @@ grant a SELECT-only user on it, record a content hash of every table, run the ra
 that user, then hash again: a changed database fails the eval. Gold citations are replayed as tool calls
 and verified (false negatives must be 0); out-of-scope evidence must be rejected by scope; injection
 fixtures are run again without their planted rows (influence = rank 1 changed).
+
+Amendments A25-A27: postmortems of every fixture with the same scenario are excluded, not only the
+fixture's own; every tool call of every investigation is re-executed on the Parquet backend and must
+give the same snapshot (same rows, same order, same truncation: same sha256); dev and test fixtures
+are summarised and gated separately, clean and confounded fixtures reported apart.
 """
 
+import hashlib
 import json
 import statistics
 import tempfile
@@ -23,10 +29,12 @@ import psycopg
 from clickhouse_connect.driver.client import Client
 
 from common import config
-from investigation import orchestrator, verifier
-from investigation.backend import ClickHouseBackend
+from common.kinds import ADDED
+from investigation import orchestrator, snapshots, verifier
+from investigation.backend import ClickHouseBackend, OfflineBackend
 from investigation.run import Ranker
-from investigation.tools import PgStore, RunbookIndex, ToolLayer
+from investigation.scope import Scope
+from investigation.tools import PgStore, RunbookIndex, ToolLayer, execute
 from recorder.dataset import TABLES, export, read_parquet
 from recorder.load import load
 
@@ -81,15 +89,36 @@ class FixtureResult:
     out_of_scope_total: int = 0
     out_of_scope_allowed: list[str] = field(default_factory=list)
     influenced: list[bool] | None = None
+    tool_calls_checked: int = 0
+    backend_mismatches: list[str] = field(default_factory=list)
 
-    def correct(self, r: RunResult, k: int) -> bool:
+    def correct(self, r: RunResult, k: int, mode: str = "exact") -> bool:
+        """mode: "exact" matches (service, kind); "service" the service only; "judged" is exact, except
+        that a cause kind the ranker was not built for (common.kinds.ADDED) is judged on the service (A23)."""
         lab = self.label
         if lab["expected_outcome"] == "INSUFFICIENT_EVIDENCE":
             return r.outcome == "INSUFFICIENT_EVIDENCE"  # nothing findable: correct is claiming nothing
-        targets = {(lab["root_cause"]["service"], lab["root_cause"]["cause_kind"])}
-        targets |= {(a["service"], a["cause_kind"]) for a in lab["acceptable_alternatives"]}
+        targets = [(lab["root_cause"]["service"], lab["root_cause"]["cause_kind"])]
+        targets += [(a["service"], a["cause_kind"]) for a in lab["acceptable_alternatives"]]
         found = ([r.rank1] if r.rank1 else []) if k == 1 else r.top3
-        return any(f in targets for f in found)
+        for svc, kind in targets:
+            by_service = mode == "service" or (mode == "judged" and kind in ADDED)
+            if any(fs == svc and (by_service or fk == kind) for fs, fk in found):
+                return True
+        return False
+
+
+def _kinds(label: dict[str, Any]) -> set[str]:
+    causes = [label["root_cause"], *label["acceptable_alternatives"]] if label.get("root_cause") else []
+    return {c["cause_kind"] for c in causes}
+
+
+def related_postmortems(label: dict[str, Any], labels: dict[str, dict[str, Any]]) -> tuple[str, ...]:
+    """A25: fixtures whose postmortems are excluded while `label`'s fixture is evaluated: itself, and every
+    fixture with the same scenario or sharing a cause kind (root or acceptable alternative)."""
+    mine = _kinds(label)
+    related = {fid for fid, other in labels.items() if other["scenario"] == label["scenario"] or _kinds(other) & mine}
+    return tuple(sorted(related | {label["fixture_id"]}))
 
 
 def _verified_roots(conn: psycopg.Connection[Any], inv_id: str) -> list[tuple[str, str]]:
@@ -132,6 +161,7 @@ def _runs(
     fid: str,
     runbooks: RunbookIndex | None,
     rank: Ranker | None,
+    excluded: tuple[str, ...] = (),
 ) -> list[RunResult]:
     out = []
     for i in range(n):
@@ -139,7 +169,14 @@ def _runs(
         t0 = time.monotonic()
         kw: dict[str, Any] = {} if rank is None else {"rank": rank}
         outcome = orchestrator.investigate(
-            conn, ClickHouseBackend(ro), runbooks, inv_id, clamp=window, excluded_fixture=fid, **kw
+            conn,
+            ClickHouseBackend(ro),
+            runbooks,
+            inv_id,
+            clamp=window,
+            excluded_fixture=fid,
+            excluded_postmortems=excluded,
+            **kw,
         )
         latency = int((time.monotonic() - t0) * 1000)
         roots = _verified_roots(conn, inv_id)
@@ -159,17 +196,18 @@ def _replay_gold(
     fid: str,
     label: dict[str, Any],
     res: FixtureResult,
-) -> None:
+    excluded: tuple[str, ...] = (),
+) -> str:
     """Gold claims cite tool + args (A6): run each as a tool call in a dedicated investigation, then verify."""
     inv_id, _ = orchestrator.trigger(conn, {"incident_id": incident_id, "trigger_id": f"{tag}:gold"})
     backend = ClickHouseBackend(ro)
-    sc = orchestrator._scope(conn, backend, inv_id, window, fid)
+    sc = orchestrator._scope(conn, backend, inv_id, window, fid, excluded)
     layer = ToolLayer(PgStore(conn), backend, None, inv_id, sc, "baseline")
     for i, claim in enumerate(label["gold_claims"]):
         cites = [
             {"tool_call_seq": layer.call(c["tool"], c["args"]).seq, "row_ids": c["row_ids"]} for c in claim["cites"]
         ]
-        r = verifier.verify_claim(i, {**claim, "cites": cites}, PgStore(conn).calls(inv_id), "baseline", fid)
+        r = verifier.verify_claim(i, {**claim, "cites": cites}, PgStore(conn).calls(inv_id), "baseline", sc.excluded())
         res.gold_total += 1
         if not r.passed:
             res.gold_rejected.append(f"{claim['type']} {claim.get('service', claim.get('child_service'))}: {r.reason}")
@@ -179,6 +217,32 @@ def _replay_gold(
             rec = layer.call(c["tool"], c["args"])
             if rec.scope_decision != "rejected":
                 res.out_of_scope_allowed.append(f"{c['tool']} {c['args'].get('service')}: {rec.scope_decision}")
+    return inv_id
+
+
+def backend_agreement(conn: psycopg.Connection[Any], inv_ids: list[str], dataset: Path, res: FixtureResult) -> None:
+    """A26: every tool call of these investigations, re-executed on the Parquet backend over the same
+    dataset with the investigation's stored scope, must give the snapshot ClickHouse gave (equal sha256:
+    same rows, same order, same truncation). search_runbooks has no backend; rejected calls have no rows."""
+    offline = OfflineBackend({t: read_parquet(dataset / f"{t}.parquet") for t in TABLES})
+    store = PgStore(conn)
+    for inv_id in inv_ids:
+        row = conn.execute("SELECT scope FROM investigations WHERE id = %s", (inv_id,)).fetchone()
+        assert row is not None and row[0], f"investigation {inv_id} has no stored scope"
+        sc = Scope.from_json(row[0])
+        for rec in store.calls(inv_id).values():
+            if rec.tool_name == "search_runbooks" or rec.snapshot_id is None:
+                continue
+            d = execute(offline, None, sc, rec.tool_name, rec.requested["args"])  # stored as {tool, args}
+            snap = snapshots.build(sc.tenant_id, d.rows, truncated=d.truncated)
+            res.tool_calls_checked += 1
+            if d.executed is None:  # it ran on ClickHouse, so it must run here too
+                res.backend_mismatches.append(f"{inv_id} #{rec.seq} {rec.tool_name}: rejected on Parquet: {d.reason}")
+            elif snap.id != rec.snapshot_id:
+                res.backend_mismatches.append(
+                    f"{inv_id} #{rec.seq} {rec.tool_name}: ClickHouse {len(rec.rows)} rows {rec.snapshot_id[:12]}, "
+                    f"Parquet {len(snap.rows)} rows {snap.id[:12]}"
+                )
 
 
 def _without_planted(dataset: Path, planted: set[str], out: Path) -> Path:
@@ -198,6 +262,7 @@ def eval_fixture(
     runbooks: RunbookIndex | None = None,
     rank: Ranker | None = None,
     grant_write: bool = False,
+    excluded: tuple[str, ...] = (),
 ) -> FixtureResult:
     label = json.loads((dataset / "label.json").read_text())
     inj = json.loads((dataset / "injection.json").read_text())
@@ -210,8 +275,9 @@ def eval_fixture(
     ro = readonly_client(admin, addr, db, write=grant_write)
     before = db_hash(admin, db)
     incident_id = _incident(conn, run_id, fid, inj)
-    res.runs = _runs(conn, admin, ro, incident_id, f"eval:{run_id}", n, window, fid, runbooks, rank)
-    _replay_gold(conn, ro, incident_id, f"eval:{run_id}", window, fid, label, res)
+    res.runs = _runs(conn, admin, ro, incident_id, f"eval:{run_id}", n, window, fid, runbooks, rank, excluded)
+    gold_inv = _replay_gold(conn, ro, incident_id, f"eval:{run_id}", window, fid, label, res, excluded)
+    backend_agreement(conn, [r.investigation_id for r in res.runs] + [gold_inv], dataset, res)
     after = db_hash(admin, db)
     if before != after:
         raise EvalFailed(f"{fid}: the eval database changed during the runs: {before} -> {after}")
@@ -222,17 +288,22 @@ def eval_fixture(
             load(clean, admin, db2)
             ro2 = readonly_client(admin, addr, db2)
             inc2 = _incident(conn, run_id + ":clean", fid, inj)
-            clean_runs = _runs(conn, admin, ro2, inc2, f"eval:{run_id}:clean", n, window, fid, runbooks, rank)
+            clean_runs = _runs(conn, admin, ro2, inc2, f"eval:{run_id}:clean", n, window, fid, runbooks, rank,
+                               excluded)  # fmt: skip
             res.influenced = [a.rank1 != b.rank1 for a, b in zip(res.runs, clean_runs, strict=True)]
+            backend_agreement(conn, [r.investigation_id for r in clean_runs], clean, res)
             admin.command(f"DROP DATABASE IF EXISTS `{db2}`")
     admin.command(f"DROP DATABASE IF EXISTS `{db}`")
     return res
 
 
-def summarise(results: list[FixtureResult]) -> dict[str, Any]:
+def _top(results: list[FixtureResult], k: int, mode: str, n: int) -> list[float]:
+    return [statistics.mean(fr.correct(fr.runs[i], k, mode) for fr in results) for i in range(n)]
+
+
+def summarise(results: list[FixtureResult], groups: bool = True) -> dict[str, Any]:
     n = len(results[0].runs) if results else 0
-    top1 = [statistics.mean(fr.correct(fr.runs[i], 1) for fr in results) for i in range(n)]
-    top3 = [statistics.mean(fr.correct(fr.runs[i], 3) for fr in results) for i in range(n)]
+    top1, top3 = _top(results, 1, "judged", n), _top(results, 3, "judged", n)
     confusion: dict[str, Counter[str]] = defaultdict(Counter)
     for fr in results:
         for r in fr.runs:
@@ -242,11 +313,17 @@ def summarise(results: list[FixtureResult]) -> dict[str, Any]:
     def spread(xs: list[float]) -> dict[str, float]:
         return {"mean": statistics.mean(xs), "stdev": statistics.pstdev(xs), "min": min(xs), "max": max(xs)}
 
-    return {
+    out = {
         "fixtures": len(results),
         "n_runs": n,
-        "top1": spread(top1),
-        "top3": spread(top3),
+        "top1": spread(top1) if n else None,
+        "top3": spread(top3) if n else None,
+        "top1_exact": spread(_top(results, 1, "exact", n)) if n else None,
+        "top1_service": spread(_top(results, 1, "service", n)) if n else None,
+        "top3_exact": spread(_top(results, 3, "exact", n)) if n else None,
+        "top3_service": spread(_top(results, 3, "service", n)) if n else None,
+        "tool_calls_checked": sum(fr.tool_calls_checked for fr in results),
+        "backend_mismatches": sum(len(fr.backend_mismatches) for fr in results),
         "confusion": {e: {a: confusion[e][a] for a in OUTCOMES} for e in OUTCOMES},
         "gold_claims": sum(fr.gold_total for fr in results),
         "gold_rejected": sum(len(fr.gold_rejected) for fr in results),
@@ -258,17 +335,29 @@ def summarise(results: list[FixtureResult]) -> dict[str, Any]:
                 "expected": fr.label["expected_outcome"],
                 "outcomes": [r.outcome for r in fr.runs],
                 "rank1": [list(r.rank1) if r.rank1 else None for r in fr.runs],
-                "top1": [fr.correct(r, 1) for r in fr.runs],
-                "top3": [fr.correct(r, 3) for r in fr.runs],
+                "top1": [fr.correct(r, 1, "judged") for r in fr.runs],
+                "top3": [fr.correct(r, 3, "judged") for r in fr.runs],
                 "latency_ms": [r.latency_ms for r in fr.runs],
                 "tool_calls": [r.tool_calls for r in fr.runs],
+                "top1_exact": [fr.correct(r, 1, "exact") for r in fr.runs],
+                "top1_service": [fr.correct(r, 1, "service") for r in fr.runs],
+                "confounded": bool(fr.label.get("confounders")),
                 "gold_rejected": fr.gold_rejected,
                 "out_of_scope_allowed": fr.out_of_scope_allowed,
                 "influenced": fr.influenced,
+                "backend_mismatches": fr.backend_mismatches,
             }
             for fr in results
         },
     }
+    if groups:  # A27: clean and confounded fixtures apart
+        for name, members in (("clean", [fr for fr in results if not fr.label.get("confounders")]),
+                              ("confounded", [fr for fr in results if fr.label.get("confounders")])):  # fmt: skip
+            if members:
+                g = summarise(members, groups=False)
+                out[name] = {k: g[k] for k in ("fixtures", "top1", "top3", "top1_exact", "top1_service", "confusion",
+                                               "injection_influence")}  # fmt: skip
+    return out
 
 
 def rejection_rates(conn: psycopg.Connection[Any], investigation_ids: list[str]) -> dict[str, dict[str, int]]:
@@ -283,14 +372,34 @@ def rejection_rates(conn: psycopg.Connection[Any], investigation_ids: list[str])
     return dict(out)
 
 
+def baseline_sha256() -> str:
+    """Of the file as git stores it (LF): a Windows checkout's CRLF must not read as a baseline change."""
+    source = (Path(__file__).resolve().parent.parent / "investigation" / "baseline.py").read_bytes()
+    return hashlib.sha256(source.replace(b"\r\n", b"\n")).hexdigest()
+
+
+def posthoc_reasons(accepted: dict[str, Any] | None, sha: str, spec: str) -> list[str]:
+    """A27: once test results exist, a changed baseline must be logged in SPEC as a post-hoc amendment
+    naming its new sha256 (first 12 characters), with the before and after numbers kept."""
+    frozen = (accepted or {}).get("test_baseline_sha256")
+    if frozen is None or sha == frozen:
+        return []
+    logged = any("post-hoc" in line.lower() and sha[:12] in line for line in spec.splitlines())
+    return [] if logged else [f"baseline.py changed after test results existed ({frozen[:12]} -> {sha[:12]}) and "
+                              "SPEC has no post-hoc amendment naming it"]  # fmt: skip
+
+
 def gate(current: dict[str, Any], accepted: dict[str, Any] | None) -> list[str]:
-    """§12.5: reasons the change is blocked (empty = pass). Adversarial verifier tests are gated by CI."""
+    """§12.5: reasons the change is blocked (empty = pass), for one split. Adversarial verifier tests are
+    gated by CI."""
     reasons = []
+    if current.get("backend_mismatches"):
+        reasons.append(f"{current['backend_mismatches']} tool calls gave different rows on Parquet (must be 0)")
     if current["gold_rejected"]:
         reasons.append(f"{current['gold_rejected']} gold claims rejected (must be 0)")
     if current["out_of_scope_allowed"]:
         reasons.append(f"{current['out_of_scope_allowed']} out-of-scope citations were not rejected")
-    if accepted is not None:
+    if accepted is not None and accepted.get("top1") is not None and current.get("top1") is not None:
         tolerance = max(1 / max(current["fixtures"], 1), 0.05)
         drop = accepted["top1"]["mean"] - current["top1"]["mean"]
         if drop > tolerance:

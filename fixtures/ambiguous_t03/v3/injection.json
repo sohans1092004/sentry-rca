@@ -1,0 +1,153 @@
+{
+  "run": {
+    "run_id": "cpu_throttling-ambiguous-101-20261020T215636",
+    "plan": {
+      "scenario": "cpu_throttling",
+      "variant": "ambiguous",
+      "seed": 101,
+      "delay_s": 40,
+      "root_cause": {
+        "service": "payments",
+        "cause_kind": "cpu_throttling"
+      },
+      "acceptable_alternatives": [
+        {
+          "service": "inventory",
+          "cause_kind": "cache_stampede"
+        }
+      ],
+      "symptom_services": [
+        "gateway",
+        "orders"
+      ],
+      "expected_outcome": "CONFLICTING_EVIDENCE",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "payments",
+          "kind": "cpu_quota",
+          "params": {
+            "cpus": 0.08
+          },
+          "duration_s": 275,
+          "role": "cause"
+        },
+        {
+          "at_s": 4,
+          "service": "inventory",
+          "kind": "cache_stampede",
+          "params": {
+            "interval_s": 3.4
+          },
+          "duration_s": 253,
+          "role": "cause"
+        },
+        {
+          "at_s": -251,
+          "service": "orders",
+          "kind": "deploy",
+          "params": {
+            "version": "orders-v1.83.0"
+          },
+          "duration_s": 1,
+          "role": "confounder"
+        },
+        {
+          "at_s": -42,
+          "service": "gateway",
+          "kind": "client_errors",
+          "params": {
+            "n": 38
+          },
+          "duration_s": 30,
+          "role": "confounder"
+        }
+      ],
+      "deploy": null,
+      "notes": null,
+      "confounded": true,
+      "sampling": {
+        "traces": 0.5,
+        "logs": 0.7
+      },
+      "confounder_deploy": {
+        "service": "orders",
+        "version": "orders-v1.83.0",
+        "at_s": -251,
+        "rollout_s": 5
+      }
+    },
+    "injection_start": "2026-10-20T21:56:36.975+00:00",
+    "applied": [
+      {
+        "at": "2026-10-20T21:56:37.499+00:00",
+        "at_s": -251,
+        "service": "orders",
+        "kind": "deploy",
+        "params": {
+          "version": "orders-v1.83.0"
+        },
+        "duration_s": 1,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T22:00:05.984+00:00",
+        "at_s": -42,
+        "service": "gateway",
+        "kind": "client_errors",
+        "params": {
+          "n": 38
+        },
+        "duration_s": 30,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T22:00:48.155+00:00",
+        "at_s": 0,
+        "service": "payments",
+        "kind": "cpu_quota",
+        "params": {
+          "cpus": 0.08
+        },
+        "duration_s": 275,
+        "role": "cause"
+      },
+      {
+        "at": "2026-10-20T22:00:52.006+00:00",
+        "at_s": 4,
+        "service": "inventory",
+        "kind": "cache_stampede",
+        "params": {
+          "interval_s": 3.4
+        },
+        "duration_s": 253,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": null,
+    "confounder_deploy_row": {
+      "id": "c53968e4-dccc-4291-bc09-f82149a1d79b",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "orders",
+      "version": "orders-v1.83.0",
+      "started_at": "2026-10-20T21:56:32.499+00:00",
+      "finished_at": "2026-10-20T21:56:37.499+00:00"
+    },
+    "injection_end": "2026-10-20T22:05:23.134+00:00"
+  },
+  "incident": {
+    "id": "0ad9dcfc-58f1-46e4-8f45-bbff67ad4aae",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-20 22:01:12.133713+00:00",
+    "first_anomaly_at": "2026-10-20 22:01:07.064846+00:00",
+    "last_seen": "2026-10-20 22:07:57.041010+00:00",
+    "alert_count": 82,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 23.978713,
+  "onset_to_open_s": 5.068867,
+  "variant": "ambiguous",
+  "partner": "cache_stampede"
+}

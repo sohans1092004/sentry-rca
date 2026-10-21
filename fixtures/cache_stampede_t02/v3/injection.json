@@ -1,0 +1,71 @@
+{
+  "run": {
+    "run_id": "cache_stampede-102-20261020T173546",
+    "plan": {
+      "scenario": "cache_stampede",
+      "variant": null,
+      "seed": 102,
+      "delay_s": 47,
+      "root_cause": {
+        "service": "inventory",
+        "cause_kind": "cache_stampede"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "payments",
+        "orders",
+        "gateway"
+      ],
+      "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "inventory",
+          "kind": "cache_stampede",
+          "params": {
+            "interval_s": 2.8
+          },
+          "duration_s": 251,
+          "role": "cause"
+        }
+      ],
+      "deploy": null,
+      "notes": null,
+      "confounded": false,
+      "sampling": null,
+      "confounder_deploy": null
+    },
+    "injection_start": "2026-10-20T17:35:46.241+00:00",
+    "applied": [
+      {
+        "at": "2026-10-20T17:35:46.868+00:00",
+        "at_s": 0,
+        "service": "inventory",
+        "kind": "cache_stampede",
+        "params": {
+          "interval_s": 2.8
+        },
+        "duration_s": 251,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": null,
+    "confounder_deploy_row": null,
+    "injection_end": "2026-10-20T17:39:57.270+00:00"
+  },
+  "incident": {
+    "id": "d01ee521-37ca-4a53-9305-9b15de0b9b77",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-20 17:36:02.823790+00:00",
+    "first_anomaly_at": "2026-10-20 17:35:57.753701+00:00",
+    "last_seen": "2026-10-20 17:41:52.735890+00:00",
+    "alert_count": 71,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 15.95579,
+  "onset_to_open_s": 5.070089,
+  "variant": null,
+  "partner": null
+}
