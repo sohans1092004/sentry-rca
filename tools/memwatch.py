@@ -47,7 +47,7 @@ def alive(pid: int) -> bool:
 def main(pid: int, log: str, floor_mb: int = 1024, interval_s: float = 30.0) -> None:
     with open(log, "a", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["utc", "available_mb", "llama_server_rss_mb", "ollama_rss_mb", "event"])
+        w.writerow(["utc", "available_mb", "llama_server_rss_mb", "ollama_rss_mb", "python_rss_mb", "event"])
         while alive(pid):
             avail = available_mb()
             event = ""
@@ -55,12 +55,12 @@ def main(pid: int, log: str, floor_mb: int = 1024, interval_s: float = 30.0) -> 
                 event = f"STOP: available {avail} MB < {floor_mb} MB, killed pid {pid}"
                 subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True)
             w.writerow([datetime.now(UTC).isoformat(timespec="seconds"), avail, rss_mb("llama-server.exe"),
-                        rss_mb("ollama.exe"), event])  # fmt: skip
+                        rss_mb("ollama.exe"), rss_mb("python.exe"), event])  # fmt: skip
             f.flush()
             if event:
                 return
             time.sleep(interval_s)
-        w.writerow([datetime.now(UTC).isoformat(timespec="seconds"), available_mb(), "", "", "watched process ended"])
+        w.writerow([datetime.now(UTC).isoformat(timespec="seconds"), available_mb(), "", "", "", "watched process ended"])
 
 
 if __name__ == "__main__":

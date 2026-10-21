@@ -12,6 +12,7 @@ miss in replay fails loudly instead of calling a live model or returning another
 The canonical request replaces each data-block boundary (random per tool call, A35) with a placeholder.
 """
 
+import contextlib
 import hashlib
 import json
 import os
@@ -125,6 +126,12 @@ def ollama_digest(model: str) -> str:
         if m["name"] == model or m["name"] == f"{model}:latest":
             return str(m["digest"])
     raise Unavailable(f"{model} is not pulled in Ollama (ollama pull {model})")
+
+
+def ollama_unload(model: str) -> None:
+    """Free the model's memory now instead of after Ollama's keep-alive (5 min)."""
+    with contextlib.suppress(httpx.TransportError):
+        httpx.post(f"{OLLAMA}/api/generate", json={"model": model, "keep_alive": 0}, timeout=60)
 
 
 class OpenAICompatible:

@@ -1,0 +1,110 @@
+{
+ "digest": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+ "entries": {
+  "5089f29d391e9dd4e1803dbfc1d086822fe8a7b3632ce825ec8a22c3d233b139": {
+   "response": {
+    "content": "{\n \"hypotheses\": [\n  {\n   \"rank\": 1,\n   \"causal_role\": \"candidate_root_cause\",\n   \"cause_service\": \"gateway\",\n   \"cause_kind\": \"dependency_outage\",\n   \"score\": 0.614872,\n   \"claims\": [\n    {\n     \"type\": \"runbook_match\",\n     \"cites\": [\n      {\n       \"tool_call_seq\": 29,\n       \"rows\": \"all\"\n      }\n     ]\n    }\n   ],\n   \"narrative\": \"The runbook 'High request latency at the edge' suggests a dependency outage is the root cause.\"\n  },\n  {\n   \"rank\": 2,\n   \"causal_role\": \"candidate_root_cause\",\n   \"cause_service\": \"gateway\",\n   \"cause_kind\": \"noisy_neighbor\",\n   \"score\": 0.609255,\n   \"claims\": [\n    {\n     \"type\": \"runbook_match\",\n     \"cites\": [\n      {\n       \"tool_call_seq\": 29,\n       \"rows\": \"all\"\n      }\n     ]\n    }\n   ],\n   \"narrative\": \"The runbook 'Postmortem: noisy neighbor incident (noisy_neighbor_002)' suggests a noisy neighbor is the root cause.\"\n  }\n ]\n}",
+    "latency_ms": 111156,
+    "tokens_in": 6087,
+    "tokens_out": 281,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 4
+  },
+  "8bb4851ca3de92428486d233d4bc348a5f8650627c52d30b45e9d667fc32cc05": {
+   "response": {
+    "content": "",
+    "latency_ms": 42656,
+    "tokens_in": 2426,
+    "tokens_out": 383,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "ERROR",
+       "end": "2026-10-19T18:55:23.364Z",
+       "limit": 1000,
+       "service": "gateway",
+       "start": "2026-10-19T18:31:33.373Z"
+      },
+      "name": "query_logs"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-19T18:55:23.364Z",
+       "labels": {
+        "service": "gateway"
+       },
+       "metric": "http.server.request.duration.mean",
+       "start": "2026-10-19T18:31:33.373Z"
+      },
+      "name": "query_metrics"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-19T18:55:23.364Z",
+       "limit": 1000,
+       "min_duration_ms": 100,
+       "service": "gateway",
+       "start": "2026-10-19T18:31:33.373Z"
+      },
+      "name": "query_traces"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-19T18:55:23.364Z",
+       "service": "gateway",
+       "start": "2026-10-19T18:31:33.373Z"
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "query": "gateway"
+      },
+      "name": "search_runbooks"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 2
+  },
+  "9b051bca3ca1cb849368dd7608cd3e49aa1b461da4cacc27b28a28f1e94abb14": {
+   "response": {
+    "content": "",
+    "latency_ms": 11063,
+    "tokens_in": 1690,
+    "tokens_out": 89,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-19T18:55:23.364Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-19T18:31:33.373Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  },
+  "c7a7f6f8315a162f8a581fd648d8a142a64cf1894ff0128ae9b28d432d4fd7e1": {
+   "response": {
+    "content": "{\n \"hypotheses\": [\n  {\n   \"rank\": 1,\n   \"causal_role\": \"candidate_root_cause\",\n   \"cause_service\": \"gateway\",\n   \"cause_kind\": \"dependency_outage\",\n   \"score\": 0.614872,\n   \"claims\": [\n    {\n     \"type\": \"runbook_match\",\n     \"service\": \"gateway\",\n     \"claims\": [\n      {\n       \"tool_call_seq\": 29,\n       \"rows\": \"all\"\n      }\n     ]\n    }\n   ],\n   \"narrative\": \"The runbook 'High request latency at the edge' suggests a dependency outage is the root cause.\"\n  },\n  {\n   \"rank\": 2,\n   \"causal_role\": \"candidate_root_cause\",\n   \"cause_service\": \"gateway\",\n   \"cause_kind\": \"noisy_neighbor\",\n   \"score\": 0.609255,\n   \"claims\": [\n    {\n     \"type\": \"runbook_match\",\n     \"service\": \"gateway\",\n     \"claims\": [\n      {\n       \"tool_call_seq\": 29,\n       \"rows\": \"all\"\n      }\n     ]\n    }\n   ],\n   \"narrative\": \"The runbook 'Postmortem: noisy neighbor incident (noisy_neighbor_002)' suggests a noisy neighbor is the root cause.\"\n  }\n ]\n}",
+    "latency_ms": 96843,
+    "tokens_in": 6263,
+    "tokens_out": 293,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 3
+  }
+ },
+ "model": "qwen2.5:3b"
+}

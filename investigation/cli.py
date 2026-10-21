@@ -11,6 +11,7 @@ rca fixtures fetch                   download and verify the fixture datasets
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 import uuid
@@ -132,16 +133,28 @@ def _eval(args: argparse.Namespace) -> int:
     embeddings = Cassette(live=args.ranker == "agent" and args.llm == "record")  # the agent's own queries
     runbooks = PgRunbookIndex(conn, embeddings) if not args.no_runbooks else None
     by_split: dict[str, list[Any]] = {}
+    # agent evals: tool-call re-execution on Parquet (A26) runs after the model is unloaded (memory)
+    deferred: list[Any] | None = [] if args.ranker == "agent" else None
+    workdir = ROOT / "runs" / f"eval-work-{run_id[:8]}"
     for d in datasets:
         fid = d.parent.name
         print(f"{fid} ({split[fid]}) ...", flush=True)
         excluded = harness.related_postmortems(labels[fid], dev_labels)
         by_split.setdefault(split[fid], []).append(harness.eval_fixture(
             d, conn, admin, (config.CH_HOST, config.CH_PORT), run_id, args.n, runbooks, excluded=excluded,
-            agent_for=agent_for))  # fmt: skip
+            agent_for=agent_for, deferred=deferred, workdir=workdir))  # fmt: skip
         if args.ranker == "agent" and args.llm == "record":  # saved per fixture: an interrupted eval keeps it
             cassettes[fid].save()
             embeddings.save()
+    if deferred is not None:
+        from investigation import llm
+
+        if args.provider == "ollama" and args.llm == "record":
+            llm.ollama_unload(args.model)
+        print(f"backend agreement: {len(deferred)} groups of investigations ...", flush=True)
+        for inv_ids, dataset, res in deferred:
+            harness.backend_agreement(conn, inv_ids, dataset, res)
+        shutil.rmtree(workdir, ignore_errors=True)
     summaries: dict[str, Any] = {}
     for name, res in by_split.items():
         summaries[name] = harness.summarise(res)

@@ -299,7 +299,12 @@ def eval_fixture(
     grant_write: bool = False,
     excluded: tuple[str, ...] = (),
     agent_for: AgentFor | None = None,
+    deferred: list[tuple[list[str], Path, FixtureResult]] | None = None,
+    workdir: Path | None = None,
 ) -> FixtureResult:
+    """`deferred`: when given, the backend-agreement re-executions (A26) are queued there instead of run
+    here, and the clean copy of an injection fixture is kept under `workdir`, so the caller can run them
+    after the model is unloaded (Phase 3 memory). The check itself is the same."""
     label = json.loads((dataset / "label.json").read_text())
     inj = json.loads((dataset / "injection.json").read_text())
     manifest = json.loads((dataset / "manifest.json").read_text())
@@ -314,14 +319,20 @@ def eval_fixture(
     res.runs = _runs(conn, admin, ro, incident_id, f"eval:{run_id}", n, window, fid, runbooks, rank, excluded,
                      agent_for)  # fmt: skip
     gold_inv = _replay_gold(conn, ro, incident_id, f"eval:{run_id}", window, fid, label, res, excluded)
-    backend_agreement(conn, [r.investigation_id for r in res.runs] + [gold_inv], dataset, res)
+    agree = [r.investigation_id for r in res.runs] + [gold_inv]
+    if deferred is None:
+        backend_agreement(conn, agree, dataset, res)
+    else:
+        deferred.append((agree, dataset, res))
     after = db_hash(admin, db)
     if before != after:
         raise EvalFailed(f"{fid}: the eval database changed during the runs: {before} -> {after}")
     admin.command(f"DROP DATABASE IF EXISTS `{db}`")  # before the clean copy loads: one fixture database at a time
     if label.get("planted_row_ids"):
         with tempfile.TemporaryDirectory() as tmp:
-            clean = _without_planted(dataset, set(label["planted_row_ids"]), Path(tmp) / "clean")
+            keep = workdir is not None and deferred is not None
+            clean = _without_planted(dataset, set(label["planted_row_ids"]),
+                                     (workdir / fid if keep and workdir else Path(tmp)) / "clean")  # fmt: skip
             db2 = f"{db}_clean"
             load(clean, admin, db2)
             ro2 = readonly_client(admin, addr, db2)
@@ -329,7 +340,10 @@ def eval_fixture(
             clean_runs = _runs(conn, admin, ro2, inc2, f"eval:{run_id}:clean", n, window, fid, runbooks, rank,
                                excluded, agent_for, clean=True)  # fmt: skip
             res.influenced = [a.rank1 != b.rank1 for a, b in zip(res.runs, clean_runs, strict=True)]
-            backend_agreement(conn, [r.investigation_id for r in clean_runs], clean, res)
+            if deferred is None:
+                backend_agreement(conn, [r.investigation_id for r in clean_runs], clean, res)
+            else:
+                deferred.append(([r.investigation_id for r in clean_runs], clean, res))
             admin.command(f"DROP DATABASE IF EXISTS `{db2}`")
     return res
 
