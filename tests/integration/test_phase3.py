@@ -46,7 +46,7 @@ class Script:
     def __init__(self, steps):
         self.steps = list(steps)
 
-    def complete(self, messages, tools, temperature=0.0):
+    def complete(self, messages, tools, temperature=0.0, schema=None):
         step = self.steps.pop(0)
         if isinstance(step, Exception):
             raise step

@@ -9,7 +9,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from investigation import llm, verifier
-from investigation.agent import Agent, Budget, Degraded, OutputError, parse_output, resolve_cites
+from investigation.agent import ANSWER_SCHEMA, Agent, Budget, Degraded, OutputError, parse_output, resolve_cites
 from investigation.backend import OfflineBackend
 from investigation.run import run_ranker
 from investigation.scope import Scope, iso
@@ -69,8 +69,8 @@ class Script:
     def __init__(self, steps, clock=None, tick=0.0):
         self.steps, self.seen, self.clock, self.tick = list(steps), [], clock, tick
 
-    def complete(self, messages, tools, temperature=0.0):
-        self.seen.append((json.loads(json.dumps(messages)), tools))
+    def complete(self, messages, tools, temperature=0.0, schema=None):
+        self.seen.append((json.loads(json.dumps(messages)), tools, schema))
         if self.clock is not None:
             self.clock.now += self.tick
         step = self.steps.pop(0) if self.steps else answer({"hypotheses": []})
@@ -155,6 +155,8 @@ def test_parse_failure_gets_one_retry_with_the_error_then_degrades():
     assert e.value.reason == "parse"
     retry = provider.seen[1][0][-1]["content"]
     assert retry.startswith("Your reply could not be used: not valid JSON")
+    assert provider.seen[0][2] is None and provider.seen[1][2] is ANSWER_SCHEMA  # the retry is constrained (A38)
+    assert provider.seen[1][1] == []
 
 
 def test_one_retry_can_recover():
@@ -266,7 +268,7 @@ class Live:
     def __init__(self):
         self.calls = 0
 
-    def complete(self, messages, tools, temperature=0.0):
+    def complete(self, messages, tools, temperature=0.0, schema=None):
         self.calls += 1
         return llm.Response(f"reply {self.calls}", [], 10, 2)
 
@@ -326,3 +328,16 @@ def test_unreachable_provider_is_retried_then_unavailable(monkeypatch):
     with pytest.raises(llm.Unavailable):
         llm._post("http://x/api/chat", {}, {}, 1.0)
     assert len(attempts) == llm.RETRIES
+
+
+def test_older_results_are_elided_past_the_context_limit_and_stay_citable(monkeypatch):
+    import investigation.agent as agent_mod
+
+    monkeypatch.setattr(agent_mod, "CONTEXT_CHARS", 1)  # force compaction from the first turn
+    steps = [tool("query_logs", **LOGS_CALL) for _ in range(5)] + [answer({"hypotheses": [pool_hypothesis()]})]
+    provider = Script(steps)
+    result, _, _ = run(provider)
+    tools_seen = [m["content"] for m in provider.seen[-1][0] if m["role"] == "tool"]
+    assert [c.endswith("[rows elided]") for c in tools_seen] == [True, True, False, False, False]
+    assert all("<<DATA-" not in c for c in tools_seen[:2])  # nothing but the server's header is left
+    assert result.outcome == "ROOT_CAUSE_IDENTIFIED"  # the agent cited call 1, whose rows were elided

@@ -1,8 +1,9 @@
 """LLM providers, recording and replay (SPEC §7.4, ADR-000, Amendment A35).
 
-Provider interface: `complete(messages, tools, temperature=0) -> Response`. Ollama on the host is the
-default; one OpenAI-compatible HTTP provider (any free-tier endpoint) exists, disabled unless its key is
-set. Neither is required to run the tests or CI: CI replays.
+Provider interface: `complete(messages, tools, temperature=0, schema=None) -> Response`; `schema`, when
+given, is a JSON Schema the reply must match (constrained decoding where the provider supports it, A38).
+Ollama on the host is the default; one OpenAI-compatible HTTP provider (any free-tier endpoint) exists,
+disabled unless its key is set. Neither is required to run the tests or CI: CI replays.
 
 Every exchange is recorded: in `llm_exchanges` (the investigation's audit, written by the agent loop) and
 in a per-fixture cassette. The cassette key is sha256(model + model digest + canonical request +
@@ -53,13 +54,18 @@ class Provider(Protocol):
     digest: str
 
     def complete(
-        self, messages: list[dict[str, Any]], tools: list[dict[str, Any]], temperature: float = 0.0
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]],
+        temperature: float = 0.0,
+        schema: dict[str, Any] | None = None,
     ) -> Response: ...
 
 
 def canonical_request(model: str, messages: list[dict[str, Any]], tools: list[dict[str, Any]],
-                      temperature: float) -> dict[str, Any]:  # fmt: skip
-    return {"model": model, "messages": messages, "tools": tools, "temperature": temperature, "num_ctx": NUM_CTX}
+                      temperature: float, schema: dict[str, Any] | None = None) -> dict[str, Any]:  # fmt: skip
+    req = {"model": model, "messages": messages, "tools": tools, "temperature": temperature, "num_ctx": NUM_CTX}
+    return req | ({"format": schema} if schema is not None else {})
 
 
 def request_hash(model: str, digest: str, request: dict[str, Any], run_index: int) -> str:
@@ -94,11 +100,13 @@ class Ollama:
         self.digest = ollama_digest(model)
 
     def complete(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]],
-                 temperature: float = 0.0) -> Response:  # fmt: skip
+                 temperature: float = 0.0, schema: dict[str, Any] | None = None) -> Response:  # fmt: skip
         body: dict[str, Any] = {"model": self.model, "messages": messages, "stream": False,
                                 "options": {"temperature": temperature, "seed": 0, "num_ctx": NUM_CTX}}  # fmt: skip
         if tools:
             body["tools"] = tools
+        if schema is not None:
+            body["format"] = schema
         t0 = time.monotonic()
         out = _post(f"{OLLAMA}/api/chat", body, {}, self.timeout_s)
         msg = out.get("message", {})
@@ -135,10 +143,12 @@ class OpenAICompatible:
         self._headers = {"Authorization": f"Bearer {key}"}  # never logged or recorded
 
     def complete(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]],
-                 temperature: float = 0.0) -> Response:  # fmt: skip
+                 temperature: float = 0.0, schema: dict[str, Any] | None = None) -> Response:  # fmt: skip
         body: dict[str, Any] = {"model": self.model, "messages": messages, "temperature": temperature}
         if tools:
             body["tools"] = tools
+        if schema is not None:
+            body["response_format"] = {"type": "json_schema", "json_schema": {"name": "answer", "schema": schema}}
         t0 = time.monotonic()
         out = _post(f"{self.base_url}/chat/completions", body, self._headers, self.timeout_s)
         msg = out["choices"][0]["message"]
@@ -203,8 +213,8 @@ class Recorded:
         self.exchanges: list[tuple[str, dict[str, Any], Response]] = []
 
     def complete(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]],
-                 temperature: float = 0.0) -> Response:  # fmt: skip
-        request = canonical_request(self.model, messages, tools, temperature)
+                 temperature: float = 0.0, schema: dict[str, Any] | None = None) -> Response:  # fmt: skip
+        request = canonical_request(self.model, messages, tools, temperature, schema)
         key = request_hash(self.model, self.digest, request, self.run_index)
         self.seq += 1
         hit = self.cassette.entries.get(key) if self.cassette is not None and self.mode != "live" else None
@@ -216,7 +226,7 @@ class Recorded:
                              f"{self.seq}, {self.model}@{self.digest[:12]}) in {where}")  # fmt: skip
         else:
             assert self.inner is not None
-            resp = self.inner.complete(messages, tools, temperature)
+            resp = self.inner.complete(messages, tools, temperature, schema)
             if self.cassette is not None:
                 self.cassette.entries[key] = {"run_index": self.run_index, "seq": self.seq, "response": asdict(resp)}
         if self.sink is not None:

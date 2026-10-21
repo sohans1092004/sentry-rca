@@ -17,6 +17,7 @@ verifier checks exactly what §8.2 says, whatever the model wrote.
 """
 
 import json
+import re
 import secrets
 import time
 from collections import defaultdict
@@ -32,8 +33,11 @@ from investigation.tools import TOOLS, CallRecord
 from investigation.verifier import CLAIM_TOOLS, ROLES
 
 Call = Callable[[str, dict[str, Any]], CallRecord]
-DISPLAY_ROWS = 40  # rows shown per tool result; more are sampled evenly (the snapshot keeps them all)
-BODY_CHARS = 200
+DISPLAY_ROWS = 20  # rows shown per tool result; more are sampled evenly (the snapshot keeps them all)
+BODY_CHARS = 160
+LOG_GROUPS = 12  # distinct log messages shown per result, most frequent first
+CONTEXT_CHARS = 18_000  # above this, older tool results keep only their header (rows stay citable)
+KEEP_RESULTS = 3  # the most recent tool results always shown in full
 BASELINE = timedelta(minutes=15)
 
 
@@ -191,7 +195,7 @@ def _row_lines(rec: CallRecord) -> list[str]:
                 f"{r['status']} start={r['start_ts']} parent={pos[r['parent_span_id']] + 1 if r.get('parent_span_id')
                 in pos else '-'}" for i in idx for r in [rows[i]]]  # fmt: skip
     if rec.tool_name == "query_logs":
-        return [f"{i + 1} {r['ts']} {r['severity']} {str(r['body'])[:BODY_CHARS]}" for i in idx for r in [rows[i]]]
+        return _log_groups(rows)
     if rec.tool_name == "get_recent_deploys":
         return [f"{i + 1} deploy_id={r['id']} {r['service']} {r['version']} finished_at={r['finished_at']}"
                 for i in idx for r in [rows[i]]]  # fmt: skip
@@ -202,12 +206,32 @@ def _row_lines(rec: CallRecord) -> list[str]:
     return [f"{i + 1} " + " ".join(f"{k}={_num(v)}" for k, v in rows[i].items() if k != "row_id") for i in idx]
 
 
+def _log_groups(rows: list[dict[str, Any]]) -> list[str]:
+    """Logs grouped by message (digits and hex ids masked), most frequent first: one line per message with
+    its count, severity, first and last time, and the row numbers that carry it."""
+    groups: dict[tuple[str, str], list[int]] = defaultdict(list)
+    for i, r in enumerate(rows):
+        groups[(str(r["severity"]), re.sub(r"[0-9a-f]{8,}|\d+", "#", str(r["body"])[:BODY_CHARS]))].append(i)
+    ranked = sorted(groups.items(), key=lambda g: (-len(g[1]), g[1][0]))
+    out = []
+    for (sev, _), members in ranked[:LOG_GROUPS]:
+        nums = ",".join(str(i + 1) for i in members[:6]) + (f",+{len(members) - 6} more" if len(members) > 6 else "")
+        first, last = rows[members[0]], rows[members[-1]]
+        out.append(f"rows {nums} ({len(members)} lines, {sev}, {first['ts']} .. {last['ts']}): "
+                   f"{str(first['body'])[:BODY_CHARS]}")  # fmt: skip
+    if len(ranked) > LOG_GROUPS:
+        out.append(f"({len(ranked) - LOG_GROUPS} rarer messages not shown; filter with contains= or severity=)")
+    return out
+
+
 def render_result(rec: CallRecord, boundary: str) -> str:
     """One tool result: a header the server writes, then the rows, only inside the data block."""
     if rec.scope_decision == "rejected":
         return f"Tool call {rec.seq} ({rec.tool_name}) was rejected by the server: {rec.reason}"
     n = len(rec.rows)
     note = f"; {n} rows, showing {len(_shown(n))} evenly spaced" if n > DISPLAY_ROWS else f"; {n} rows"
+    if rec.tool_name == "query_logs":
+        note = f"; {n} rows, grouped by message"
     head = (f"Tool call {rec.seq} ({rec.tool_name}, {rec.scope_decision}, executed as "
             f"{json.dumps(rec.executed, sort_keys=True)}){note}" + ("; TRUNCATED at the row cap" if rec.truncated
                                                                     else "") + ".")  # fmt: skip
@@ -218,6 +242,29 @@ def render_result(rec: CallRecord, boundary: str) -> str:
 # --- output parsing --------------------------------------------------------------------------------
 
 HYPOTHESIS_KEYS = {"rank", "causal_role", "cause_service", "cause_kind", "score", "claims", "narrative"}
+_STR, _NUM, _INT = {"type": "string"}, {"type": "number"}, {"type": "integer"}
+CLAIM_FIELDS: dict[str, Any] = {
+    "service": _STR, "metric": _STR, "window": {"type": "array", "items": _STR, "minItems": 2, "maxItems": 2},
+    "direction": {"enum": ["up", "down"]}, "min_magnitude": _NUM, "pattern": _STR, "min_count": _INT,
+    "min_ratio": _NUM, "parent_service": _STR, "child_service": _STR, "trace_ids": {"type": "array", "items": _STR},
+    "min_latency_share": _NUM, "deploy_id": _STR, "onset_ts": _STR, "doc_id": _STR, "similarity": _NUM,
+}  # fmt: skip
+ANSWER_SCHEMA: dict[str, Any] = {  # §8.1 as JSON Schema, for constrained decoding; parse_output still checks all
+    "type": "object", "required": ["hypotheses"], "additionalProperties": False,
+    "properties": {"hypotheses": {"type": "array", "items": {
+        "type": "object", "additionalProperties": False,
+        "required": ["rank", "causal_role", "cause_service", "cause_kind", "score", "claims"],
+        "properties": {
+            "rank": _INT, "causal_role": {"enum": sorted(ROLES)}, "cause_service": _STR,
+            "cause_kind": {"enum": CAUSE_KINDS}, "score": _NUM, "narrative": _STR,
+            "claims": {"type": "array", "minItems": 1, "items": {
+                "type": "object", "required": ["type", "cites"], "additionalProperties": False,
+                "properties": {"type": {"enum": sorted(CLAIM_TOOLS)}, **CLAIM_FIELDS, "cites": {
+                    "type": "array", "minItems": 1, "items": {
+                        "type": "object", "required": ["tool_call_seq", "rows"], "additionalProperties": False,
+                        "properties": {"tool_call_seq": _INT, "rows": {"anyOf": [
+                            {"const": "all"}, {"type": "array", "items": _INT, "minItems": 1}]}}}}}}}}}}},
+}  # fmt: skip
 
 
 def _is_num(v: Any) -> bool:
@@ -343,7 +390,20 @@ class Agent:
         self.run = AgentRun()
         self.messages: list[dict[str, Any]] = []
 
-    def _ask(self, tools: list[dict[str, Any]]) -> llm.Response:
+    def _compact(self) -> None:
+        """Bound the prompt: past CONTEXT_CHARS, every tool result but the last KEEP_RESULTS keeps only the
+        server's header line. Its rows remain citable by number; the snapshot is unchanged."""
+        tool_msgs = [m for m in self.messages if m["role"] == "tool"]
+        size = sum(len(str(m.get("content") or "")) for m in self.messages)
+        for m in tool_msgs[:-KEEP_RESULTS]:
+            if size <= CONTEXT_CHARS:
+                break
+            head = str(m["content"]).split("\n", 1)[0]
+            if not head.endswith("[rows elided]"):
+                size -= len(m["content"]) - len(head) - 14
+                m["content"] = f"{head} [rows elided]"
+
+    def _ask(self, tools: list[dict[str, Any]], schema: dict[str, Any] | None = None) -> llm.Response:
         b, r = self.budget, self.run
         if self.clock() - self.t0 > b.wall_s:
             raise Degraded("budget", f"wall time {b.wall_s:.0f} s used")
@@ -351,7 +411,7 @@ class Agent:
             raise Degraded("budget", f"{r.tokens} tokens used, budget {b.tokens}")
         t = self.clock()
         try:
-            resp = self.provider.complete(self.messages, tools, 0.0)
+            resp = self.provider.complete(self.messages, tools, 0.0, schema)
         except llm.Unavailable as e:
             raise Degraded("llm_unavailable", str(e)) from e
         r.llm_calls += 1
@@ -380,7 +440,9 @@ class Agent:
         mine: dict[int, CallRecord] = {}
         retried, final_turn = False, False
         while True:
-            resp = self._ask([] if final_turn else specs)
+            self._compact()
+            # an answer-only turn (after the budget, or the retry) is constrained to the schema (A38)
+            resp = self._ask([], ANSWER_SCHEMA) if final_turn or retried else self._ask(specs)
             if resp.tool_calls:
                 if final_turn:
                     raise Degraded("budget", f"asked for tools after the {b.tool_calls}-call budget was used")
