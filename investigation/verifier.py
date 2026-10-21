@@ -241,8 +241,14 @@ def verify_claim(ordinal: int, claim: dict[str, Any], calls: dict[int, CallRecor
     return ClaimResult(ordinal, kind, True, None, citations)
 
 
+def _about(claim: dict[str, Any]) -> Any:
+    """The service a claim is evidence about (A36): a trace dependency is about its child."""
+    return claim.get("child_service") if claim.get("type") == "trace_dependency" else claim.get("service")
+
+
 def verify(hypothesis: dict[str, Any], calls: dict[int, CallRecord], ranker: str,
-           excluded: str | tuple[str, ...] | None = None) -> HypothesisResult:  # fmt: skip
+           excluded: str | tuple[str, ...] | None = None, services: tuple[str, ...] | None = None
+           ) -> HypothesisResult:  # fmt: skip
     claims = hypothesis.get("claims")
     if not isinstance(claims, list) or not claims:
         return HypothesisResult(False, "a hypothesis needs at least one claim", [])
@@ -254,6 +260,12 @@ def verify(hypothesis: dict[str, Any], calls: dict[int, CallRecord], ranker: str
                                 results)  # fmt: skip
     if hypothesis["causal_role"] == "candidate_root_cause" and all(c.get("type") == "runbook_match" for c in claims):
         return HypothesisResult(False, "a root cause needs evidence beyond a similar past incident", results)
+    if hypothesis["causal_role"] == "candidate_root_cause":  # A36: the cause is what the evidence is about
+        svc = hypothesis.get("cause_service")
+        if services is not None and svc not in services:
+            return HypothesisResult(False, f"cause_service {svc!r} is outside the investigation scope", results)
+        if not any(c.get("type") != "runbook_match" and _about(c) == svc for c in claims):
+            return HypothesisResult(False, f"no claim is about the cause_service {svc!r}", results)
     failed = [r for r in results if not r.passed]
     if failed:
         return HypothesisResult(False, f"claim {failed[0].ordinal} failed: {failed[0].reason}", results)

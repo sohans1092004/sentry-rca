@@ -14,11 +14,13 @@ are summarised and gated separately, clean and confounded fixtures reported apar
 
 import hashlib
 import json
+import re
 import statistics
 import tempfile
 import time
 import uuid
 from collections import Counter, defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -31,6 +33,7 @@ from clickhouse_connect.driver.client import Client
 from common import config
 from common.kinds import ADDED
 from investigation import orchestrator, snapshots, verifier
+from investigation.agent import AgentConfig
 from investigation.backend import ClickHouseBackend, OfflineBackend
 from investigation.run import Ranker
 from investigation.scope import Scope
@@ -38,6 +41,7 @@ from investigation.tools import PgStore, RunbookIndex, ToolLayer, execute
 from recorder.dataset import TABLES, export, read_parquet
 from recorder.load import load
 
+AgentFor = Callable[[str, int, bool], AgentConfig]  # (fixture_id, run_index, without_planted) -> config
 OUTCOMES = ["ROOT_CAUSE_IDENTIFIED", "INSUFFICIENT_EVIDENCE", "CONFLICTING_EVIDENCE"]
 HASHED = ["metrics", "logs", "spans", "deploys"]
 RO_USER, RO_PASSWORD = "sentry_eval_ro", "sentry_eval_ro"
@@ -72,11 +76,22 @@ def readonly_client(admin: Client, addr: tuple[str, int], database: str, write: 
 @dataclass
 class RunResult:
     investigation_id: str
-    outcome: str
-    rank1: tuple[str, str] | None  # top verified root cause
+    outcome: str  # the outcome shown: the agent's, or the baseline's when there is no agent or it degraded
+    rank1: tuple[str, str] | None  # top verified root cause, of the ranker shown
     top3: list[tuple[str, str]]
     latency_ms: int
     tool_calls: int
+    status: str = "complete"
+    ranker: str = "baseline"  # the ranker shown
+    budget: dict[str, Any] = field(default_factory=dict)  # investigations.budget_used
+    baseline_outcome: str | None = None  # the same investigation's baseline result, for paired comparison
+    baseline_rank1: tuple[str, str] | None = None
+    baseline_top3: list[tuple[str, str]] = field(default_factory=list)
+
+    def as_baseline(self) -> "RunResult":
+        return RunResult(self.investigation_id, self.baseline_outcome or self.outcome, self.baseline_rank1,
+                         self.baseline_top3, self.budget.get("baseline_ms", self.latency_ms),
+                         self.budget.get("tool_calls", self.tool_calls))  # fmt: skip
 
 
 @dataclass
@@ -121,11 +136,11 @@ def related_postmortems(label: dict[str, Any], labels: dict[str, dict[str, Any]]
     return tuple(sorted(related | {label["fixture_id"]}))
 
 
-def _verified_roots(conn: psycopg.Connection[Any], inv_id: str) -> list[tuple[str, str]]:
+def _verified_roots(conn: psycopg.Connection[Any], inv_id: str, ranker: str = "baseline") -> list[tuple[str, str]]:
     rows = conn.execute(
-        "SELECT cause_service, cause_kind FROM hypotheses WHERE investigation_id = %s AND ranker = 'baseline' "
+        "SELECT cause_service, cause_kind FROM hypotheses WHERE investigation_id = %s AND ranker = %s "
         "AND verifier_status = 'passed' AND causal_role = 'candidate_root_cause' ORDER BY rank",
-        (inv_id,),
+        (inv_id, ranker),
     ).fetchall()
     return [(str(s), str(k)) for s, k in rows]
 
@@ -162,12 +177,16 @@ def _runs(
     runbooks: RunbookIndex | None,
     rank: Ranker | None,
     excluded: tuple[str, ...] = (),
+    agent_for: AgentFor | None = None,
+    clean: bool = False,
 ) -> list[RunResult]:
     out = []
     for i in range(n):
         inv_id, _ = orchestrator.trigger(conn, {"incident_id": incident_id, "trigger_id": f"{tag}:{i}"})
         t0 = time.monotonic()
         kw: dict[str, Any] = {} if rank is None else {"rank": rank}
+        if agent_for is not None:
+            kw["agent"] = agent_for(fid, i, clean)
         outcome = orchestrator.investigate(
             conn,
             ClickHouseBackend(ro),
@@ -179,11 +198,17 @@ def _runs(
             **kw,
         )
         latency = int((time.monotonic() - t0) * 1000)
-        roots = _verified_roots(conn, inv_id)
+        row = conn.execute("SELECT status, ranker, budget_used FROM investigations WHERE id = %s", (inv_id,)).fetchone()
+        assert row is not None
+        status, shown, budget = str(row[0]), str(row[1]), dict(row[2])
+        roots, base = _verified_roots(conn, inv_id, shown), _verified_roots(conn, inv_id, "baseline")
+        base_outcome = conn.execute("SELECT outcome FROM investigation_results WHERE investigation_id = %s AND "
+                                    "ranker = 'baseline'", (inv_id,)).fetchone()  # fmt: skip
         calls = conn.execute("SELECT count(*) FROM tool_calls WHERE investigation_id = %s", (inv_id,)).fetchone()
-        out.append(
-            RunResult(inv_id, outcome, roots[0] if roots else None, roots[:3], latency, int(calls[0]) if calls else 0)
-        )
+        out.append(RunResult(inv_id, outcome, roots[0] if roots else None, roots[:3], latency,
+                             int(calls[0]) if calls else 0, status, shown, budget,
+                             base_outcome[0] if base_outcome else None, base[0] if base else None,
+                             base[:3]))  # fmt: skip
     return out
 
 
@@ -263,6 +288,7 @@ def eval_fixture(
     rank: Ranker | None = None,
     grant_write: bool = False,
     excluded: tuple[str, ...] = (),
+    agent_for: AgentFor | None = None,
 ) -> FixtureResult:
     label = json.loads((dataset / "label.json").read_text())
     inj = json.loads((dataset / "injection.json").read_text())
@@ -275,7 +301,8 @@ def eval_fixture(
     ro = readonly_client(admin, addr, db, write=grant_write)
     before = db_hash(admin, db)
     incident_id = _incident(conn, run_id, fid, inj)
-    res.runs = _runs(conn, admin, ro, incident_id, f"eval:{run_id}", n, window, fid, runbooks, rank, excluded)
+    res.runs = _runs(conn, admin, ro, incident_id, f"eval:{run_id}", n, window, fid, runbooks, rank, excluded,
+                     agent_for)  # fmt: skip
     gold_inv = _replay_gold(conn, ro, incident_id, f"eval:{run_id}", window, fid, label, res, excluded)
     backend_agreement(conn, [r.investigation_id for r in res.runs] + [gold_inv], dataset, res)
     after = db_hash(admin, db)
@@ -289,7 +316,7 @@ def eval_fixture(
             ro2 = readonly_client(admin, addr, db2)
             inc2 = _incident(conn, run_id + ":clean", fid, inj)
             clean_runs = _runs(conn, admin, ro2, inc2, f"eval:{run_id}:clean", n, window, fid, runbooks, rank,
-                               excluded)  # fmt: skip
+                               excluded, agent_for, clean=True)  # fmt: skip
             res.influenced = [a.rank1 != b.rank1 for a, b in zip(res.runs, clean_runs, strict=True)]
             backend_agreement(conn, [r.investigation_id for r in clean_runs], clean, res)
             admin.command(f"DROP DATABASE IF EXISTS `{db2}`")
@@ -360,16 +387,99 @@ def summarise(results: list[FixtureResult], groups: bool = True) -> dict[str, An
     return out
 
 
-def rejection_rates(conn: psycopg.Connection[Any], investigation_ids: list[str]) -> dict[str, dict[str, int]]:
+def _dist(xs: list[float]) -> dict[str, float] | None:
+    if not xs:
+        return None
+    return {"mean": statistics.mean(xs), "median": statistics.median(xs), "min": min(xs), "max": max(xs)}
+
+
+def _outcome_ok(fr: FixtureResult, r: RunResult) -> bool:
+    return bool(r.outcome == fr.label["expected_outcome"])
+
+
+def as_baseline(results: list[FixtureResult]) -> list[FixtureResult]:
+    """The baseline's own result inside the same investigations (it always runs first, §7.1)."""
+    return [FixtureResult(fr.fixture_id, fr.label, [r.as_baseline() for r in fr.runs]) for fr in results]
+
+
+def agent_stats(results: list[FixtureResult]) -> dict[str, Any]:
+    """Phase 3 reporting: degradation, parse failures, budget use and latency of the agent runs."""
+    runs = [r for fr in results for r in fr.runs]
+    agent = [r.budget.get("agent", {}) for r in runs]
+    degraded = Counter(r.budget.get("degraded") for r in runs if r.status == "degraded_baseline")
+    first_agent = [float(r.budget["agent_ms"]) for r in runs if r.budget.get("agent_verified")]
+    first_any = [float(r.budget["baseline_ms"]) if r.budget.get("baseline_verified") else float(r.budget["agent_ms"])
+                 for r in runs if r.budget.get("baseline_verified") or r.budget.get("agent_verified")]  # fmt: skip
+    only = [fr.correct(r, 1, "judged") and r.status == "complete" for fr in results for r in fr.runs]
+    return {
+        "runs": len(runs),
+        "degraded": sum(degraded.values()),
+        "degraded_by_reason": dict(degraded),
+        "parse_failures": sum(a.get("parse_failures", 0) for a in agent),
+        "runs_with_a_parse_failure": sum(1 for a in agent if a.get("parse_failures")),
+        "agent_only_top1": statistics.mean(only) if only else None,  # a degraded run counts as wrong
+        "outcome_correct": sum(_outcome_ok(fr, r) for fr in results for r in fr.runs),
+        "tokens": _dist([float(a.get("tokens_in", 0) + a.get("tokens_out", 0)) for a in agent]),
+        "llm_calls": _dist([float(a.get("llm_calls", 0)) for a in agent]),
+        "agent_tool_calls": _dist([float(a.get("tool_calls", 0)) for a in agent]),
+        "latency_outcome_ms": _dist([float(r.latency_ms) for r in runs]),
+        "latency_agent_ms": _dist([float(a.get("wall_ms", 0)) for a in agent]),
+        "latency_first_verified_ms": _dist(first_any),
+        "latency_first_agent_verified_ms": _dist(first_agent),
+        "agent_verified_any": len(first_agent),
+    }
+
+
+def paired(agent: list[FixtureResult], base: list[FixtureResult]) -> dict[str, Any]:
+    """Per fixture, agent against baseline over the same N runs: top-1 (judged) and outcome correct.
+    A fixture is a win or a loss only by its own runs; the totals are counts of fixtures, not rates."""
+    by_id = {fr.fixture_id: fr for fr in base}
+    rows: dict[str, Any] = {}
+    tally: dict[str, Counter[str]] = {"top1": Counter(), "outcome": Counter()}
+    for fr in agent:
+        b = by_id[fr.fixture_id]
+        row: dict[str, Any] = {"confounded": bool(fr.label.get("confounders"))}
+        for metric, ok in (("top1", lambda f, r: f.correct(r, 1, "judged")), ("outcome", _outcome_ok)):
+            a_n, b_n = sum(ok(fr, r) for r in fr.runs), sum(ok(b, r) for r in b.runs)
+            verdict = "win" if a_n > b_n else "loss" if a_n < b_n else "tie"
+            row[metric] = {"agent": a_n, "baseline": b_n, "of": len(fr.runs), "verdict": verdict}
+            tally[metric][verdict] += 1
+        row["agent_rank1"] = [list(r.rank1) if r.rank1 else None for r in fr.runs]
+        row["baseline_rank1"] = [list(r.rank1) if r.rank1 else None for r in b.runs]
+        row["agent_status"] = [r.status for r in fr.runs]
+        rows[fr.fixture_id] = row
+    return {"per_fixture": rows, **{f"{m}_tally": dict(t) for m, t in tally.items()}}
+
+
+def rejection_rates(conn: psycopg.Connection[Any], investigation_ids: list[str],
+                    ranker: str | None = None) -> dict[str, dict[str, int]]:  # fmt: skip
     rows = conn.execute(
         "SELECT c.claim_type, c.verifier_result, count(*) FROM claims c JOIN hypotheses h ON h.id = c.hypothesis_id "
-        "WHERE h.investigation_id = ANY(%s::uuid[]) GROUP BY 1, 2",
-        (investigation_ids,),
+        "WHERE h.investigation_id = ANY(%s::uuid[]) AND (%s::text IS NULL OR h.ranker = %s) GROUP BY 1, 2",
+        (investigation_ids, ranker, ranker),
     ).fetchall()
     out: dict[str, dict[str, int]] = defaultdict(lambda: {"passed": 0, "failed": 0})
     for t, r, c in rows:
         out[str(t)][str(r)] = int(c)
     return dict(out)
+
+
+def rejection_reasons(conn: psycopg.Connection[Any], investigation_ids: list[str], ranker: str) -> dict[str, Any]:
+    """Rejected hypotheses of one ranker: how many, and why, by claim type (the first failed claim's
+    reason with numbers stripped, so reasons group)."""
+    rows = conn.execute(
+        "SELECT c.claim_type, c.failure_reason FROM claims c JOIN hypotheses h ON h.id = c.hypothesis_id "
+        "WHERE h.investigation_id = ANY(%s::uuid[]) AND h.ranker = %s AND c.verifier_result = 'failed'",
+        (investigation_ids, ranker),
+    ).fetchall()
+    hyp = conn.execute(
+        "SELECT verifier_status, count(*) FROM hypotheses WHERE investigation_id = ANY(%s::uuid[]) AND ranker = %s "
+        "GROUP BY 1", (investigation_ids, ranker)).fetchall()  # fmt: skip
+    reasons: dict[str, Counter[str]] = defaultdict(Counter)
+    for t, why in rows:
+        reasons[str(t)][re.sub(r"[0-9a-f]{8,}|\d+(\.\d+)?", "#", str(why))[:120]] += 1
+    return {"hypotheses": {str(k): int(v) for k, v in hyp},
+            "failed_claims_by_type": {t: dict(c.most_common(8)) for t, c in reasons.items()}}  # fmt: skip
 
 
 def baseline_sha256() -> str:
