@@ -14,6 +14,7 @@ are summarised and gated separately, clean and confounded fixtures reported apar
 
 import hashlib
 import json
+import math
 import re
 import statistics
 import tempfile
@@ -448,7 +449,20 @@ def paired(agent: list[FixtureResult], base: list[FixtureResult]) -> dict[str, A
         row["baseline_rank1"] = [list(r.rank1) if r.rank1 else None for r in b.runs]
         row["agent_status"] = [r.status for r in fr.runs]
         rows[fr.fixture_id] = row
-    return {"per_fixture": rows, **{f"{m}_tally": dict(t) for m, t in tally.items()}}
+    out: dict[str, Any] = {"per_fixture": rows, **{f"{m}_tally": dict(t) for m, t in tally.items()}}
+    for m, t in tally.items():
+        out[f"{m}_sign_test_p"] = sign_test(t["win"], t["loss"])
+    return out
+
+
+def sign_test(wins: int, losses: int) -> float | None:
+    """Exact two-sided sign test over the non-tied fixtures (descriptive only; the plan's decision rule
+    is wins - losses >= 3)."""
+    n = wins + losses
+    if n == 0:
+        return None
+    k = min(wins, losses)
+    return float(min(1.0, 2 * sum(math.comb(n, i) for i in range(k + 1)) / 2**n))
 
 
 def rejection_rates(conn: psycopg.Connection[Any], investigation_ids: list[str],

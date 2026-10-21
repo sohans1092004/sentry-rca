@@ -60,3 +60,23 @@ def test_gate_blocks_on_any_backend_mismatch():
     ok = {"gold_rejected": 0, "out_of_scope_allowed": 0, "backend_mismatches": 0, "top1": None}
     assert gate(ok, None) == []
     assert gate({**ok, "backend_mismatches": 1}, None) == ["1 tool calls gave different rows on Parquet (must be 0)"]
+
+
+def test_paired_comparison_counts_fixtures_and_the_sign_test_is_exact():
+    from evals.harness import FixtureResult, RunResult, paired, sign_test
+
+    label = {"expected_outcome": "ROOT_CAUSE_IDENTIFIED", "root_cause": {"service": "inv", "cause_kind": "slow_query"},
+             "acceptable_alternatives": []}  # fmt: skip
+
+    def fr(fid, hits):
+        runs = [RunResult(f"{fid}{i}", "ROOT_CAUSE_IDENTIFIED", ("inv", "slow_query") if i < hits else ("x", "other"),
+                          [], 0, 0) for i in range(5)]  # fmt: skip
+        return FixtureResult(fid, label, runs)
+
+    agent = [fr("a", 5), fr("b", 3), fr("c", 0)]
+    base = [fr("a", 0), fr("b", 3), fr("c", 1)]
+    p = paired(agent, base)
+    assert p["top1_tally"] == {"win": 1, "tie": 1, "loss": 1}
+    assert p["per_fixture"]["a"]["top1"] == {"agent": 5, "baseline": 0, "of": 5, "verdict": "win"}
+    assert sign_test(1, 1) == 1.0 and sign_test(0, 0) is None
+    assert abs(sign_test(8, 0) - 2 / 256) < 1e-12
