@@ -1,6 +1,7 @@
 # ADR-000: LLM provider and model
 
-**Status:** Accepted (Phase 3, model selection). Raw numbers: `docs/measurements/phase3/selection/`.
+**Status:** Accepted (Phase 3, model selection), corrected the same day (see *Correction*). Raw numbers:
+`docs/measurements/phase3/selection/`.
 
 ## Context
 
@@ -24,7 +25,8 @@ below 1 GB.
   only (A35).
 - **Optional hosted provider:** an OpenAI-compatible one exists. It is off unless `LLM_API_KEY` is set,
   and none is required.
-- **Model: `llama3.2:3b`** (Q4_K_M, digest in the cassettes).
+- **Model: `qwen2.5:3b`** (Q4_K_M, digest in the cassettes). The first version of this ADR chose
+  `llama3.2:3b`; see *Correction*.
 
 ## Candidates and measurements
 
@@ -36,7 +38,7 @@ Setup:
 - Model time is the sum of each exchange's recorded `latency_ms` (`tools/agent_latency.py`), because
   fixtures replayed after a restart report replay time as their wall time.
 
-| | qwen2.5:3b | **llama3.2:3b** | qwen2.5:1.5b |
+| | **qwen2.5:3b** | llama3.2:3b | qwen2.5:1.5b |
 |---|---|---|---|
 | Top-1 judged / exact / service-only | 0.263 / 0.263 / 0.263 | 0.263 / 0.263 / 0.263 | 0.316 / 0.316 / 0.316 |
 | Outcome correct | 5 / 19 | 5 / 19 | 6 / 19 |
@@ -46,6 +48,8 @@ Setup:
 | Model time per run, median (min–max) | 377 s (126–660) | 212 s (74–318) | 31 s (12–97) |
 | Tokens per run, median | 17.5k | 42.3k | 5.2k |
 | LLM calls / agent tool calls per run, median | 4 / 6 | 21 / 20 | 3 / 1 |
+| Agent tool calls rejected by scope / executed (all runs) | 55 / 88 | **303 / 9** | 14 / 5 |
+| Distinct queries executed (all runs) | **81** | 9 | 5 |
 | Model runner RSS, max | 3.7 GB | 4.1 GB | 1.9 GB |
 | Lowest host Available in the completed run | 1.26 GB | 2.03 GB | 2.67 GB |
 | Paired vs baseline (top-1): wins / losses / ties | 1 / 12 / 6 | 2 / 13 / 4 | 2 / 12 / 5 |
@@ -56,21 +60,34 @@ The baseline in the same investigations scores top-1 0.842 (16/19), as it did in
   `INSUFFICIENT_EVIDENCE`, or a run that degraded and showed the baseline.
 - **The accuracy gaps are not differences.** 0.316 against 0.263 is one fixture.
 
-## Why llama3.2:3b
+## Why qwen2.5:3b
 
-- **Robust:** it is the only candidate with no degraded run, and it has the fewest parse failures (4,
-  against 12 and 19).
-- **It investigates:** a median of 20 tool calls, where qwen2.5:1.5b makes one call and then answers. A
-  model that does not query cannot cite.
-- **Fast enough:** 44% less model time per run than qwen2.5:3b at the same parameter count.
-- **Fixable failures:** its rejected claims cluster in one fixable mistake (9 of 16 cite the timeline as
-  evidence for a `log_pattern`). qwen2.5:3b's are spread across empty citations, baseline citations,
-  wrong tools and malformed fields.
-- **Cost:** 2.4 times qwen2.5:3b's tokens, and the most memory.
-  - Its runner reaches 4.1 GB, against 2.2–3.4 GB for qwen2.5:3b at one parallel slot.
-  - Twice the 1 GB rule stopped its run while Brave (2.1 GB) and WhatsApp's WebView (about 1.1 GB)
-    were open. With them closed, the lowest Available was 2.03 GB.
-  - Agent evals therefore run with those closed.
+- **It is the only candidate that investigates.** It ran 88 queries (81 distinct) across 19 runs.
+  - llama3.2:3b ran 9. Of its 312 tool calls, 303 were rejected by the scope layer, mostly the same call
+    repeated without `start`/`end`, or with `services` passed as a string. It looped on the rejection until
+    the budget ran out, then answered `{"hypotheses": []}`.
+  - qwen2.5:1.5b ran 5.
+- **A model that runs no queries has no rows to cite.** So the agent can only get better through prompt
+  and loop changes with qwen2.5:3b.
+- **It fits:** 2.2–3.7 GB RSS, with host Available at least 1.26 GB in its completed run. Its median model
+  time is 377 s per run.
+- **Its weaknesses are the ones dev iteration targets:**
+  - 12 first-attempt parse failures, all recovered by the constrained retry (A38);
+  - empty `"all"` citations;
+  - citations of the baseline's call numbers (A39);
+  - 55 rejected calls, most missing `start`/`end` or `service`.
+
+## Correction
+
+- **What went wrong:** the first version of this ADR chose llama3.2:3b. It cited its zero degraded runs,
+  its 4 parse failures and its median of 20 tool calls, and called the 20 calls "it investigates".
+- **How it was found:** the first dev-iteration run with llama3.2:3b showed every call of a run rejected.
+  Counting rejected against executed calls for the selection runs (table above) showed its 20 calls were
+  almost all rejected repeats.
+- **What the numbers actually meant:** its lack of degradation and parse failures came from running into
+  the tool budget and answering with nothing.
+- **The fix:** the selection criterion now counts executed queries, not issued calls. The choice is
+  qwen2.5:3b. The aborted llama3.2:3b iteration run is not used.
 
 ## Not run
 
@@ -92,8 +109,8 @@ The baseline in the same investigations scores top-1 0.842 (16/19), as it did in
 
 ## Consequences
 
-- At about 3.5 minutes of model time per run, an N=5 dev eval (19 fixtures plus the injection fixtures'
-  clean runs) takes about 6 hours, and the test eval about 5. Replay in CI takes minutes.
+- At about 6 minutes of model time per run, an N=5 dev eval (19 fixtures plus the injection fixtures'
+  clean runs) takes about 10–11 hours, and the test eval about 9. Replay in CI takes minutes.
 - The 120 s wall budget of §7.1 cannot be met on this hardware by any candidate that investigates; the
   budget defaults are re-measured on the chosen model in a SPEC amendment.
 - A larger local model needs more RAM or a GPU. A hosted model needs a key and a network, and gives up
