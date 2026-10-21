@@ -1,0 +1,153 @@
+{
+  "run": {
+    "run_id": "connection_refused-102-20261020T194842",
+    "plan": {
+      "scenario": "connection_refused",
+      "variant": null,
+      "seed": 102,
+      "delay_s": 27,
+      "root_cause": {
+        "service": "inventory",
+        "cause_kind": "connection_refused"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "payments",
+        "orders",
+        "gateway"
+      ],
+      "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "orders",
+          "kind": "refused",
+          "params": {
+            "period_s": 11,
+            "on_s": 5
+          },
+          "duration_s": 233,
+          "role": "cause"
+        },
+        {
+          "at_s": 0,
+          "service": "payments",
+          "kind": "refused",
+          "params": {
+            "period_s": 11,
+            "on_s": 5
+          },
+          "duration_s": 233,
+          "role": "cause"
+        },
+        {
+          "at_s": -124,
+          "service": "payments",
+          "kind": "deploy",
+          "params": {
+            "version": "payments-v1.78.0"
+          },
+          "duration_s": 1,
+          "role": "confounder"
+        },
+        {
+          "at_s": -122,
+          "service": "gateway",
+          "kind": "memory_step",
+          "params": {
+            "mib": 80
+          },
+          "duration_s": 900,
+          "role": "confounder"
+        }
+      ],
+      "deploy": null,
+      "notes": null,
+      "confounded": true,
+      "sampling": {
+        "traces": 0.5,
+        "logs": 0.7
+      },
+      "confounder_deploy": {
+        "service": "payments",
+        "version": "payments-v1.78.0",
+        "at_s": -124,
+        "rollout_s": 12
+      }
+    },
+    "injection_start": "2026-10-20T19:48:42.458+00:00",
+    "applied": [
+      {
+        "at": "2026-10-20T19:48:42.971+00:00",
+        "at_s": -124,
+        "service": "payments",
+        "kind": "deploy",
+        "params": {
+          "version": "payments-v1.78.0"
+        },
+        "duration_s": 1,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T19:48:44.536+00:00",
+        "at_s": -122,
+        "service": "gateway",
+        "kind": "memory_step",
+        "params": {
+          "mib": 80
+        },
+        "duration_s": 900,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T19:50:46.505+00:00",
+        "at_s": 0,
+        "service": "orders",
+        "kind": "refused",
+        "params": {
+          "period_s": 11,
+          "on_s": 5
+        },
+        "duration_s": 233,
+        "role": "cause"
+      },
+      {
+        "at": "2026-10-20T19:50:46.540+00:00",
+        "at_s": 0,
+        "service": "payments",
+        "kind": "refused",
+        "params": {
+          "period_s": 11,
+          "on_s": 5
+        },
+        "duration_s": 233,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": null,
+    "confounder_deploy_row": {
+      "id": "666c47a1-a113-4f9f-9d64-ab0c299f6e46",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "payments",
+      "version": "payments-v1.78.0",
+      "started_at": "2026-10-20T19:48:30.971+00:00",
+      "finished_at": "2026-10-20T19:48:42.971+00:00"
+    },
+    "injection_end": "2026-10-20T19:54:39.526+00:00"
+  },
+  "incident": {
+    "id": "d50f46ac-bd00-4165-8243-6a8f54a84bb0",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-20 19:51:02.512405+00:00",
+    "first_anomaly_at": "2026-10-20 19:50:57.422711+00:00",
+    "last_seen": "2026-10-20 19:55:27.411388+00:00",
+    "alert_count": 54,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 16.007405,
+  "onset_to_open_s": 5.089694,
+  "variant": null,
+  "partner": null
+}

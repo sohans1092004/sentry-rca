@@ -1,0 +1,174 @@
+{
+  "run": {
+    "run_id": "bad_deploy-ambiguous-101-20261020T151839",
+    "plan": {
+      "scenario": "bad_deploy",
+      "variant": "ambiguous",
+      "seed": 101,
+      "delay_s": 39,
+      "root_cause": {
+        "service": "payments",
+        "cause_kind": "bad_deploy"
+      },
+      "acceptable_alternatives": [
+        {
+          "service": "inventory",
+          "cause_kind": "slow_query"
+        }
+      ],
+      "symptom_services": [
+        "gateway",
+        "orders"
+      ],
+      "expected_outcome": "CONFLICTING_EVIDENCE",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 11,
+          "service": "payments",
+          "kind": "bad_deploy",
+          "params": {
+            "version": "payments-v1.81.0",
+            "mode": "slow",
+            "delay_ms": 450
+          },
+          "duration_s": 231,
+          "role": "cause"
+        },
+        {
+          "at_s": 9,
+          "service": "inventory",
+          "kind": "lock_wait",
+          "params": {
+            "query": "confirm_hold",
+            "table": "holds",
+            "op": "UPDATE",
+            "delay_ms": 450
+          },
+          "duration_s": 188,
+          "role": "cause"
+        },
+        {
+          "at_s": -477,
+          "service": "gateway",
+          "kind": "deploy",
+          "params": {
+            "version": "gateway-v1.15.0"
+          },
+          "duration_s": 1,
+          "role": "confounder"
+        },
+        {
+          "at_s": -298,
+          "service": "gateway",
+          "kind": "client_errors",
+          "params": {
+            "n": 33
+          },
+          "duration_s": 30,
+          "role": "confounder"
+        }
+      ],
+      "deploy": {
+        "service": "payments",
+        "version": "payments-v1.81.0",
+        "rollout_s": 11
+      },
+      "notes": null,
+      "confounded": true,
+      "sampling": {
+        "traces": 0.5,
+        "logs": 0.7
+      },
+      "confounder_deploy": {
+        "service": "gateway",
+        "version": "gateway-v1.15.0",
+        "at_s": -477,
+        "rollout_s": 11
+      }
+    },
+    "injection_start": "2026-10-20T15:18:39.334+00:00",
+    "applied": [
+      {
+        "at": "2026-10-20T15:18:39.858+00:00",
+        "at_s": -477,
+        "service": "gateway",
+        "kind": "deploy",
+        "params": {
+          "version": "gateway-v1.15.0"
+        },
+        "duration_s": 1,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T15:21:38.345+00:00",
+        "at_s": -298,
+        "service": "gateway",
+        "kind": "client_errors",
+        "params": {
+          "n": 33
+        },
+        "duration_s": 30,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T15:26:47.625+00:00",
+        "at_s": 9,
+        "service": "inventory",
+        "kind": "lock_wait",
+        "params": {
+          "query": "confirm_hold",
+          "table": "holds",
+          "op": "UPDATE",
+          "delay_ms": 450
+        },
+        "duration_s": 188,
+        "role": "cause"
+      },
+      {
+        "at": "2026-10-20T15:26:47.653+00:00",
+        "at_s": 11,
+        "service": "payments",
+        "kind": "bad_deploy",
+        "params": {
+          "version": "payments-v1.81.0",
+          "mode": "slow",
+          "delay_ms": 450
+        },
+        "duration_s": 231,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": {
+      "id": "1758f975-d855-4c16-abe5-87dc9564dcfb",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "payments",
+      "version": "payments-v1.81.0",
+      "started_at": "2026-10-20T15:26:36.346+00:00",
+      "finished_at": "2026-10-20T15:26:47.346+00:00"
+    },
+    "confounder_deploy_row": {
+      "id": "eb111d3e-6f8b-4139-88f0-7b5caef903ae",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "gateway",
+      "version": "gateway-v1.15.0",
+      "started_at": "2026-10-20T15:18:28.858+00:00",
+      "finished_at": "2026-10-20T15:18:39.858+00:00"
+    },
+    "injection_end": "2026-10-20T15:30:38.449+00:00"
+  },
+  "incident": {
+    "id": "c7d75ba1-fa63-4109-aeeb-334c59252da0",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-20 15:27:08.203044+00:00",
+    "first_anomaly_at": "2026-10-20 15:27:03.125544+00:00",
+    "last_seen": "2026-10-20 15:31:33.113381+00:00",
+    "alert_count": 54,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 20.578044,
+  "onset_to_open_s": 5.0775,
+  "variant": "ambiguous",
+  "partner": "slow_query"
+}

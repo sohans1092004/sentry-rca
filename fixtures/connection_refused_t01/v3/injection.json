@@ -1,0 +1,96 @@
+{
+  "run": {
+    "run_id": "connection_refused-101-20261020T135607",
+    "plan": {
+      "scenario": "connection_refused",
+      "variant": null,
+      "seed": 101,
+      "delay_s": 33,
+      "root_cause": {
+        "service": "inventory",
+        "cause_kind": "connection_refused"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "payments",
+        "orders",
+        "gateway"
+      ],
+      "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "orders",
+          "kind": "refused",
+          "params": {
+            "period_s": 8,
+            "on_s": 4
+          },
+          "duration_s": 182,
+          "role": "cause"
+        },
+        {
+          "at_s": 0,
+          "service": "payments",
+          "kind": "refused",
+          "params": {
+            "period_s": 8,
+            "on_s": 4
+          },
+          "duration_s": 182,
+          "role": "cause"
+        }
+      ],
+      "deploy": null,
+      "notes": null,
+      "confounded": false,
+      "sampling": null,
+      "confounder_deploy": null
+    },
+    "injection_start": "2026-10-20T13:56:07.973+00:00",
+    "applied": [
+      {
+        "at": "2026-10-20T13:56:08.485+00:00",
+        "at_s": 0,
+        "service": "orders",
+        "kind": "refused",
+        "params": {
+          "period_s": 8,
+          "on_s": 4
+        },
+        "duration_s": 182,
+        "role": "cause"
+      },
+      {
+        "at": "2026-10-20T13:56:08.504+00:00",
+        "at_s": 0,
+        "service": "payments",
+        "kind": "refused",
+        "params": {
+          "period_s": 8,
+          "on_s": 4
+        },
+        "duration_s": 182,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": null,
+    "confounder_deploy_row": null,
+    "injection_end": "2026-10-20T13:59:10.028+00:00"
+  },
+  "incident": {
+    "id": "d8addb43-cbe0-41a6-840a-d15bc186e167",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-20 13:56:23.506644+00:00",
+    "first_anomaly_at": "2026-10-20 13:56:18.409438+00:00",
+    "last_seen": "2026-10-20 14:00:03.392905+00:00",
+    "alert_count": 45,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 15.021644,
+  "onset_to_open_s": 5.097206,
+  "variant": null,
+  "partner": null
+}

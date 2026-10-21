@@ -1,0 +1,26 @@
+{
+  "tables": {
+    "metrics": {
+      "rows": 217311,
+      "sha256": "f53adc4cacc423bc2a8bbd228d346ae2bbb2d31af8771e8242392a72c58ac3dd"
+    },
+    "logs": {
+      "rows": 5873,
+      "sha256": "f2e18a9a616824cef4c640b3b46ec5af5aea6825919f8d8b08a6030527a6b6d3"
+    },
+    "spans": {
+      "rows": 199175,
+      "sha256": "b3a051a57844f554a51f230270723d264b86639a277062d08deb24123ac31a14"
+    },
+    "deploys": {
+      "rows": 1,
+      "sha256": "b8c5f39475ae4e25157164e781ffa60a3a527243d41421640a15288e061d02d8"
+    }
+  },
+  "fixture_id": "cache_stampede_t02",
+  "version": "v3",
+  "window": [
+    "2026-10-20 17:20:57.753701+00:00",
+    "2026-10-20 17:46:52.735890+00:00"
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "run": {
+    "run_id": "no_fault-101-20261020T211014",
+    "plan": {
+      "scenario": "no_fault",
+      "variant": null,
+      "seed": 101,
+      "delay_s": 34,
+      "root_cause": null,
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "gateway",
+        "orders",
+        "payments",
+        "inventory"
+      ],
+      "expected_outcome": "INSUFFICIENT_EVIDENCE",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 0,
+          "service": "gateway",
+          "kind": "jitter",
+          "params": {
+            "p": 0.32,
+            "max_ms": 325
+          },
+          "duration_s": 243,
+          "role": "cause"
+        },
+        {
+          "at_s": 0,
+          "service": "orders",
+          "kind": "jitter",
+          "params": {
+            "p": 0.32,
+            "max_ms": 325
+          },
+          "duration_s": 243,
+          "role": "cause"
+        },
+        {
+          "at_s": 0,
+          "service": "payments",
+          "kind": "jitter",
+          "params": {
+            "p": 0.32,
+            "max_ms": 325
+          },
+          "duration_s": 243,
+          "role": "cause"
+        },
+        {
+          "at_s": 0,
+          "service": "inventory",
+          "kind": "jitter",
+          "params": {
+            "p": 0.32,
+            "max_ms": 325
+          },
+          "duration_s": 243,
+          "role": "cause"
+        },
+        {
+          "at_s": -388,
+          "service": "inventory",
+          "kind": "deploy",
+          "params": {
+            "version": "inventory-v1.60.0"
+          },
+          "duration_s": 1,
+          "role": "confounder"
+        },
+        {
+          "at_s": -214,
+          "service": "payments",
+          "kind": "memory_step",
+          "params": {
+            "mib": 72
+          },
+          "duration_s": 900,
+          "role": "confounder"
+        }
+      ],
+      "deploy": null,
+      "notes": null,
+      "confounded": true,
+      "sampling": {
+        "traces": 0.5,
+        "logs": 0.7
+      },
+      "confounder_deploy": {
+        "service": "inventory",
+        "version": "inventory-v1.60.0",
+        "at_s": -388,
+        "rollout_s": 13
+      }
+    },
+    "injection_start": "2026-10-20T21:10:14.116+00:00",
+    "applied": [
+      {
+        "at": "2026-10-20T21:10:14.659+00:00",
+        "at_s": -388,
+        "service": "inventory",
+        "kind": "deploy",
+        "params": {
+          "version": "inventory-v1.60.0"
+        },
+        "duration_s": 1,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T21:13:08.191+00:00",
+        "at_s": -214,
+        "service": "payments",
+        "kind": "memory_step",
+        "params": {
+          "mib": 72
+        },
+        "duration_s": 900,
+        "role": "confounder"
+      },
+      {
+        "at": "2026-10-20T21:16:42.162+00:00",
+        "at_s": 0,
+        "service": "gateway",
+        "kind": "jitter",
+        "params": {
+          "p": 0.32,
+          "max_ms": 325
+        },
+        "duration_s": 243,
+        "role": "cause"
+      },
+      {
+        "at": "2026-10-20T21:16:42.190+00:00",
+        "at_s": 0,
+        "service": "orders",
+        "kind": "jitter",
+        "params": {
+          "p": 0.32,
+          "max_ms": 325
+        },
+        "duration_s": 243,
+        "role": "cause"
+      },
+      {
+        "at": "2026-10-20T21:16:42.218+00:00",
+        "at_s": 0,
+        "service": "payments",
+        "kind": "jitter",
+        "params": {
+          "p": 0.32,
+          "max_ms": 325
+        },
+        "duration_s": 243,
+        "role": "cause"
+      },
+      {
+        "at": "2026-10-20T21:16:42.228+00:00",
+        "at_s": 0,
+        "service": "inventory",
+        "kind": "jitter",
+        "params": {
+          "p": 0.32,
+          "max_ms": 325
+        },
+        "duration_s": 243,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": null,
+    "confounder_deploy_row": {
+      "id": "8451936b-8937-4cae-96cd-f594d43b043e",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "inventory",
+      "version": "inventory-v1.60.0",
+      "started_at": "2026-10-20T21:10:01.659+00:00",
+      "finished_at": "2026-10-20T21:10:14.659+00:00"
+    },
+    "injection_end": "2026-10-20T21:20:45.224+00:00"
+  },
+  "incident": {
+    "id": "a906acb5-04a0-4756-b6ee-a06d86889ea8",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-20 21:17:02.280125+00:00",
+    "first_anomaly_at": "2026-10-20 21:16:57.191470+00:00",
+    "last_seen": "2026-10-20 21:21:42.177351+00:00",
+    "alert_count": 57,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 20.118125,
+  "onset_to_open_s": 5.088655,
+  "variant": null,
+  "partner": null
+}

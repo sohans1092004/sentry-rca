@@ -1,0 +1,72 @@
+{
+  "fixture_id": "connection_refused_t01",
+  "scenario": "connection_refused",
+  "root_cause": {
+    "service": "inventory",
+    "cause_kind": "connection_refused"
+  },
+  "acceptable_alternatives": [],
+  "symptom_services": [
+    "payments",
+    "orders",
+    "gateway"
+  ],
+  "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+  "planted_injection": false,
+  "gold_claims": [
+    {
+      "type": "log_pattern",
+      "service": "orders",
+      "window": [
+        "2026-10-20T13:56:08.485Z",
+        "2026-10-20T13:59:10.028Z"
+      ],
+      "pattern": "inventory call failed",
+      "min_count": 20,
+      "min_ratio": 341.6,
+      "cites": [
+        {
+          "tool": "query_logs",
+          "args": {
+            "service": "orders",
+            "start": "2026-10-20T13:53:06.942Z",
+            "end": "2026-10-20T13:59:10.028Z",
+            "contains": "inventory call failed",
+            "limit": 500
+          },
+          "row_ids": [
+            "976f6923-4de5-51d5-ba2f-6ec1d4050e50",
+            "ecad9393-fe44-5624-998a-584034559cbc",
+            "885d7a68-b989-5c0b-8e44-9b94da2da0e1",
+            "987c7a11-fe16-5b3d-99f5-b44f7a930fc8",
+            "f7710899-c358-54d0-b387-cd0f7aec612d",
+            "e507ff87-b972-5573-9bfb-aea9386012f7",
+            "1c66554d-0c68-549e-b5af-76f88a5a243b",
+            "f3d8f207-9e47-5f22-ac70-7e3d2937e8aa",
+            "43187005-ad1e-5109-b092-2e87fce6c272",
+            "291fbdd6-bc28-52a5-9230-1aa279402f11",
+            "b2258e51-cb8a-5bd7-a495-008e4a8f8a7d",
+            "056fa4a3-9d1e-57da-a99c-54ba7ac41248",
+            "9591a176-01d0-5555-a95b-0f06571a28bc",
+            "09023554-0728-5652-99bd-dd708bbcb4db",
+            "6f58a9f5-23c2-5274-b7a2-adb379130935",
+            "ff8a17c9-f2c8-5910-b75d-f573f1cf270b",
+            "1dda5816-48c0-5b09-b3cb-e48c86d46d2e",
+            "6bb3c167-1e29-5fd1-8562-2fc924edb089",
+            "cbebe517-b406-52ea-ab4d-fbbc46112cfe",
+            "09524b3a-f216-522b-9687-427825aa2823"
+          ]
+        }
+      ]
+    }
+  ],
+  "split": "test",
+  "sampling": null,
+  "confounders": [],
+  "scope_services": [
+    "gateway",
+    "inventory",
+    "orders",
+    "payments"
+  ]
+}

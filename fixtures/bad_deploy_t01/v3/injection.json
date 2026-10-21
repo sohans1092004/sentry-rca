@@ -1,0 +1,86 @@
+{
+  "run": {
+    "run_id": "bad_deploy-101-20261020T224227",
+    "plan": {
+      "scenario": "bad_deploy",
+      "variant": null,
+      "seed": 101,
+      "delay_s": 20,
+      "root_cause": {
+        "service": "inventory",
+        "cause_kind": "bad_deploy"
+      },
+      "acceptable_alternatives": [],
+      "symptom_services": [
+        "payments",
+        "orders",
+        "gateway"
+      ],
+      "expected_outcome": "ROOT_CAUSE_IDENTIFIED",
+      "planted_injection": false,
+      "steps": [
+        {
+          "at_s": 17,
+          "service": "inventory",
+          "kind": "bad_deploy",
+          "params": {
+            "version": "inventory-v1.17.0",
+            "mode": "slow",
+            "delay_ms": 415
+          },
+          "duration_s": 226,
+          "role": "cause"
+        }
+      ],
+      "deploy": {
+        "service": "inventory",
+        "version": "inventory-v1.17.0",
+        "rollout_s": 17
+      },
+      "notes": null,
+      "confounded": false,
+      "sampling": null,
+      "confounder_deploy": null
+    },
+    "injection_start": "2026-10-20T22:42:27.364+00:00",
+    "applied": [
+      {
+        "at": "2026-10-20T22:42:45.126+00:00",
+        "at_s": 17,
+        "service": "inventory",
+        "kind": "bad_deploy",
+        "params": {
+          "version": "inventory-v1.17.0",
+          "mode": "slow",
+          "delay_ms": 415
+        },
+        "duration_s": 226,
+        "role": "cause"
+      }
+    ],
+    "deploy_row": {
+      "id": "aa53a621-605f-4ee7-b655-74efb142d70a",
+      "tenant_id": "00000000-0000-4000-8000-000000000001",
+      "service": "inventory",
+      "version": "inventory-v1.17.0",
+      "started_at": "2026-10-20T22:42:27.867+00:00",
+      "finished_at": "2026-10-20T22:42:44.867+00:00"
+    },
+    "confounder_deploy_row": null,
+    "injection_end": "2026-10-20T22:46:30.384+00:00"
+  },
+  "incident": {
+    "id": "da8fcb68-dc4d-439f-8fce-c51fa73e18f4",
+    "service": "gateway",
+    "status": "resolved",
+    "opened_at": "2026-10-20 22:43:07.018755+00:00",
+    "first_anomaly_at": "2026-10-20 22:43:01.933366+00:00",
+    "last_seen": "2026-10-20 22:47:26.923114+00:00",
+    "alert_count": 53,
+    "fingerprint": "gateway|slo|00000000-0000-4000-8000-0000000000a1"
+  },
+  "alert_latency_s": 21.892755,
+  "onset_to_open_s": 5.085389,
+  "variant": null,
+  "partner": null
+}

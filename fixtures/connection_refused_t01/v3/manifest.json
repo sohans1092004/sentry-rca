@@ -1,0 +1,26 @@
+{
+  "tables": {
+    "metrics": {
+      "rows": 211869,
+      "sha256": "87a2e2b67756ac197843c79917171de9c60b3dfb8f06f07b180157b9a765a075"
+    },
+    "logs": {
+      "rows": 7399,
+      "sha256": "9af06408d4ecfe95d20586d736dabd3381e3c89b89017b804e9c9aec611297c7"
+    },
+    "spans": {
+      "rows": 227031,
+      "sha256": "2a93d6be7ffba6e9aec11f26310229a45864cd954e002f1c137b23159899a03f"
+    },
+    "deploys": {
+      "rows": 1,
+      "sha256": "e115b8396b01f28f6b19e5a99b14a241f745151394561470c00cc1cba22ffd8d"
+    }
+  },
+  "fixture_id": "connection_refused_t01",
+  "version": "v3",
+  "window": [
+    "2026-10-20 13:41:18.409438+00:00",
+    "2026-10-20 14:05:03.392905+00:00"
+  ]
+}
