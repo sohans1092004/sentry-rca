@@ -778,3 +778,21 @@ E           Failed: DID NOT RAISE EvalFailed
 $ uv run pytest -vv -p no:cacheprovider tests/integration/test_phase2.py::test_eval_fails_when_the_database_changes
 ============================= 1 passed in 16.26s ==============================
 
+=== leak_corpus @ 2026-10-21T04:35:29+00:00 -> PASS
+property: Leak test (A34): a runbook naming an injector internal is caught
+guard removed in recorder/leaks.py: [('            if word in low:\n', '            if False:\n')]
+--- guard removed (expect failure, exit 1):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_leaks.py::test_corpus_leaks_are_caught
+E       AssertionError: assert {'fault-only'} == {'fault-only', 'internal'}
+E         
+E         Extra items in the right set:
+E         'internal'
+E         
+E         Full diff:
+E           {
+E               'fault-only',
+============================== 1 failed in 0.85s ==============================
+--- guard restored (expect pass, exit 0):
+$ uv run pytest -vv -p no:cacheprovider tests/unit/test_leaks.py::test_corpus_leaks_are_caught
+============================== 1 passed in 0.72s ==============================
+

@@ -244,9 +244,7 @@ GUARDS_PHASE2: dict[str, dict] = {
     "leak_corpus": {
         "property": "Leak test (A34): a runbook naming an injector internal is caught",
         "file": "recorder/leaks.py",
-        "edits": [("            if word in low:
-", "            if False:
-")],
+        "edits": [("            if word in low:\n", "            if False:\n")],
         "tests": [U + "test_leaks.py::test_corpus_leaks_are_caught"],
     },
     "posthoc_rule": {
