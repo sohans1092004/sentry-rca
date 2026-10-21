@@ -365,8 +365,9 @@ def test_older_results_are_elided_past_the_context_limit_and_stay_citable(monkey
     provider = Script(steps)
     result, _, _ = run(provider)
     tools_seen = [m["content"] for m in provider.seen[-1][0] if m["role"] == "tool"]
-    assert [c.endswith("[rows elided]") for c in tools_seen] == [True, True, False, False, False]
-    assert all("<<DATA-" not in c for c in tools_seen[:2])  # nothing but the server's header is left
+    keep = agent_mod.KEEP_RESULTS
+    assert [c.endswith("[rows elided]") for c in tools_seen] == [True] * (5 - keep) + [False] * keep
+    assert all("<<DATA-" not in c for c in tools_seen[: 5 - keep])  # nothing but the server's header is left
     assert result.outcome == "ROOT_CAUSE_IDENTIFIED"  # the agent cited call 1, whose rows were elided
 
 
