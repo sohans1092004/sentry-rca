@@ -60,6 +60,7 @@ class Provider(Protocol):
         tools: list[dict[str, Any]],
         temperature: float = 0.0,
         schema: dict[str, Any] | None = None,
+        timeout_s: float | None = None,
     ) -> Response: ...
 
 
@@ -86,6 +87,8 @@ def _post(url: str, body: dict[str, Any], headers: dict[str, str], timeout: floa
             return dict(r.json())
         except (httpx.TransportError, httpx.HTTPStatusError) as e:
             last = e
+            if isinstance(e, httpx.TimeoutException):
+                break  # a slow model is not retried: the caller's time is what ran out
             if isinstance(e, httpx.HTTPStatusError) and e.response.status_code < 500 and e.response.status_code != 429:
                 break  # a 4xx other than 429 will not get better
             if attempt + 1 < RETRIES:
@@ -101,7 +104,8 @@ class Ollama:
         self.digest = ollama_digest(model)
 
     def complete(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]],
-                 temperature: float = 0.0, schema: dict[str, Any] | None = None) -> Response:  # fmt: skip
+                 temperature: float = 0.0, schema: dict[str, Any] | None = None,
+                 timeout_s: float | None = None) -> Response:  # fmt: skip
         body: dict[str, Any] = {"model": self.model, "messages": messages, "stream": False,
                                 "options": {"temperature": temperature, "seed": 0, "num_ctx": NUM_CTX}}  # fmt: skip
         if tools:
@@ -109,7 +113,7 @@ class Ollama:
         if schema is not None:
             body["format"] = schema
         t0 = time.monotonic()
-        out = _post(f"{OLLAMA}/api/chat", body, {}, self.timeout_s)
+        out = _post(f"{OLLAMA}/api/chat", body, {}, min(self.timeout_s, timeout_s or self.timeout_s))
         msg = out.get("message", {})
         calls = [{"name": c["function"]["name"], "arguments": c["function"].get("arguments") or {}}
                  for c in msg.get("tool_calls") or []]  # fmt: skip
@@ -150,14 +154,16 @@ class OpenAICompatible:
         self._headers = {"Authorization": f"Bearer {key}"}  # never logged or recorded
 
     def complete(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]],
-                 temperature: float = 0.0, schema: dict[str, Any] | None = None) -> Response:  # fmt: skip
+                 temperature: float = 0.0, schema: dict[str, Any] | None = None,
+                 timeout_s: float | None = None) -> Response:  # fmt: skip
         body: dict[str, Any] = {"model": self.model, "messages": messages, "temperature": temperature}
         if tools:
             body["tools"] = tools
         if schema is not None:
             body["response_format"] = {"type": "json_schema", "json_schema": {"name": "answer", "schema": schema}}
         t0 = time.monotonic()
-        out = _post(f"{self.base_url}/chat/completions", body, self._headers, self.timeout_s)
+        limit = min(self.timeout_s, timeout_s or self.timeout_s)
+        out = _post(f"{self.base_url}/chat/completions", body, self._headers, limit)
         msg = out["choices"][0]["message"]
         calls = []
         for c in msg.get("tool_calls") or []:
@@ -220,7 +226,8 @@ class Recorded:
         self.exchanges: list[tuple[str, dict[str, Any], Response]] = []
 
     def complete(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]],
-                 temperature: float = 0.0, schema: dict[str, Any] | None = None) -> Response:  # fmt: skip
+                 temperature: float = 0.0, schema: dict[str, Any] | None = None,
+                 timeout_s: float | None = None) -> Response:  # fmt: skip
         request = canonical_request(self.model, messages, tools, temperature, schema)
         key = request_hash(self.model, self.digest, request, self.run_index)
         self.seq += 1
@@ -233,7 +240,7 @@ class Recorded:
                              f"{self.seq}, {self.model}@{self.digest[:12]}) in {where}")  # fmt: skip
         else:
             assert self.inner is not None
-            resp = self.inner.complete(messages, tools, temperature, schema)
+            resp = self.inner.complete(messages, tools, temperature, schema, timeout_s)
             if self.cassette is not None:
                 self.cassette.entries[key] = {"run_index": self.run_index, "seq": self.seq, "response": asdict(resp)}
         if self.sink is not None:

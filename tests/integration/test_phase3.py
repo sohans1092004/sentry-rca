@@ -46,7 +46,7 @@ class Script:
     def __init__(self, steps):
         self.steps = list(steps)
 
-    def complete(self, messages, tools, temperature=0.0, schema=None):
+    def complete(self, messages, tools, temperature=0.0, schema=None, timeout_s=None):
         step = self.steps.pop(0)
         if isinstance(step, Exception):
             raise step
@@ -114,7 +114,7 @@ def test_a_completed_agent_is_shown_and_both_rankers_are_kept(pg, pg_dsn):
     app, inv = start(pg, pg_dsn)
     final = {"hypotheses": [{"rank": 1, "causal_role": "candidate_root_cause", "cause_service": "inventory",
                              "cause_kind": "pool_exhaustion", "score": 0.9, "narrative": "pool timeouts",
-                             "claims": [{**claim(), "cites": [{"tool_call_seq": 2, "rows": "all"}]}]}]}  # fmt: skip
+                             "claims": [{**claim(), "cites": [{"tool_call_seq": 1, "rows": "all"}]}]}]}  # fmt: skip
     outcome = investigate(app, inv, config([llm.Response("", [{"name": "query_logs", "arguments": LOGS}], 50, 5),
                                             llm.Response(json.dumps(final), [], 80, 40)]))  # fmt: skip
     status, ranker, budget = pg.execute(

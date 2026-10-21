@@ -27,7 +27,7 @@ from datetime import timedelta
 from typing import Any
 
 from common.kinds import CAUSE_KINDS
-from investigation import llm
+from investigation import llm, verifier
 from investigation.scope import Scope, iso, parse
 from investigation.tools import TOOLS, CallRecord
 from investigation.verifier import CLAIM_TOOLS, ROLES
@@ -224,15 +224,17 @@ def _log_groups(rows: list[dict[str, Any]]) -> list[str]:
     return out
 
 
-def render_result(rec: CallRecord, boundary: str) -> str:
-    """One tool result: a header the server writes, then the rows, only inside the data block."""
+def render_result(rec: CallRecord, boundary: str, number: int | None = None) -> str:
+    """One tool result: a header the server writes, then the rows, only inside the data block. `number`
+    is the call's number in the agent's own view (1, 2, ...; A39), which is what it cites."""
+    k = rec.seq if number is None else number
     if rec.scope_decision == "rejected":
-        return f"Tool call {rec.seq} ({rec.tool_name}) was rejected by the server: {rec.reason}"
+        return f"Tool call {k} ({rec.tool_name}) was rejected by the server: {rec.reason}"
     n = len(rec.rows)
     note = f"; {n} rows, showing {len(_shown(n))} evenly spaced" if n > DISPLAY_ROWS else f"; {n} rows"
     if rec.tool_name == "query_logs":
         note = f"; {n} rows, grouped by message"
-    head = (f"Tool call {rec.seq} ({rec.tool_name}, {rec.scope_decision}, executed as "
+    head = (f"Tool call {k} ({rec.tool_name}, {rec.scope_decision}, executed as "
             f"{json.dumps(rec.executed, sort_keys=True)}){note}" + ("; TRUNCATED at the row cap" if rec.truncated
                                                                     else "") + ".")  # fmt: skip
     body = "\n".join(_row_lines(rec)) if n else "(no rows)"
@@ -339,23 +341,26 @@ def _citable(claim: dict[str, Any], row: dict[str, Any]) -> bool:
 
 
 def resolve_cites(h: dict[str, Any], calls: dict[int, CallRecord]) -> dict[str, Any]:
-    """Row numbers / "all" -> the cited snapshot's row_ids (§8.1). A seq or number that does not exist is
-    kept as written, so the verifier rejects it with its own reason."""
+    """Call numbers, row numbers and "all" -> the cited call's seq and its snapshot's row_ids (§8.1). `calls`
+    is keyed by the number the agent cites. A call number it does not know becomes seq -n, which no
+    investigation has; a row number it does not know is kept; the verifier rejects both with a reason."""
     claims = []
     for c in h["claims"]:
         cites = []
         for ct in c["cites"]:
             call, rows = calls.get(ct["tool_call_seq"]), ct.get("rows", ct.get("row_ids"))
             ids: list[str] = []
-            if call is not None and rows == "all":
-                ids = [str(r["row_id"]) for r in call.rows if _citable(c, r)]
+            if rows == "all":  # a placeholder says why nothing was selected; the verifier names it
+                ids = [str(r["row_id"]) for r in call.rows if _citable(c, r)] if call is not None else ["<all>"]
+                ids = ids or ["<no row of this call is in the claim's window and service>"]
             elif call is not None and "rows" in ct:
                 for n in rows:
                     ok = isinstance(n, int) and not isinstance(n, bool) and 1 <= n <= len(call.rows)
                     ids.append(str(call.rows[n - 1]["row_id"]) if ok else f"<row {n}>")
             else:
                 ids = [str(r) for r in rows] if isinstance(rows, list) else []
-            cites.append({"tool_call_seq": ct["tool_call_seq"], "row_ids": ids})
+            seq = call.seq if call is not None else -abs(int(ct["tool_call_seq"]))
+            cites.append({"tool_call_seq": seq, "row_ids": ids})
         claims.append({**{k: v for k, v in c.items() if k != "cites"}, "cites": cites})
     return {**h, "claims": claims}
 
@@ -370,6 +375,7 @@ class AgentRun:
     tokens_out: int = 0
     tool_calls: int = 0
     parse_failures: int = 0
+    repairs: int = 0
     degraded: str | None = None
     wall_ms: int = 0
     turns: list[dict[str, Any]] = field(default_factory=list)  # per turn: tool calls asked, ms, tokens
@@ -386,7 +392,7 @@ class Agent:
                  clock: Callable[[], float] = time.monotonic,
                  calls: Callable[[], dict[int, CallRecord]] | None = None):  # fmt: skip
         self.provider, self.budget, self.incident, self.clock = provider, budget or Budget(), incident, clock
-        self.all_calls = calls  # every call of the investigation (both rankers), for resolving cites
+        self.all_calls = calls  # every call of the investigation (both rankers), for the repair check
         self.run = AgentRun()
         self.messages: list[dict[str, Any]] = []
 
@@ -410,9 +416,12 @@ class Agent:
         if r.tokens > b.tokens:
             raise Degraded("budget", f"{r.tokens} tokens used, budget {b.tokens}")
         t = self.clock()
-        try:
-            resp = self.provider.complete(self.messages, tools, 0.0, schema)
+        try:  # a call gets at most the wall time left (A39); running out mid-call is the budget, not the model
+            left = max(1.0, b.wall_s - (t - self.t0))
+            resp = self.provider.complete(self.messages, tools, 0.0, schema, timeout_s=left)
         except llm.Unavailable as e:
+            if self.clock() - self.t0 > b.wall_s:
+                raise Degraded("budget", f"wall time {b.wall_s:.0f} s used during a model call") from e
             raise Degraded("llm_unavailable", str(e)) from e
         r.llm_calls += 1
         r.tokens_in, r.tokens_out = r.tokens_in + resp.tokens_in, r.tokens_out + resp.tokens_out
@@ -437,8 +446,9 @@ class Agent:
         specs = tool_specs(runbook_search)
         self.messages = [{"role": "system", "content": SYSTEM},
                          {"role": "user", "content": context_message(scope, self.incident)}]  # fmt: skip
-        mine: dict[int, CallRecord] = {}
+        mine: dict[int, CallRecord] = {}  # keyed by the agent's own call number (A39)
         retried, final_turn = False, False
+        first: list[dict[str, Any]] | None = None  # the answer before a repair turn, kept if the repair fails
         while True:
             self._compact()
             # an answer-only turn (after the budget, or the retry) is constrained to the schema (A38)
@@ -455,8 +465,8 @@ class Agent:
                         args = c["arguments"] if isinstance(c["arguments"], dict) else {}
                         rec = call(str(c["name"]), args)
                         r.tool_calls += 1
-                        mine[rec.seq] = rec
-                        content = render_result(rec, new_boundary())
+                        mine[r.tool_calls] = rec
+                        content = render_result(rec, new_boundary(), r.tool_calls)
                     self.messages.append({"role": "tool", "content": content})
                 if r.tool_calls >= b.tool_calls:
                     final_turn = True
@@ -468,6 +478,8 @@ class Agent:
                 hyps = parse_output(resp.content)
             except OutputError as e:
                 r.parse_failures += 1
+                if first is not None:
+                    return first  # the repair did not parse: the answer it was repairing stands
                 if retried:
                     raise Degraded("parse", str(e)) from e
                 retried = True
@@ -476,5 +488,29 @@ class Agent:
                     f"Your reply could not be used: {e}. Reply with only the JSON object described in the "
                     'instructions, {"hypotheses": [...]}, with no other text.')})  # fmt: skip
                 continue
-            calls = self.all_calls() if self.all_calls else mine
-            return [resolve_cites(h, calls) for h in hyps]
+            resolved = [resolve_cites(h, mine) for h in hyps]
+            if first is not None or not self._can_repair():
+                return resolved
+            rejected = self._rejections(resolved, scope)
+            if not rejected:
+                return resolved
+            # 2. one repair turn (A39): the verifier's reasons, verbatim; the verifier still decides
+            first, r.repairs = resolved, r.repairs + 1
+            self.messages.append({"role": "assistant", "content": resp.content})
+            self.messages.append({"role": "user", "content": (
+                "The verifier rejected these hypotheses:\n" + "\n".join(rejected) + "\nFix the claims: you may "
+                "run more tool calls if a claim needs a query that covers its window, then reply with the whole "
+                "JSON object again. Drop any hypothesis you cannot support.")})  # fmt: skip
+
+    def _can_repair(self) -> bool:
+        b, r = self.budget, self.run
+        return r.tokens < b.tokens and self.clock() - self.t0 < b.wall_s
+
+    def _rejections(self, hyps: list[dict[str, Any]], scope: Scope) -> list[str]:
+        calls = self.all_calls() if self.all_calls else {}
+        out = []
+        for h in hyps:
+            v = verifier.verify(h, calls, "agent", scope.excluded(), scope.services)
+            if not v.passed:
+                out.append(f"- rank {h['rank']} ({h['cause_service']}, {h['cause_kind']}): {v.reason}")
+        return out

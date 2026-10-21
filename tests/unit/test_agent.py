@@ -69,7 +69,7 @@ class Script:
     def __init__(self, steps, clock=None, tick=0.0):
         self.steps, self.seen, self.clock, self.tick = list(steps), [], clock, tick
 
-    def complete(self, messages, tools, temperature=0.0, schema=None):
+    def complete(self, messages, tools, temperature=0.0, schema=None, timeout_s=None):
         self.seen.append((json.loads(json.dumps(messages)), tools, schema))
         if self.clock is not None:
             self.clock.now += self.tick
@@ -235,14 +235,41 @@ def test_an_unavailable_model_degrades():
 
 
 def test_a_hypothesis_citing_the_baseline_rankers_call_is_rejected():
-    """Same-ranker citations (A15): the agent cannot borrow the baseline's evidence. seq 1 is the
-    baseline's query, identical to what the agent would have asked for."""
-    provider = Script([answer({"hypotheses": [pool_hypothesis(seq=1)]})])
-    result, _, store = run(provider, prior=[("query_logs", LOGS_CALL)])
-    assert store.calls("inv")[1].ranker == "baseline"
-    v = result.verification[0]
-    assert not v.passed and "of the baseline ranker" in v.reason
+    """Same-ranker citations (A15, A39). The agent numbers only its own calls, so its "call 1" here (it
+    made none) resolves to no call at all; and a hypothesis that does cite the baseline's call by its
+    real seq, the same query the agent would have made, is rejected by the verifier."""
+    bad = {"hypotheses": [pool_hypothesis(seq=1)]}
+    result, _, store = run(Script([answer(bad), answer(bad)]), prior=[("query_logs", LOGS_CALL)])
+    base = store.calls("inv")[1]
+    assert base.ranker == "baseline"
+    assert result.hypotheses[0]["claims"][0]["cites"][0]["tool_call_seq"] == -1
+    assert "not in this investigation" in result.verification[0].reason
+    claim = {k: v for k, v in pool_hypothesis()["claims"][0].items() if k != "cites"}
+    borrowed = {**pool_hypothesis(), "claims": [{**claim, "cites": [
+        {"tool_call_seq": base.seq, "row_ids": [r["row_id"] for r in base.rows]}]}]}  # fmt: skip
+    v = verifier.verify(borrowed, store.calls("inv"), "agent")
+    assert not v.passed, "the agent's hypothesis was verified on the baseline's evidence"
+    assert "of the baseline ranker" in v.reason
     assert result.outcome == "INSUFFICIENT_EVIDENCE"
+
+
+def test_a_rejected_answer_gets_one_repair_turn_with_the_verifiers_reasons():
+    wrong = pool_hypothesis()
+    wrong["claims"][0] = {**wrong["claims"][0], "pattern": "connection reset"}
+    provider = Script([tool("query_logs", **LOGS_CALL), answer({"hypotheses": [wrong]}),
+                       answer({"hypotheses": [pool_hypothesis()]})])  # fmt: skip
+    result, ag, _ = run(provider)
+    feedback = provider.seen[2][0][-1]["content"]
+    assert feedback.startswith("The verifier rejected these hypotheses:") and "'connection reset'" in feedback
+    assert ag.run.repairs == 1 and result.outcome == "ROOT_CAUSE_IDENTIFIED"
+
+
+def test_a_repair_that_does_not_parse_keeps_the_first_answer():
+    wrong = pool_hypothesis(cause_service="orders")
+    provider = Script([tool("query_logs", **LOGS_CALL), answer({"hypotheses": [wrong]}), answer("sorry")])
+    result, ag, _ = run(provider)
+    assert ag.run.repairs == 1 and ag.run.parse_failures == 1
+    assert [h["cause_service"] for h in result.hypotheses] == ["orders"] and not result.verification[0].passed
 
 
 def test_planted_instruction_obeyed_is_still_rejected_downstream():
@@ -250,8 +277,8 @@ def test_planted_instruction_obeyed_is_still_rejected_downstream():
     (schema rejects), or name `dns` with the real evidence attached (the verifier rejects, A36)."""
     with pytest.raises(OutputError):
         parse_output(json.dumps({"hypotheses": [pool_hypothesis(cause_service="dns", cause_kind="dns_failure")]}))
-    provider = Script([tool("query_logs", **LOGS_CALL),
-                       answer({"hypotheses": [pool_hypothesis(cause_service="dns", cause_kind="other")]})])  # fmt: skip
+    dns = {"hypotheses": [pool_hypothesis(cause_service="dns", cause_kind="other")]}
+    provider = Script([tool("query_logs", **LOGS_CALL), answer(dns), answer(dns)])  # it insists after the repair
     result, _, _ = run(provider)
     v = result.verification[0]
     assert not v.passed, "a hypothesis naming dns, the planted service, was verified"
@@ -268,7 +295,7 @@ class Live:
     def __init__(self):
         self.calls = 0
 
-    def complete(self, messages, tools, temperature=0.0, schema=None):
+    def complete(self, messages, tools, temperature=0.0, schema=None, timeout_s=None):
         self.calls += 1
         return llm.Response(f"reply {self.calls}", [], 10, 2)
 
@@ -368,7 +395,7 @@ class Obedient(Script):
         super().__init__([])
         self.attack, self.turn = attack, 0
 
-    def complete(self, messages, tools, temperature=0.0, schema=None):
+    def complete(self, messages, tools, temperature=0.0, schema=None, timeout_s=None):
         self.seen.append((json.loads(json.dumps(messages)), tools, schema))
         self.turn += 1
         if self.turn == 1:
@@ -426,3 +453,21 @@ def test_injected_cause_without_evidence_is_rejected_by_the_verifier():
     v = result.verification[0]
     assert not v.passed and "is from another service" in v.reason  # inventory's rows cannot prove payments
     assert result.outcome == "INSUFFICIENT_EVIDENCE"
+
+
+def test_each_model_call_gets_only_the_wall_time_left_and_a_timeout_there_is_the_budget():
+    clock, limits = Clock(), []
+
+    class Slow(Script):
+        def complete(self, messages, tools, temperature=0.0, schema=None, timeout_s=None):
+            limits.append(timeout_s)
+            clock.now += 50.0
+            if len(limits) == 3:  # the third call runs out of time mid-call
+                clock.now += 30.0
+                raise llm.Unavailable("ReadTimeout")
+            return tool("query_logs", **LOGS_CALL)
+
+    with pytest.raises(Degraded) as e:
+        run(Slow([]), Budget(wall_s=120.0), clock=clock)
+    assert e.value.reason == "budget" and "during a model call" in str(e.value)
+    assert limits == [120.0, 70.0, 20.0]
