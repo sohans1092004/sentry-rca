@@ -241,6 +241,14 @@ GUARDS_PHASE2: dict[str, dict] = {
         "edits": [("        elif confounders and not scenarios:\n", "        elif False:\n")],
         "tests": [U + "test_leaks.py::test_markers_are_caught_and_shared_vocabulary_is_not"],
     },
+    "leak_corpus": {
+        "property": "Leak test (A34): a runbook naming an injector internal is caught",
+        "file": "recorder/leaks.py",
+        "edits": [("            if word in low:
+", "            if False:
+")],
+        "tests": [U + "test_leaks.py::test_corpus_leaks_are_caught"],
+    },
     "posthoc_rule": {
         "property": "Post-hoc rule (A27): a baseline change after test results needs a logged amendment",
         "file": "evals/harness.py",

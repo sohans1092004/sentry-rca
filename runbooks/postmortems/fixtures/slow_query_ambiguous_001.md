@@ -2,8 +2,7 @@ title: Postmortem: slow query incident (slow_query_ambiguous_001)
 kind: postmortem
 fixture_id: slow_query_ambiguous_001
 ---
-Incident on gateway opened 2026-10-18 23:55:07.285891+00:00 (16 s after the fault began).
-Root cause: a database query in orders slowed down (insert_order, about 299 ms per call).
-A second, overlapping cause was also present: inventory (bad_deploy).
+Incident on gateway, alert 17 s after the fault began.
+Root cause: INSERT statements on the orders table in orders waited on a lock for about 299 ms each; the slow-statement log ('duration: ... statement: ...') rose sharply; at the same time, the deploy of inventory-v1.29.0 to inventory shipped a regression that added about 370 ms to every request. A deploy to payments shortly before was unrelated.
 Symptoms: gateway, payments slowed or failed as a result.
 Resolution: the fault was removed and the incident resolved on its own.

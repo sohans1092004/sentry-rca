@@ -55,3 +55,18 @@ def test_markers_are_caught_and_shared_vocabulary_is_not(tmp_path):
     listed = {e["item"][4] for e in report["never_healthy"]}
     assert listed == {"20", "30", "40"}  # 30 never healthy, but shared by two scenarios: listed, not failed
     assert "99" not in listed  # planted lines are the attack, excluded
+
+
+def test_corpus_leaks_are_caught(tmp_path):
+    """A34: a runbook naming an injector internal, or quoting a fault-only line, fails; quoting healthy
+    vocabulary does not."""
+    from recorder.leaks import audit_corpus
+
+    healthy = T0 + timedelta(minutes=1)
+    lines = [log(healthy, 10, "duration: 312.4 ms  statement: INSERT INTO orders"), log(healthy, 11, "ok")]
+    d = fixture(tmp_path, "a", "slow_query", "lock_wait", lines)
+    docs = [("good", "the slow-statement log ('duration: ... statement: INSERT INTO orders') rose"),
+            ("internal", "the lock_waits row made inserts slow"),
+            ("fault-only", "it logged 'slow query insert_order took over 300 ms'")]  # fmt: skip
+    failures = {f["doc"] for f in audit_corpus(docs, [d])}
+    assert failures == {"internal", "fault-only"}

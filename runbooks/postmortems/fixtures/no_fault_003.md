@@ -2,7 +2,7 @@ title: Postmortem: no fault incident (no_fault_003)
 kind: postmortem
 fixture_id: no_fault_003
 ---
-Incident on gateway opened 2026-10-19 04:17:57.483499+00:00 (18 s after the fault began).
+Incident on gateway, alert 17 s after the fault began.
 Root cause: there was no single cause: every service showed small random latency at once (background noise), and no deploy, error or dependency explained it.
 Symptoms: gateway, orders, payments, inventory slowed or failed as a result.
 Resolution: the fault was removed and the incident resolved on its own.

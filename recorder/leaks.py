@@ -10,6 +10,9 @@ An item never seen in healthy traffic is listed. It fails the test when it appea
 one scenario and no confounder (it identifies that scenario), or with confounders only (it tells a
 confounder from a real cause). Planted rows are excluded: their text is the attack, meant to be seen.
 
+The runbook corpus is checked too (A34), since an investigation can retrieve it: no document may name
+an injector internal, and every phrase a document quotes ('...') must appear in healthy log lines.
+
     python -m recorder.leaks [fixture_dir ...]      # default: every v3 dataset under data/fixtures
 """
 
@@ -136,16 +139,47 @@ def audit(datasets: list[Path]) -> dict[str, Any]:
     return {"datasets": len(datasets), "items": len(seen), "never_healthy": listed, "failures": failures}
 
 
+# names that exist only in the injector and its fault switches, never in what a service emits
+INTERNALS = ["lock_wait", "lock_waits", "conn_leak", "cpu_burn", "cpu_quota", "/_fault", "faults.py", "injector",
+             "pg_sleep", "plant_logs", "memory_step", "client_errors"]  # fmt: skip
+
+
+def audit_corpus(docs: list[tuple[str, str]], datasets: list[Path]) -> list[dict[str, Any]]:
+    """(doc id, text) pairs -> failures: an injector internal named, or a quoted phrase ('...', split at
+    '...' ellipses) that no healthy log line contains."""
+    healthy: list[str] = []
+    for d in datasets:
+        steps = _steps(json.loads((d / "injection.json").read_text()))
+        first = min(st["at"] for st in steps)
+        healthy += [r["body"].lower() for r in read_parquet(d / "logs.parquet") if r["ts"] < first]
+    failures = []
+    for doc_id, text in docs:
+        low = text.lower()
+        for word in INTERNALS:
+            if word in low:
+                failures.append({"doc": doc_id, "why": f"names injector internal {word!r}"})
+        for quoted in re.findall(r"(?<![A-Za-z])'([^']{6,})'(?![A-Za-z])", text):
+            for part in (p.strip(" .:") for p in quoted.split("...")):
+                if len(part) >= 6 and not any(part.lower() in h for h in healthy):
+                    failures.append({"doc": doc_id, "why": f"quotes {part!r}, which no healthy log line contains"})
+    return failures
+
+
 def v3_datasets() -> list[Path]:
     return sorted(p for p in (ROOT / "data" / "fixtures").glob("*/v3") if (p / "label.json").exists())
 
 
 if __name__ == "__main__":
+    from investigation.runbooks import read_corpus
+
     paths = [Path(a) for a in sys.argv[1:]] or v3_datasets()
     report = audit(paths)
-    print(json.dumps({k: report[k] for k in ("datasets", "items")}))
+    corpus = audit_corpus([(d.id, f"{d.title}\n{d.body}") for d in read_corpus()], paths)
+    print(json.dumps({k: report[k] for k in ("datasets", "items")} | {"corpus_documents": len(read_corpus())}))
     for e in report["never_healthy"]:
         print("never healthy:", json.dumps(e))
     for f in report["failures"]:
         print("LEAK:", json.dumps(f))
-    sys.exit(1 if report["failures"] else 0)
+    for f in corpus:
+        print("CORPUS LEAK:", json.dumps(f))
+    sys.exit(1 if report["failures"] or corpus else 0)
