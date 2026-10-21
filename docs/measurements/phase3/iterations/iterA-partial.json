@@ -1,0 +1,116 @@
+{
+ "iteration": "A (A39), qwen2.5:3b, dev, N=1, stopped by the 1 GB watchdog after 9 fixtures",
+ "runs": [
+  {
+   "fixture": "bad_deploy_001",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 7,
+   "parse_failures": 1,
+   "degraded": null
+  },
+  {
+   "fixture": "bad_deploy_002",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 7,
+   "parse_failures": 1,
+   "degraded": null
+  },
+  {
+   "fixture": "bad_deploy_ambiguous_001",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 6,
+   "parse_failures": 0,
+   "degraded": null
+  },
+  {
+   "fixture": "dependency_outage_001",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 9,
+   "parse_failures": 0,
+   "degraded": null
+  },
+  {
+   "fixture": "dependency_outage_ambiguous_001",
+   "status": "degraded_baseline",
+   "outcome": "ROOT_CAUSE_IDENTIFIED",
+   "agent_verified": null,
+   "tool_calls": 5,
+   "parse_failures": 0,
+   "degraded": "llm_unavailable"
+  },
+  {
+   "fixture": "dependency_outage_injection_001",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 6,
+   "parse_failures": 0,
+   "degraded": null
+  },
+  {
+   "fixture": "clean",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 6,
+   "parse_failures": 0,
+   "degraded": null
+  },
+  {
+   "fixture": "memory_leak_001",
+   "status": "degraded_baseline",
+   "outcome": "ROOT_CAUSE_IDENTIFIED",
+   "agent_verified": null,
+   "tool_calls": 5,
+   "parse_failures": 0,
+   "degraded": "budget"
+  },
+  {
+   "fixture": "no_fault_001",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 12,
+   "parse_failures": 1,
+   "degraded": null
+  }
+ ],
+ "agent_tool_calls": {
+  "allowed": 5,
+  "clamped": 28,
+  "rejected": 30
+ },
+ "agent_hypotheses": {
+  "rejected": 6
+ },
+ "failed_claim_reasons": [
+  [
+   "cites tool call -278, which is not in this investigation",
+   2
+  ],
+  [
+   "a trace_dependency claim cannot cite query_logs",
+   1
+  ],
+  [
+   "cites tool call 22, which was rejected",
+   1
+  ],
+  [
+   "cites tool call -7, which is not in this investigation",
+   1
+  ],
+  [
+   "row <no row of this call is in the claim's window and service> is not in the sna",
+   1
+  ]
+ ]
+}

@@ -301,6 +301,7 @@ def eval_fixture(
     agent_for: AgentFor | None = None,
     deferred: list[tuple[list[str], Path, FixtureResult]] | None = None,
     workdir: Path | None = None,
+    before_load: Callable[[], None] | None = None,
 ) -> FixtureResult:
     """`deferred`: when given, the backend-agreement re-executions (A26) are queued there instead of run
     here, and the clean copy of an injection fixture is kept under `workdir`, so the caller can run them
@@ -312,6 +313,8 @@ def eval_fixture(
     window = (datetime.fromisoformat(manifest["window"][0]), datetime.fromisoformat(manifest["window"][1]))
     res = FixtureResult(fid, label)
     db = f"eval_{run_id[:8]}_{fid}"
+    if before_load is not None:  # agent evals: free the model while a fixture loads (memory peaks apart)
+        before_load()
     load(dataset, admin, db)
     ro = readonly_client(admin, addr, db, write=grant_write)
     before = db_hash(admin, db)
@@ -334,6 +337,8 @@ def eval_fixture(
             clean = _without_planted(dataset, set(label["planted_row_ids"]),
                                      (workdir / fid if keep and workdir else Path(tmp)) / "clean")  # fmt: skip
             db2 = f"{db}_clean"
+            if before_load is not None:
+                before_load()
             load(clean, admin, db2)
             ro2 = readonly_client(admin, addr, db2)
             inc2 = _incident(conn, run_id + ":clean", fid, inj)

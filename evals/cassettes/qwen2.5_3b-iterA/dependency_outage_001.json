@@ -1,0 +1,130 @@
+{
+ "digest": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+ "entries": {
+  "2f7def70b2a737013f7f06006072844d1563830428fa4f0288641a69ae5b6c5e": {
+   "response": {
+    "content": "{\n \"hypotheses\": [\n  {\n   \"rank\": 2,\n   \"causal_role\": \"candidate_root_cause\",\n   \"cause_service\": \"orders\",\n   \"cause_kind\": \"slow_query\",\n   \"score\": 0.598636,\n   \"claims\": [\n    {\n     \"type\": \"trace_dependency\",\n     \"parent_service\": \"gateway\",\n     \"child_service\": \"orders\",\n     \"trace_ids\": [\n      \"f380ac11052ee182be40a49695952632\",\n      \"8b6017e6c028abdeef54873764dc0635\",\n      \"f296087200e1b17c5b0df4ce77e85eb0\",\n      \"880c728ce08ed3ff2e78ab54c493c05f\",\n      \"c298f448185b8097c11b74025746dc76\",\n      \"6bbc464ef85c6d3bbfaaa1d61bb19a30\",\n      \"3fb5db330b80f4e4fbdb7e5b8b0e4092\",\n      \"56667ddd3f7d785294a0a4a1fe8830bf\",\n      \"64de0f457e180d80befd0b1b01342f3c\",\n      \"bb2d6e49261e77f48ba310a8230e38b7\",\n      \"6789f9c4f683fafcf3439c07150857a2\",\n      \"534883d4ae841572c6bd73a685cfc57e\",\n      \"5f4ae6fffb5d00dab8433a17c89495a1\"\n     ],\n     \"min_latency_share\": 0.5,\n     \"cites\": [\n      {\n       \"tool_call_seq\": 2,\n       \"rows\": \"all\"\n      }\n     ]\n    }\n   ],\n   \"narrative\": \"The orders service is experiencing slow queries, which are causing delays in the gateway service, leading to the incident.\"\n  }\n ]\n}",
+    "latency_ms": 97609,
+    "tokens_in": 7699,
+    "tokens_out": 585,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 4
+  },
+  "74e2239e65dd3154d3810a31cb9da3649afb1d683bd9b6bee58724a8f95c1e31": {
+   "response": {
+    "content": "",
+    "latency_ms": 11687,
+    "tokens_in": 1690,
+    "tokens_out": 89,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-19T22:46:25.140Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-19T22:21:40.152Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  },
+  "b519033c5da7d1c84bdd982c00752705e94c3469443fa1ce1061d9ff0755abe0": {
+   "response": {
+    "content": "{\n \"hypotheses\": [\n  {\n   \"rank\": 1,\n   \"causal_role\": \"candidate_root_cause\",\n   \"cause_service\": \"gateway\",\n   \"cause_kind\": \"slow_query\",\n   \"score\": 0.598636,\n   \"claims\": [\n    {\n     \"type\": \"trace_dependency\",\n     \"parent_service\": \"gateway\",\n     \"child_service\": \"orders\",\n     \"trace_ids\": [\n      \"f380ac11052ee182be40a49695952632\",\n      \"8b6017e6c028abdeef54873764dc0635\",\n      \"f296087200e1b17c5b0df4ce77e85eb0\",\n      \"880c728ce08ed3ff2e78ab54c493c05f\",\n      \"c298f448185b8097c11b74025746dc76\",\n      \"6bbc464ef85c6d3bbfaaa1d61bb19a30\",\n      \"3fb5db330b80f4e4fbdb7e5b8b0e4092\",\n      \"56667ddd3f7d785294a0a4a1fe8830bf\",\n      \"64de0f457e180d80befd0b1b01342f3c\",\n      \"bb2d6e49261e77f48ba310a8230e38b7\",\n      \"6789f9c4f683fafcf3439c07150857a2\",\n      \"534883d4ae841572c6bd73a685cfc57e\",\n      \"5f4ae6fffb5d00dab8433a17c89495a1\"\n     ],\n     \"min_latency_share\": 0.5,\n     \"cites\": [\n      {\n       \"tool_call_seq\": 2,\n       \"rows\": \"all\"\n      }\n     ]\n    }\n   ],\n   \"narrative\": \"The gateway service is experiencing slow queries, which are causing delays in the orders service, leading to the incident.\"\n  },\n  {\n   \"rank\": 2,\n   \"causal_role\": \"candidate_root_cause\",\n   \"cause_service\": \"orders\",\n   \"cause_kind\": \"slow_query\",\n   \"score\": 0.598636,\n   \"claims\": [\n    {\n     \"type\": \"trace_dependency\",\n     \"parent_service\": \"gateway\",\n     \"child_service\": \"orders\",\n     \"trace_ids\": [\n      \"f380ac11052ee182be40a49695952632\",\n      \"8b6017e6c028abdeef54873764dc0635\",\n      \"f296087200e1b17c5b0df4ce77e85eb0\",\n      \"880c728ce08ed3ff2e78ab54c493c05f\",\n      \"c298f448185b8097c11b74025746dc76\",\n      \"6bbc464ef85c6d3bbfaaa1d61bb19a30\",\n      \"3fb5db330b80f4e4fbdb7e5b8b0e4092\",\n      \"56667ddd3f7d785294a0a4a1fe8830bf\",\n      \"64de0f457e180d80befd0b1b01342f3c\",\n      \"bb2d6e49261e77f48ba310a8230e38b7\",\n      \"6789f9c4f683fafcf3439c07150857a2\",\n      \"534883d4ae841572c6bd73a685cfc57e\",\n      \"5f4ae6fffb5d00dab8433a17c89495a1\"\n     ],\n     \"min_latency_share\": 0.5,\n     \"cites\": [\n      {\n       \"tool_call_seq\": 2,\n       \"rows\": \"all\"\n      }\n     ]\n    }\n   ],\n   \"narrative\": \"The orders service is experiencing slow queries, which are causing delays in the gateway service, leading to the incident.\"\n  }\n ]\n}",
+    "latency_ms": 260655,
+    "tokens_in": 6443,
+    "tokens_out": 1160,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 3
+  },
+  "f991b8c9216b233d7aa580a2c83f5687b8045e6303e519ecf7f6133c8943165e": {
+   "response": {
+    "content": "",
+    "latency_ms": 68469,
+    "tokens_in": 2535,
+    "tokens_out": 507,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "error",
+       "end": "2026-10-19T22:46:25.140Z",
+       "limit": 1000,
+       "service": "gateway",
+       "start": "2026-10-19T22:21:40.152Z"
+      },
+      "name": "query_logs"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-19T22:46:25.140Z",
+       "labels": {
+        "service": "gateway"
+       },
+       "metric": "http.server.request.duration.mean",
+       "start": "2026-10-19T22:21:40.152Z"
+      },
+      "name": "query_metrics"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-19T22:46:25.140Z",
+       "limit": 1000,
+       "min_duration_ms": 100,
+       "service": "gateway",
+       "start": "2026-10-19T22:21:40.152Z"
+      },
+      "name": "query_traces"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-19T22:46:25.140Z",
+       "service": "gateway"
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-19T22:46:25.140Z",
+       "service": "inventory"
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-19T22:46:25.140Z",
+       "service": "orders"
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-19T22:46:25.140Z",
+       "service": "payments"
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "query": "gateway"
+      },
+      "name": "search_runbooks"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 2
+  }
+ },
+ "model": "qwen2.5:3b"
+}

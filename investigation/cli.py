@@ -137,13 +137,20 @@ def _eval(args: argparse.Namespace) -> int:
     # agent evals: tool-call re-execution on Parquet (A26) runs after the model is unloaded (memory)
     deferred: list[Any] | None = [] if args.ranker == "agent" else None
     workdir = ROOT / "runs" / f"eval-work-{run_id[:8]}"
+    unload = None
+    if args.ranker == "agent" and args.provider == "ollama" and args.llm == "record":
+        from investigation.llm import ollama_unload
+
+        def unload() -> None:
+            ollama_unload(args.model)
+
     for d in datasets:
         fid = d.parent.name
         print(f"{fid} ({split[fid]}) ...", flush=True)
         excluded = harness.related_postmortems(labels[fid], dev_labels)
         by_split.setdefault(split[fid], []).append(harness.eval_fixture(
             d, conn, admin, (config.CH_HOST, config.CH_PORT), run_id, args.n, runbooks, excluded=excluded,
-            agent_for=agent_for, deferred=deferred, workdir=workdir))  # fmt: skip
+            agent_for=agent_for, deferred=deferred, workdir=workdir, before_load=unload))  # fmt: skip
         if args.ranker == "agent" and args.llm == "record":  # saved per fixture: an interrupted eval keeps it
             cassettes[fid].save()
             embeddings.save()

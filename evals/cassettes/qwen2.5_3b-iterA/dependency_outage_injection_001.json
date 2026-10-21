@@ -1,0 +1,110 @@
+{
+ "digest": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+ "entries": {
+  "0e26f090cca2d195ac2e5729984d3d08465989cac0accbdced09b0892a4a5545": {
+   "response": {
+    "content": "",
+    "latency_ms": 10000,
+    "tokens_in": 1690,
+    "tokens_out": 89,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T01:41:59.716Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  },
+  "178a7b71e2c17f37905978eca7c236825ea570c76ce4f1f4ff40a208e8e6db51": {
+   "response": {
+    "content": "{\n  \"hypotheses\": [\n    {\n      \"rank\": 1,\n      \"causal_role\": \"candidate_root_cause\",\n      \"cause_service\": \"gateway\",\n      \"cause_kind\": \"slow_query\",\n      \"score\": 0.598636,\n      \"claims\": [\n        {\n          \"type\": \"trace_dependency\",\n          \"parent_service\": \"inventory\",\n          \"child_service\": \"gateway\",\n          \"trace_ids\": [\n            \"43ec03243132dbd1d4c2b6b87175e800\",\n            \"486984c8eaedc3bc6b5a584255d5439a\",\n            \"72fd82504484edf0bb84c7b58830184b\",\n            \"94912f8b487e2c815ee028453c6cabec\",\n            \"ed487e2d71f474cf4daacbaecf4764e8\",\n            \"279fce83d30309548cc823ba3568d8de\",\n            \"d0244fd271c933a9d4106e90c72652d2\",\n            \"dbec6464924ac312388688d1db63f35c\",\n            \"23c3f17da0b8a1e42a9df09128038a18\",\n            \"2e8a1fa3ffd71ecd5c7d9e6ffee05cc9\",\n            \"b126961decf7267c5cc8b2d5bbdc0907\",\n            \"5711fe8d972239ece8e84ff7a5619155\",\n            \"cfa1ba0e5a03b75da4730795f32baa30\",\n            \"67a9631d0a873b664e1e4835265e9afa\",\n            \"2b00be2dcdaddc9b91837d49ca7f84c3\",\n            \"79fbc18e723cd5d433b963e750f64217\",\n            \"5c9a719bf2e52c981ef4c91ba2743562\"\n          ],\n          \"cites\": [\n            {\n              \"tool_call_seq\": 278,\n              \"rows\": \"all\"\n            }\n          ]\n        }\n      ],\n      \"narrative\": \"The slow queries in the gateway service are likely caused by a slow query in the inventory service.\"\n    },\n    {\n      \"rank\": 2,\n      \"causal_role\": \"downstream_symptom\",\n      \"cause_service\": \"inventory\",\n      \"cause_kind\": \"slow_query\",\n      \"score\": 0.598636,\n      \"claims\": [\n        {\n          \"type\": \"trace_dependency\",\n          \"parent_service\": \"inventory\",\n          \"child_service\": \"gateway\",\n          \"trace_ids\": [\n            \"43ec03243132dbd1d4c2b6b87175e800\",\n            \"486984c8eaedc3bc6b5a584255d5439a\",\n            \"72fd82504484edf0bb84c7b58830184b\",\n            \"94912f8b487e2c815ee028453c6cabec\",\n            \"ed487e2d71f474cf4daacbaecf4764e8\",\n            \"279fce83d30309548cc823ba3568d8de\",\n            \"d0244fd271c933a9d4106e90c72652d2\",\n            \"dbec6464924ac312388688d1db63f35c\",\n            \"23c3f17da0b8a1e42a9df09128038a18\",\n            \"2e8a1fa3ffd71ecd5c7d9e6ffee05cc9\",\n            \"b126961decf7267c5cc8b2d5bbdc0907\",\n            \"5711fe8d972239ece8e84ff7a5619155\",\n            \"cfa1ba0e5a03b75da4730795f32baa30\",\n            \"67a9631d0a873b664e1e4835265e9afa\",\n            \"2b00be2dcdaddc9b91837d49ca7f84c3\",\n            \"79fbc18e723cd5d433b963e750f64217\",\n            \"5c9a719bf2e52c981ef4c91ba2743562\"\n          ],\n          \"cites\": [\n            {\n              \"tool_call_seq\": 278,\n              \"rows\": \"all\"\n            }\n          ]\n        }\n      ],\n      \"narrative\": \"The slow queries in the inventory service are likely causing slow queries in the gateway service.\"\n    }\n  ]\n}",
+    "latency_ms": 296765,
+    "tokens_in": 6351,
+    "tokens_out": 1378,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 3
+  },
+  "222752de88b622094af1b63b76f7d987ea0284da7e4cf40e431bc876a6aa6b4f": {
+   "response": {
+    "content": "{\n  \"hypotheses\": [\n    {\n      \"rank\": 2,\n      \"causal_role\": \"downstream_symptom\",\n      \"cause_service\": \"inventory\",\n      \"cause_kind\": \"slow_query\",\n      \"score\": 0.598636,\n      \"claims\": [\n        {\n          \"type\": \"trace_dependency\",\n          \"parent_service\": \"inventory\",\n          \"child_service\": \"gateway\",\n          \"trace_ids\": [\n            \"43ec03243132dbd1d4c2b6b87175e800\",\n            \"486984c8eaedc3bc6b5a584255d5439a\",\n            \"72fd82504484edf0bb84c7b58830184b\",\n            \"94912f8b487e2c815ee028453c6cabec\",\n            \"ed487e2d71f474cf4daacbaecf4764e8\",\n            \"279fce83d30309548cc823ba3568d8de\",\n            \"d0244fd271c933a9d4106e90c72652d2\",\n            \"dbec6464924ac312388688d1db63f35c\",\n            \"23c3f17da0b8a1e42a9df09128038a18\",\n            \"2e8a1fa3ffd71ecd5c7d9e6ffee05cc9\",\n            \"b126961decf7267c5cc8b2d5bbdc0907\",\n            \"5711fe8d972239ece8e84ff7a5619155\",\n            \"cfa1ba0e5a03b75da4730795f32baa30\",\n            \"67a9631d0a873b664e1e4835265e9afa\",\n            \"2b00be2dcdaddc9b91837d49ca7f84c3\",\n            \"79fbc18e723cd5d433b963e750f64217\",\n            \"5c9a719bf2e52c981ef4c91ba2743562\"\n          ],\n          \"cites\": [\n            {\n              \"tool_call_seq\": 278,\n              \"rows\": \"all\"\n            }\n          ]\n        }\n      ],\n      \"narrative\": \"The slow queries in the inventory service are likely causing slow queries in the gateway service.\"\n    }\n  ]\n}",
+    "latency_ms": 110000,
+    "tokens_in": 7841,
+    "tokens_out": 694,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 4
+  },
+  "af12d509ed285bc4d81828c08cbc42356c09827dbd8d78a54bff4ca83b3aea57": {
+   "response": {
+    "content": "",
+    "latency_ms": 56359,
+    "tokens_in": 2534,
+    "tokens_out": 383,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "ERROR",
+       "end": "2026-10-20T01:41:59.716Z",
+       "limit": 1000,
+       "service": "gateway",
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "name": "query_logs"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T01:41:59.716Z",
+       "labels": {
+        "service": "gateway"
+       },
+       "metric": "http.server.request.duration.mean",
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "name": "query_metrics"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T01:41:59.716Z",
+       "limit": 1000,
+       "min_duration_ms": 100,
+       "service": "gateway",
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "name": "query_traces"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T01:41:59.716Z",
+       "service": "gateway",
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "query": "gateway"
+      },
+      "name": "search_runbooks"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 2
+  }
+ },
+ "model": "qwen2.5:3b"
+}
