@@ -1,11 +1,11 @@
-# Phase 3 model selection, DEV fixtures only: each candidate records one agent run per dev fixture
+﻿# Phase 3 model selection, DEV fixtures only: each candidate records one agent run per dev fixture
 # (N=1) through `rca eval`, with a memory watchdog that stops the run below 1 GB Available.
 #   powershell -File tools/model_selection.ps1 [-Models qwen2.5:3b,llama3.2:3b,qwen2.5:1.5b] [-WallS 600]
 param([string[]]$Models = @("qwen2.5:3b", "llama3.2:3b", "qwen2.5:1.5b"), [int]$WallS = 600, [int]$N = 1)
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 New-Item -ItemType Directory -Force runs | Out-Null
-foreach ($m in $Models) {
+foreach ($m in ($Models -join "," -split ",")) {  # -File passes a list as one string
     $slug = $m.Replace(":", "_")
     $out = "runs/selection-$slug.json"
     "$(Get-Date -Format o) start $m" | Add-Content runs/selection.log
