@@ -481,3 +481,33 @@ def test_a_rejected_call_gets_the_servers_hint_and_a_repeat_is_named():
     assert "query_logs needs end, service, start." in results[0]
     assert "The window is start=2026-10-18T10:00:00.000Z, end=2026-10-18T10:30:00.000Z" in results[0]
     assert "identical to your call 1" in results[1] and "identical" not in results[0]
+
+
+def test_history_converts_to_openai_format_with_ids_matching_tool_results():
+    msgs = [{"role": "system", "content": "s"}, {"role": "user", "content": "u"},
+            {"role": "assistant", "content": "", "tool_calls": [
+                {"function": {"name": "query_logs", "arguments": {"service": "inventory"}}},
+                {"function": {"name": "query_traces", "arguments": {}}}]},
+            {"role": "tool", "content": "r1"}, {"role": "tool", "content": "r2"}]  # fmt: skip
+    out = llm.openai_messages(msgs)
+    calls = out[2]["tool_calls"]
+    assert [c["id"] for c in calls] == ["call_2_0", "call_2_1"]
+    assert calls[0]["function"]["arguments"] == '{"service": "inventory"}' and out[2]["content"] is None
+    assert [(m["tool_call_id"], m["content"]) for m in out[3:]] == [("call_2_0", "r1"), ("call_2_1", "r2")]
+
+
+def test_a_rate_limited_call_waits_for_retry_after_then_succeeds(monkeypatch):
+    import httpx
+
+    slept, answers = [], [httpx.Response(429, headers={"retry-after": "7"}, text="slow down"),
+                          httpx.Response(200, json={"ok": 1})]  # fmt: skip
+
+    def post(url, **kw):
+        r = answers.pop(0)
+        r.request = httpx.Request("POST", url)
+        return r
+
+    monkeypatch.setattr(llm.httpx, "post", post)
+    monkeypatch.setattr(llm.time, "sleep", slept.append)
+    assert llm._post("http://x/v1/chat/completions", {}, {}, 5.0, retries=6) == {"ok": 1}
+    assert slept == [7.0]

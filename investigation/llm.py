@@ -83,10 +83,12 @@ def request_hash(model: str, digest: str, request: dict[str, Any], run_index: in
     return hashlib.sha256(f"{model}\n{digest}\n{body}\n{run_index}".encode()).hexdigest()
 
 
-def _post(url: str, body: dict[str, Any], headers: dict[str, str], timeout: float) -> dict[str, Any]:
-    """POST with retries and exponential backoff on connection errors, timeouts, 429 and 5xx."""
+def _post(url: str, body: dict[str, Any], headers: dict[str, str], timeout: float,
+          retries: int = RETRIES) -> dict[str, Any]:  # fmt: skip
+    """POST with retries and exponential backoff on connection errors, 429 and 5xx; a 429's Retry-After
+    is honoured (at most 60 s), so a free tier's per-minute cap slows a run instead of failing it."""
     last: Exception | None = None
-    for attempt in range(RETRIES):
+    for attempt in range(retries):
         try:
             r = httpx.post(url, json=body, headers=headers, timeout=timeout)
             if r.status_code == 429 or r.status_code >= 500:
@@ -99,8 +101,14 @@ def _post(url: str, body: dict[str, Any], headers: dict[str, str], timeout: floa
                 break  # a slow model is not retried: the caller's time is what ran out
             if isinstance(e, httpx.HTTPStatusError) and e.response.status_code < 500 and e.response.status_code != 429:
                 break  # a 4xx other than 429 will not get better
-            if attempt + 1 < RETRIES:
-                time.sleep(BACKOFF_S * 2**attempt)
+            if attempt + 1 < retries:
+                wait = BACKOFF_S * 2**attempt
+                if isinstance(e, httpx.HTTPStatusError) and e.response.status_code == 429:
+                    try:
+                        wait = max(wait, min(60.0, float(e.response.headers.get("retry-after", 10))))
+                    except ValueError:
+                        wait = max(wait, 10.0)
+                time.sleep(wait)
     raise Unavailable(f"{url}: {type(last).__name__}: {last}")
 
 
@@ -147,9 +155,31 @@ def ollama_unload(model: str) -> None:
         httpx.post(f"{OLLAMA}/api/generate", json={"model": model, "keep_alive": 0}, timeout=60)
 
 
+def openai_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The loop's (Ollama-style) history in OpenAI chat format: assistant tool calls get ids and JSON-string
+    arguments, and each tool message names the call it answers, in order."""
+    out: list[dict[str, Any]] = []
+    pending: list[str] = []
+    for i, m in enumerate(messages):
+        if m["role"] == "assistant" and m.get("tool_calls"):
+            ids = [f"call_{i}_{j}" for j in range(len(m["tool_calls"]))]
+            pending = list(ids)
+            out.append({"role": "assistant", "content": m.get("content") or None, "tool_calls": [
+                {"id": cid, "type": "function", "function": {"name": c["function"]["name"],
+                 "arguments": json.dumps(c["function"].get("arguments") or {})}}
+                for cid, c in zip(ids, m["tool_calls"], strict=True)]})  # fmt: skip
+        elif m["role"] == "tool":
+            out.append({"role": "tool", "tool_call_id": pending.pop(0) if pending else "call_unknown",
+                        "content": m.get("content") or ""})  # fmt: skip
+        else:
+            out.append({"role": m["role"], "content": m.get("content") or ""})
+    return out
+
+
 class OpenAICompatible:
     """An optional hosted model (any OpenAI-compatible chat endpoint with a free tier), enabled only when
-    LLM_API_KEY is set. Used only for a clearly labelled DEV comparison, never by default."""
+    LLM_API_KEY is set (LLM_BASE_URL names the endpoint). Never the default; when used, its results are
+    labelled with the model and endpoint."""
 
     name = "openai_compatible"
 
@@ -161,13 +191,15 @@ class OpenAICompatible:
         self.base_url = base_url or os.environ.get("LLM_BASE_URL", "")
         self.digest = f"hosted:{self.base_url}"  # a hosted model has no digest; its name and endpoint stand in
         self._headers = {"Authorization": f"Bearer {key}"}  # never logged or recorded
+        self.min_interval_s = float(os.environ.get("LLM_MIN_INTERVAL_S", "0"))  # a free tier's requests/minute
+        self._last = 0.0
 
     def complete(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]],
                  temperature: float = 0.0, schema: dict[str, Any] | None = None,
                  timeout_s: float | None = None) -> Response:  # fmt: skip
         body: dict[str, Any] = {
             "model": self.model,
-            "messages": messages,
+            "messages": openai_messages(messages),
             "temperature": temperature,
             "max_tokens": NUM_PREDICT,
         }
@@ -177,7 +209,17 @@ class OpenAICompatible:
             body["response_format"] = {"type": "json_schema", "json_schema": {"name": "answer", "schema": schema}}
         t0 = time.monotonic()
         limit = min(self.timeout_s, timeout_s or self.timeout_s)
-        out = _post(f"{self.base_url}/chat/completions", body, self._headers, limit)
+        if (pause := self.min_interval_s - (time.monotonic() - self._last)) > 0:
+            time.sleep(pause)
+        self._last = time.monotonic()
+        try:
+            out = _post(f"{self.base_url}/chat/completions", body, self._headers, limit, retries=6)
+        except Unavailable:
+            if schema is None:
+                raise
+            body["response_format"] = {"type": "json_object"}  # an endpoint without JSON Schema support
+            out = _post(f"{self.base_url}/chat/completions", body, self._headers, limit, retries=6)
+        self._last = time.monotonic()
         msg = out["choices"][0]["message"]
         calls = []
         for c in msg.get("tool_calls") or []:
