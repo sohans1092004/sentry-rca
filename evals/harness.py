@@ -62,16 +62,21 @@ def db_hash(ch: Client, database: str) -> dict[str, Any]:
     return out
 
 
+def ro_user(database: str) -> str:
+    return f"{RO_USER}_{database}"
+
+
 def readonly_client(admin: Client, addr: tuple[str, int], database: str, write: bool = False) -> Client:
     """A client for `database` that can only SELECT. `write=True` exists only for the guard check
     that proves the content hash catches a write (test_eval_fails_when_the_database_changes)."""
-    admin.command(f"CREATE USER IF NOT EXISTS {RO_USER} IDENTIFIED BY '{RO_PASSWORD}'")
-    admin.command(f"REVOKE ALL ON *.* FROM {RO_USER}")
-    admin.command(f"GRANT SELECT ON `{database}`.* TO {RO_USER}")
+    user = ro_user(database)  # one user per eval database: concurrent evals never touch each other's grants
+    admin.command(f"CREATE USER IF NOT EXISTS {user} IDENTIFIED BY '{RO_PASSWORD}'")
+    admin.command(f"REVOKE ALL ON *.* FROM {user}")
+    admin.command(f"GRANT SELECT ON `{database}`.* TO {user}")
     if write:
-        admin.command(f"GRANT INSERT ON `{database}`.* TO {RO_USER}")
+        admin.command(f"GRANT INSERT ON `{database}`.* TO {user}")
     return clickhouse_connect.get_client(
-        host=addr[0], port=addr[1], username=RO_USER, password=RO_PASSWORD, database=database
+        host=addr[0], port=addr[1], username=user, password=RO_PASSWORD, database=database
     )
 
 
@@ -331,6 +336,7 @@ def eval_fixture(
     if before != after:
         raise EvalFailed(f"{fid}: the eval database changed during the runs: {before} -> {after}")
     admin.command(f"DROP DATABASE IF EXISTS `{db}`")  # before the clean copy loads: one fixture database at a time
+    admin.command(f"DROP USER IF EXISTS {ro_user(db)}")
     if label.get("planted_row_ids"):
         with tempfile.TemporaryDirectory() as tmp:
             keep = workdir is not None and deferred is not None
@@ -350,6 +356,7 @@ def eval_fixture(
             else:
                 deferred.append(([r.investigation_id for r in clean_runs], clean, res))
             admin.command(f"DROP DATABASE IF EXISTS `{db2}`")
+            admin.command(f"DROP USER IF EXISTS {ro_user(db2)}")
     return res
 
 

@@ -474,7 +474,9 @@ class Agent:
             if resp.tool_calls:
                 if final_turn:
                     raise Degraded("budget", f"asked for tools after the {b.tool_calls}-call budget was used")
-                asked = [{"function": {"name": c["name"], "arguments": c["arguments"]}} for c in resp.tool_calls]
+                asked = [{"function": {"name": c["name"], "arguments": c["arguments"]},  # extra: echoed back
+                          **({"extra_content": c["extra_content"]} if "extra_content" in c else {})}
+                         for c in resp.tool_calls]  # fmt: skip
                 self.messages.append({"role": "assistant", "content": resp.content, "tool_calls": asked})
                 for c in resp.tool_calls:
                     if r.tool_calls >= b.tool_calls:

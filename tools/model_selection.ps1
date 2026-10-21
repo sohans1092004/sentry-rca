@@ -3,7 +3,7 @@
 #   powershell -File tools/model_selection.ps1 [-Models qwen2.5:3b,llama3.2:3b,qwen2.5:1.5b] [-WallS 600]
 param([string[]]$Models = @("qwen2.5:3b", "llama3.2:3b", "qwen2.5:1.5b"), [int]$WallS = 600, [int]$N = 1,
       [string]$Tag = "", [string]$Split = "dev", [string]$Provider = "ollama", [string]$BaseUrl = "",
-      [string]$MinIntervalS = "0")
+      [string]$MinIntervalS = "0", [int]$MaxTokens = 60000)
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 New-Item -ItemType Directory -Force runs | Out-Null
@@ -18,7 +18,7 @@ foreach ($m in ($Models -join "," -split ",")) {  # -File passes a list as one s
     $out = "runs/selection-$slug.json"
     "$(Get-Date -Format o) start $m" | Add-Content runs/selection.log
     $evalArgs = @("run", "rca", "eval", "--ranker", "agent", "--model", $m, "--llm", "record", "--split", $Split,
-        "--n", "$N", "--wall-s", "$WallS", "--out", $out)
+        "--n", "$N", "--wall-s", "$WallS", "--max-tokens", "$MaxTokens", "--out", $out)
     if ($Tag) { $evalArgs += @("--tag", $Tag) }
     if ($Provider -eq "hosted") { $evalArgs += @("--provider", "hosted") }
     $p = Start-Process -FilePath uv -ArgumentList $evalArgs `

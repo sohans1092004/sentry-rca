@@ -166,7 +166,8 @@ def openai_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
             pending = list(ids)
             out.append({"role": "assistant", "content": m.get("content") or None, "tool_calls": [
                 {"id": cid, "type": "function", "function": {"name": c["function"]["name"],
-                 "arguments": json.dumps(c["function"].get("arguments") or {})}}
+                 "arguments": json.dumps(c["function"].get("arguments") or {})},
+                 **({"extra_content": c["extra_content"]} if "extra_content" in c else {})}
                 for cid, c in zip(ids, m["tool_calls"], strict=True)]})  # fmt: skip
         elif m["role"] == "tool":
             out.append({"role": "tool", "tool_call_id": pending.pop(0) if pending else "call_unknown",
@@ -227,7 +228,8 @@ class OpenAICompatible:
                 args = json.loads(c["function"].get("arguments") or "{}")
             except json.JSONDecodeError:
                 args = {"_unparsed": c["function"].get("arguments")}
-            calls.append({"name": c["function"]["name"], "arguments": args})
+            extra = {"extra_content": c["extra_content"]} if "extra_content" in c else {}  # e.g. Gemini's
+            calls.append({"name": c["function"]["name"], "arguments": args, **extra})  # thought_signature
         usage = out.get("usage", {})
         return Response(str(msg.get("content") or ""), calls, int(usage.get("prompt_tokens", 0)),
                         int(usage.get("completion_tokens", 0)), int((time.monotonic() - t0) * 1000))  # fmt: skip

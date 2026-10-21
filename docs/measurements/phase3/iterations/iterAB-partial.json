@@ -1,0 +1,213 @@
+{
+ "iteration": "A+B (A39 + iteration B), qwen2.5:3b, dev, N=1; the eval crashed at fixture 16 (slow_query_001) when a concurrent eval revoked the shared read-only ClickHouse user (fixed: one user per eval database)",
+ "runs": [
+  {
+   "fixture": "bad_deploy_001",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 9,
+   "repairs": 1,
+   "parse_failures": 1,
+   "degraded": null
+  },
+  {
+   "fixture": "bad_deploy_002",
+   "status": "degraded_baseline",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": null,
+   "tool_calls": 9,
+   "repairs": 0,
+   "parse_failures": 0,
+   "degraded": "budget"
+  },
+  {
+   "fixture": "bad_deploy_ambiguous_001",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 9,
+   "repairs": 0,
+   "parse_failures": 1,
+   "degraded": null
+  },
+  {
+   "fixture": "dependency_outage_001",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 6,
+   "repairs": 0,
+   "parse_failures": 1,
+   "degraded": null
+  },
+  {
+   "fixture": "dependency_outage_ambiguous_001",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 1,
+   "repairs": 1,
+   "parse_failures": 1,
+   "degraded": null
+  },
+  {
+   "fixture": "dependency_outage_injection_001",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 1,
+   "repairs": 1,
+   "parse_failures": 1,
+   "degraded": null
+  },
+  {
+   "fixture": "clean",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 1,
+   "repairs": 1,
+   "parse_failures": 1,
+   "degraded": null
+  },
+  {
+   "fixture": "memory_leak_001",
+   "status": "degraded_baseline",
+   "outcome": "ROOT_CAUSE_IDENTIFIED",
+   "agent_verified": null,
+   "tool_calls": 8,
+   "repairs": 0,
+   "parse_failures": 1,
+   "degraded": "budget"
+  },
+  {
+   "fixture": "no_fault_001",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 4,
+   "repairs": 1,
+   "parse_failures": 1,
+   "degraded": null
+  },
+  {
+   "fixture": "no_fault_002",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 4,
+   "repairs": 1,
+   "parse_failures": 1,
+   "degraded": null
+  },
+  {
+   "fixture": "no_fault_003",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 6,
+   "repairs": 0,
+   "parse_failures": 1,
+   "degraded": null
+  },
+  {
+   "fixture": "noisy_neighbor_001",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 5,
+   "repairs": 1,
+   "parse_failures": 1,
+   "degraded": null
+  },
+  {
+   "fixture": "noisy_neighbor_002",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 4,
+   "repairs": 1,
+   "parse_failures": 1,
+   "degraded": null
+  },
+  {
+   "fixture": "pool_exhaustion_001",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 4,
+   "repairs": 1,
+   "parse_failures": 1,
+   "degraded": null
+  },
+  {
+   "fixture": "pool_exhaustion_002",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 4,
+   "repairs": 1,
+   "parse_failures": 1,
+   "degraded": null
+  },
+  {
+   "fixture": "pool_exhaustion_003",
+   "status": "complete",
+   "outcome": "INSUFFICIENT_EVIDENCE",
+   "agent_verified": 0,
+   "tool_calls": 1,
+   "repairs": 1,
+   "parse_failures": 1,
+   "degraded": null
+  },
+  {
+   "fixture": "pool_exhaustion_001",
+   "status": "degraded_baseline",
+   "outcome": "ROOT_CAUSE_IDENTIFIED",
+   "agent_verified": null,
+   "tool_calls": 13,
+   "repairs": 0,
+   "parse_failures": 0,
+   "degraded": "budget"
+  }
+ ],
+ "agent_tool_calls": {
+  "allowed": 5,
+  "clamped": 71,
+  "rejected": 16
+ },
+ "agent_hypotheses": {
+  "rejected": 9
+ },
+ "failed_claim_reasons": [
+  [
+   "cites tool call -7, which is not in this investigation",
+   3
+  ],
+  [
+   "a log_pattern claim cannot cite get_incident_timeline",
+   2
+  ],
+  [
+   "a runbook_match claim cannot cite get_incident_timeline",
+   1
+  ],
+  [
+   "tool call 28 does not cover the window and the equal-length window before it",
+   1
+  ],
+  [
+   "window must be [start, end]",
+   1
+  ],
+  [
+   "a trace_dependency claim cannot cite get_incident_timeline",
+   1
+  ],
+  [
+   "a metric_change claim cannot cite query_logs",
+   1
+  ]
+ ]
+}
