@@ -16,7 +16,9 @@ foreach ($m in $Models) {
     $w = Start-Process -FilePath uv -ArgumentList @("run", "python", "tools/memwatch.py", "$($p.Id)",
         "runs/memory-$slug.csv", "1024", "30") -NoNewWindow -PassThru
     $p.WaitForExit()
-    if (-not $w.HasExited) { Stop-Process -Id $w.Id -Force }
+    # the watchdog notices the exit within one interval and writes its last row; a STOP row is written
+    # after it kills the eval, so wait for it before reading the log
+    if (-not $w.WaitForExit(90000)) { Stop-Process -Id $w.Id -Force }
     "$(Get-Date -Format o) end $m exit $($p.ExitCode)" | Add-Content runs/selection.log
     if (Select-String -Path "runs/memory-$slug.csv" -Pattern "STOP" -Quiet) {
         "$(Get-Date -Format o) memory floor hit during $m; stopping the selection" | Add-Content runs/selection.log

@@ -16,6 +16,7 @@ import hashlib
 import json
 import math
 import re
+import shutil
 import statistics
 import tempfile
 import time
@@ -272,9 +273,17 @@ def backend_agreement(conn: psycopg.Connection[Any], inv_ids: list[str], dataset
 
 
 def _without_planted(dataset: Path, planted: set[str], out: Path) -> Path:
-    tables = {t: read_parquet(dataset / f"{t}.parquet") for t in TABLES}
-    tables["logs"] = [r for r in tables["logs"] if str(r["log_id"]) not in planted]
-    export(out, tables)
+    """The dataset minus the planted log rows. Only logs are rewritten; the other tables are copied as
+    files with their manifest entries, so a 200k-span table is never held in memory for it."""
+    out.mkdir(parents=True, exist_ok=True)
+    manifest = json.loads((dataset / "manifest.json").read_text())
+    logs = [r for r in read_parquet(dataset / "logs.parquet") if str(r["log_id"]) not in planted]
+    entry = export(out, {"logs": logs})["tables"]["logs"]
+    for t in TABLES:
+        if t != "logs":
+            shutil.copyfile(dataset / f"{t}.parquet", out / f"{t}.parquet")
+    manifest["tables"] = {**{t: manifest["tables"][t] for t in TABLES if t != "logs"}, "logs": entry}
+    (out / "manifest.json").write_text(json.dumps(manifest, indent=2))
     return out
 
 
@@ -309,6 +318,7 @@ def eval_fixture(
     after = db_hash(admin, db)
     if before != after:
         raise EvalFailed(f"{fid}: the eval database changed during the runs: {before} -> {after}")
+    admin.command(f"DROP DATABASE IF EXISTS `{db}`")  # before the clean copy loads: one fixture database at a time
     if label.get("planted_row_ids"):
         with tempfile.TemporaryDirectory() as tmp:
             clean = _without_planted(dataset, set(label["planted_row_ids"]), Path(tmp) / "clean")
@@ -321,7 +331,6 @@ def eval_fixture(
             res.influenced = [a.rank1 != b.rank1 for a, b in zip(res.runs, clean_runs, strict=True)]
             backend_agreement(conn, [r.investigation_id for r in clean_runs], clean, res)
             admin.command(f"DROP DATABASE IF EXISTS `{db2}`")
-    admin.command(f"DROP DATABASE IF EXISTS `{db}`")
     return res
 
 
