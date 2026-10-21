@@ -127,8 +127,8 @@ def _eval(args: argparse.Namespace) -> int:
                         i,
                         r.investigation_id,
                         r.outcome,
-                        fr.correct(r, 1),
-                        fr.correct(r, 3),
+                        fr.correct(r, 1, "judged"),
+                        fr.correct(r, 3, "judged"),
                         fr.influenced[i] if fr.influenced else None,
                         json.dumps(
                             {

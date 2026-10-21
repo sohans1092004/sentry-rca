@@ -127,12 +127,12 @@ Gold claims 41, rejected 0 (verifier false negatives 0); out-of-scope citations 
 | ambiguous_t03 | CONFLICTING_EVIDENCE | ROOT_CAUSE_IDENTIFIED | orders:bad_deploy | 0/5 | yes |
 | bad_deploy_t01 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED | inventory:bad_deploy | 5/5 | no |
 | cache_stampede_t01 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED | orders:bad_deploy | 0/5 | yes |
-| cache_stampede_t02 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED | inventory:slow_query | 0/5 | no |
+| cache_stampede_t02 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED | inventory:slow_query | 5/5 | no |
 | config_change_t01 | ROOT_CAUSE_IDENTIFIED | INSUFFICIENT_EVIDENCE | none | 0/5 | no |
 | config_change_t02 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED | gateway:bad_deploy | 0/5 | yes |
 | connection_refused_t01 | ROOT_CAUSE_IDENTIFIED | INSUFFICIENT_EVIDENCE | none | 0/5 | no |
 | connection_refused_t02 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED | gateway:memory_leak | 0/5 | yes |
-| cpu_throttling_t01 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED | orders:pool_exhaustion | 0/5 | yes |
+| cpu_throttling_t01 | ROOT_CAUSE_IDENTIFIED | ROOT_CAUSE_IDENTIFIED | orders:pool_exhaustion | 5/5 | yes |
 | cpu_throttling_t02 | ROOT_CAUSE_IDENTIFIED | INSUFFICIENT_EVIDENCE | none | 0/5 | no |
 | no_fault_t01 | INSUFFICIENT_EVIDENCE | ROOT_CAUSE_IDENTIFIED | inventory:bad_deploy | 0/5 | yes |
 | noisy_neighbor_t01 | INSUFFICIENT_EVIDENCE | INSUFFICIENT_EVIDENCE | none | 5/5 | no |
