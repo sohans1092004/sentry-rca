@@ -1,0 +1,562 @@
+{
+ "digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+ "entries": {
+  "090d9459d7078ba787bdeae70361dbb3f3eaf8c5a844c162d96d5e98ac15a077": {
+   "response": {
+    "content": "",
+    "latency_ms": 11157,
+    "tokens_in": 3247,
+    "tokens_out": 68,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": [
+        "gateway",
+        "orders",
+        "payments"
+       ],
+       "service": "gateway",
+       "severity": [
+        "WARN",
+        "ERROR"
+       ],
+       "window": "[\"2026-10-20T06:57:34.009Z\", \"2026-10-20T07:22:38.995Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 17
+  },
+  "0cb88c606a3d9b485766230d25ad9947c51b9045981d6c4fb639fb2132909686": {
+   "response": {
+    "content": "",
+    "latency_ms": 12046,
+    "tokens_in": 3047,
+    "tokens_out": 68,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": [
+        "gateway",
+        "orders",
+        "payments"
+       ],
+       "service": "gateway",
+       "severity": [
+        "WARN",
+        "ERROR"
+       ],
+       "window": "[\"2026-10-20T06:57:34.009Z\", \"2026-10-20T07:22:38.995Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 15
+  },
+  "1a4abd8ed2d8c5ae1d7887cef8a5851f82a154c60ca850be304dc84e1a4ba607": {
+   "response": {
+    "content": "",
+    "latency_ms": 9484,
+    "tokens_in": 2147,
+    "tokens_out": 68,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": [
+        "gateway",
+        "orders",
+        "payments"
+       ],
+       "service": "gateway",
+       "severity": [
+        "WARN",
+        "ERROR"
+       ],
+       "window": "[\"2026-10-20T06:57:34.009Z\", \"2026-10-20T07:22:38.995Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 6
+  },
+  "278047fe4effa9ca026f540af0ee9bb44361c753a14aa0299c943fccc01be0ae": {
+   "response": {
+    "content": "",
+    "latency_ms": 10219,
+    "tokens_in": 2647,
+    "tokens_out": 68,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": [
+        "gateway",
+        "orders",
+        "payments"
+       ],
+       "service": "gateway",
+       "severity": [
+        "WARN",
+        "ERROR"
+       ],
+       "window": "[\"2026-10-20T06:57:34.009Z\", \"2026-10-20T07:22:38.995Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 11
+  },
+  "27dc8b682a454ddf4995c4048a8e9c3e4950d5497e154fdee457e9245eece497": {
+   "response": {
+    "content": "",
+    "latency_ms": 9952,
+    "tokens_in": 2347,
+    "tokens_out": 68,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": [
+        "gateway",
+        "orders",
+        "payments"
+       ],
+       "service": "gateway",
+       "severity": [
+        "WARN",
+        "ERROR"
+       ],
+       "window": "[\"2026-10-20T06:57:34.009Z\", \"2026-10-20T07:22:38.995Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 8
+  },
+  "2ac8b932a924c8ede604eeb16048f8ee9b254cad412a5f7c2f197637fbb46ed0": {
+   "response": {
+    "content": "",
+    "latency_ms": 10186,
+    "tokens_in": 2447,
+    "tokens_out": 68,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": [
+        "gateway",
+        "orders",
+        "payments"
+       ],
+       "service": "gateway",
+       "severity": [
+        "WARN",
+        "ERROR"
+       ],
+       "window": "[\"2026-10-20T06:57:34.009Z\", \"2026-10-20T07:22:38.995Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 9
+  },
+  "5bd8eabc8e4b4902560e4a5b44cde7a03976bad4f0a2f34275a00917009c4733": {
+   "response": {
+    "content": "",
+    "latency_ms": 10296,
+    "tokens_in": 2047,
+    "tokens_out": 68,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": [
+        "gateway",
+        "orders",
+        "payments"
+       ],
+       "service": "gateway",
+       "severity": [
+        "WARN",
+        "ERROR"
+       ],
+       "window": "[\"2026-10-20T06:57:34.009Z\", \"2026-10-20T07:22:38.995Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 5
+  },
+  "66ab299c01af42a82d5c24e5658e4a14cbb2064a1a7917fc0be2b1ba556bcd82": {
+   "response": {
+    "content": "",
+    "latency_ms": 10702,
+    "tokens_in": 2747,
+    "tokens_out": 68,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": [
+        "gateway",
+        "orders",
+        "payments"
+       ],
+       "service": "gateway",
+       "severity": [
+        "WARN",
+        "ERROR"
+       ],
+       "window": "[\"2026-10-20T06:57:34.009Z\", \"2026-10-20T07:22:38.995Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 12
+  },
+  "78c258a69e89ef825fe4bfb24b415ae65c1c8289a60f395f4d9ae51651b9fd89": {
+   "response": {
+    "content": "",
+    "latency_ms": 10421,
+    "tokens_in": 2247,
+    "tokens_out": 68,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": [
+        "gateway",
+        "orders",
+        "payments"
+       ],
+       "service": "gateway",
+       "severity": [
+        "WARN",
+        "ERROR"
+       ],
+       "window": "[\"2026-10-20T06:57:34.009Z\", \"2026-10-20T07:22:38.995Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 7
+  },
+  "8a764d8c0f7994ddba7d43d523b69ac3f2a037dec07e8031f1e69c8d8611d1db": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"gateway\", \"cause_kind\": \"other\", \"score\": 0.0, \"claims\": [{\"type\": \"log_pattern\", \"cites\": [{\"tool_call_seq\": 26, \"rows\": \"all\"}]}], \"narrative\": \"Gateway anomaly onset occurred before deploy\"}] }",
+    "latency_ms": 59764,
+    "tokens_in": 3641,
+    "tokens_out": 90,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 21
+  },
+  "939f01a67a61daf5f1cef3a797ba1b78366666a2fde265d752f3895d831bc001": {
+   "response": {
+    "content": "",
+    "latency_ms": 11500,
+    "tokens_in": 3347,
+    "tokens_out": 68,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": [
+        "gateway",
+        "orders",
+        "payments"
+       ],
+       "service": "gateway",
+       "severity": [
+        "WARN",
+        "ERROR"
+       ],
+       "window": "[\"2026-10-20T06:57:34.009Z\", \"2026-10-20T07:22:38.995Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 18
+  },
+  "9dc518b1a9a57daa710f3deea280c9965a20f66b56d1f373d1fd6e4b1e2c01b5": {
+   "response": {
+    "content": "",
+    "latency_ms": 11485,
+    "tokens_in": 3447,
+    "tokens_out": 68,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": [
+        "gateway",
+        "orders",
+        "payments"
+       ],
+       "service": "gateway",
+       "severity": [
+        "WARN",
+        "ERROR"
+       ],
+       "window": "[\"2026-10-20T06:57:34.009Z\", \"2026-10-20T07:22:38.995Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 19
+  },
+  "a8cf41e4e87754164830a3d43e7f066b46e5fe3eff06cde60a4e993a7c9ebdaa": {
+   "response": {
+    "content": "",
+    "latency_ms": 10859,
+    "tokens_in": 2947,
+    "tokens_out": 68,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": [
+        "gateway",
+        "orders",
+        "payments"
+       ],
+       "service": "gateway",
+       "severity": [
+        "WARN",
+        "ERROR"
+       ],
+       "window": "[\"2026-10-20T06:57:34.009Z\", \"2026-10-20T07:22:38.995Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 14
+  },
+  "a91a2ee15f6f5372ce0c773291f596900638b54a86e8d99a0bc757b69a09eccf": {
+   "response": {
+    "content": "",
+    "latency_ms": 9061,
+    "tokens_in": 1277,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T07:22:38.995Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 2
+  },
+  "c18731668deeb14657cab964e9d83d66df1aa6463c37e12462bedb26a6ca5a45": {
+   "response": {
+    "content": "",
+    "latency_ms": 7905,
+    "tokens_in": 1351,
+    "tokens_out": 60,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T07:22:38.995Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-20T06:57:34.009Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 3
+  },
+  "ccd14f6e01531be62c281ada7c170fa66c517cfff5883441d41b0f650534be7e": {
+   "response": {
+    "content": "",
+    "latency_ms": 10561,
+    "tokens_in": 2847,
+    "tokens_out": 68,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": [
+        "gateway",
+        "orders",
+        "payments"
+       ],
+       "service": "gateway",
+       "severity": [
+        "WARN",
+        "ERROR"
+       ],
+       "window": "[\"2026-10-20T06:57:34.009Z\", \"2026-10-20T07:22:38.995Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 13
+  },
+  "f06ba987a959154d0a3f1a1af1f8b13972c7114bb31f171b3b7c447054f112da": {
+   "response": {
+    "content": "",
+    "latency_ms": 10671,
+    "tokens_in": 3147,
+    "tokens_out": 68,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": [
+        "gateway",
+        "orders",
+        "payments"
+       ],
+       "service": "gateway",
+       "severity": [
+        "WARN",
+        "ERROR"
+       ],
+       "window": "[\"2026-10-20T06:57:34.009Z\", \"2026-10-20T07:22:38.995Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 16
+  },
+  "f07a106696c32905f49728d01fc98dc5fcf187053f2867c83198a90515685113": {
+   "response": {
+    "content": "",
+    "latency_ms": 18297,
+    "tokens_in": 1701,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T07:22:38.995Z",
+       "services": "['gateway', 'inventory', 'orders', 'payments']",
+       "start": "2026-10-20T06:57:34.009Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  },
+  "f742d84903e4fdbaa868d079496792665a1859ce923dfb1a3cf4953ba6b79841": {
+   "response": {
+    "content": "",
+    "latency_ms": 18594,
+    "tokens_in": 1947,
+    "tokens_out": 78,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": [
+        "gateway",
+        "orders",
+        "payments"
+       ],
+       "service": "gateway",
+       "severity": [
+        "WARN",
+        "ERROR"
+       ],
+       "window": "[\"2026-10-20T06:57:34.009Z\", \"2026-10-20T07:22:38.995Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 4
+  },
+  "f7a449ec30987756c1ab965e10a00853a773a4c438b0726663cfbbd2b6e56328": {
+   "response": {
+    "content": "",
+    "latency_ms": 11375,
+    "tokens_in": 3547,
+    "tokens_out": 68,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": [
+        "gateway",
+        "orders",
+        "payments"
+       ],
+       "service": "gateway",
+       "severity": [
+        "WARN",
+        "ERROR"
+       ],
+       "window": "[\"2026-10-20T06:57:34.009Z\", \"2026-10-20T07:22:38.995Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 20
+  },
+  "fe54c093b49acadb61b02ffc2db07c11c9690b5f1ea3ca6a67384a42354fd048": {
+   "response": {
+    "content": "",
+    "latency_ms": 10546,
+    "tokens_in": 2547,
+    "tokens_out": 68,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": [
+        "gateway",
+        "orders",
+        "payments"
+       ],
+       "service": "gateway",
+       "severity": [
+        "WARN",
+        "ERROR"
+       ],
+       "window": "[\"2026-10-20T06:57:34.009Z\", \"2026-10-20T07:22:38.995Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 10
+  }
+ },
+ "model": "llama3.2:3b"
+}

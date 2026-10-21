@@ -1,0 +1,443 @@
+{
+ "digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+ "entries": {
+  "00999ef6bde3cbd5d3add2f0f07f67d98212970e3737ad03a4a20215b3d666bd": {
+   "response": {
+    "content": "",
+    "latency_ms": 10405,
+    "tokens_in": 2166,
+    "tokens_out": 63,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error",
+       "service": "gateway",
+       "severity": "ERROR",
+       "window": "[\"2026-10-20T06:32:44.051Z\", \"2026-10-20T06:42:24.039Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 9
+  },
+  "0d6e80d6be27886b64a5cb0cc4732c14afcbaff3b6599ea52c73a9e82b9eb5cc": {
+   "response": {
+    "content": "",
+    "latency_ms": 10625,
+    "tokens_in": 2356,
+    "tokens_out": 63,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error",
+       "service": "gateway",
+       "severity": "ERROR",
+       "window": "[\"2026-10-20T06:32:44.051Z\", \"2026-10-20T06:42:24.039Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 11
+  },
+  "108e92bb04fabd637bc2d5c9531e0b1e8ea0d0484ccb5142749a4ba6137b51ce": {
+   "response": {
+    "content": "",
+    "latency_ms": 10985,
+    "tokens_in": 3021,
+    "tokens_out": 63,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error",
+       "service": "gateway",
+       "severity": "ERROR",
+       "window": "[\"2026-10-20T06:32:44.051Z\", \"2026-10-20T06:42:24.039Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 18
+  },
+  "16e4a9afe9506424d8426fef69e47d4d2e6ca1c6a0bd31c41895c2eeef4c3f13": {
+   "response": {
+    "content": "",
+    "latency_ms": 10890,
+    "tokens_in": 2736,
+    "tokens_out": 63,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error",
+       "service": "gateway",
+       "severity": "ERROR",
+       "window": "[\"2026-10-20T06:32:44.051Z\", \"2026-10-20T06:42:24.039Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 15
+  },
+  "1a40ebda64884427d85a432c0ea409b617665aa9ad918cfdf4611af7af3b62ba": {
+   "response": {
+    "content": "",
+    "latency_ms": 10171,
+    "tokens_in": 2546,
+    "tokens_out": 63,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error",
+       "service": "gateway",
+       "severity": "ERROR",
+       "window": "[\"2026-10-20T06:32:44.051Z\", \"2026-10-20T06:42:24.039Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 13
+  },
+  "47f56fba3d522a2b23bd2cb7c389cedcfa354998be90d651711481876b6b7ba7": {
+   "response": {
+    "content": "",
+    "latency_ms": 10030,
+    "tokens_in": 1881,
+    "tokens_out": 63,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error",
+       "service": "gateway",
+       "severity": "ERROR",
+       "window": "[\"2026-10-20T06:32:44.051Z\", \"2026-10-20T06:42:24.039Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 6
+  },
+  "58ed0ea7fd94b5c600f34a637a9ec4311e67061d24e2713ccddc08092362245f": {
+   "response": {
+    "content": "",
+    "latency_ms": 7858,
+    "tokens_in": 1351,
+    "tokens_out": 60,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T06:42:24.039Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-20T06:32:44.051Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 3
+  },
+  "64b4123a0023c89af7b8e08c7e73af119e2fd09a56cc40b509639b75d1b58a59": {
+   "response": {
+    "content": "",
+    "latency_ms": 11000,
+    "tokens_in": 2831,
+    "tokens_out": 63,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error",
+       "service": "gateway",
+       "severity": "ERROR",
+       "window": "[\"2026-10-20T06:32:44.051Z\", \"2026-10-20T06:42:24.039Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 16
+  },
+  "66d4c40697993ae5b4ee1bafde35719e0e11307c5afce04292c98f7e84491e0f": {
+   "response": {
+    "content": "",
+    "latency_ms": 10250,
+    "tokens_in": 2641,
+    "tokens_out": 63,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error",
+       "service": "gateway",
+       "severity": "ERROR",
+       "window": "[\"2026-10-20T06:32:44.051Z\", \"2026-10-20T06:42:24.039Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 14
+  },
+  "6bb3df8576c8cb49bf47de72c2e6cbef3415f14e489ea53e5a3235e08d4c24ac": {
+   "response": {
+    "content": "",
+    "latency_ms": 11407,
+    "tokens_in": 3116,
+    "tokens_out": 63,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error",
+       "service": "gateway",
+       "severity": "ERROR",
+       "window": "[\"2026-10-20T06:32:44.051Z\", \"2026-10-20T06:42:24.039Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 19
+  },
+  "6cac1ae6217c43fb0515b1108ec788a77b1d55f21e34316be43bafda820b091b": {
+   "response": {
+    "content": "",
+    "latency_ms": 10250,
+    "tokens_in": 2261,
+    "tokens_out": 63,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error",
+       "service": "gateway",
+       "severity": "ERROR",
+       "window": "[\"2026-10-20T06:32:44.051Z\", \"2026-10-20T06:42:24.039Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 10
+  },
+  "6e3fe460d21cf9a00b51760257b5a58d8230969b642ec322b82e5d649046d144": {
+   "response": {
+    "content": "",
+    "latency_ms": 9640,
+    "tokens_in": 1976,
+    "tokens_out": 63,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error",
+       "service": "gateway",
+       "severity": "ERROR",
+       "window": "[\"2026-10-20T06:32:44.051Z\", \"2026-10-20T06:42:24.039Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 7
+  },
+  "7a1c3efa264d46028a5f1b071fed8c1689cb0c20073b94a42209128a0912bfad": {
+   "response": {
+    "content": "",
+    "latency_ms": 10500,
+    "tokens_in": 1786,
+    "tokens_out": 63,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error",
+       "service": "gateway",
+       "severity": "ERROR",
+       "window": "[\"2026-10-20T06:32:44.051Z\", \"2026-10-20T06:42:24.039Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 5
+  },
+  "7a3c03b4d17f79d9fb464ccbe328989b4766d23a45d2a16b85237f6319c250c6": {
+   "response": {
+    "content": "",
+    "latency_ms": 13734,
+    "tokens_in": 1691,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error",
+       "service": "gateway",
+       "severity": "ERROR",
+       "window": "[\"2026-10-20T06:32:44.051Z\", \"2026-10-20T06:42:24.039Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 4
+  },
+  "81e112499670b04ef15c9af807415b045d188dc8508fd3295bd995f195442242": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"gateway\", \"cause_kind\": \"other\", \"score\": 0.0, \"claims\": [{\"type\": \"log_pattern\", \"cites\": [{\"tool_call_seq\": 29, \"rows\": \"all\"}]}], \"narrative\": \"Gateway error occurred during the incident\"}]}",
+    "latency_ms": 56407,
+    "tokens_in": 3300,
+    "tokens_out": 89,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 21
+  },
+  "9c0248cd685a8813b73664d99114d427d36e7be75c2572e4a3a5012dd2377238": {
+   "response": {
+    "content": "",
+    "latency_ms": 11594,
+    "tokens_in": 3211,
+    "tokens_out": 63,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error",
+       "service": "gateway",
+       "severity": "ERROR",
+       "window": "[\"2026-10-20T06:32:44.051Z\", \"2026-10-20T06:42:24.039Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 20
+  },
+  "9c140995ea251c8e4f478c1af089c1bdabf7465b0f4e3f24d8b0386067c2a20b": {
+   "response": {
+    "content": "",
+    "latency_ms": 18655,
+    "tokens_in": 1701,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T06:42:24.039Z",
+       "services": "['gateway', 'inventory', 'orders', 'payments']",
+       "start": "2026-10-20T06:32:44.051Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  },
+  "b183cf05728c3a5bfdb51115e3336410b51d47f7d026e6b605884a5f60b41c62": {
+   "response": {
+    "content": "",
+    "latency_ms": 9811,
+    "tokens_in": 2071,
+    "tokens_out": 63,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error",
+       "service": "gateway",
+       "severity": "ERROR",
+       "window": "[\"2026-10-20T06:32:44.051Z\", \"2026-10-20T06:42:24.039Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 8
+  },
+  "ba1eb5ee321d97a139b56e93abc3efd2b9a666d6b5175c23332acc52d7ac3d17": {
+   "response": {
+    "content": "",
+    "latency_ms": 10625,
+    "tokens_in": 2451,
+    "tokens_out": 63,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error",
+       "service": "gateway",
+       "severity": "ERROR",
+       "window": "[\"2026-10-20T06:32:44.051Z\", \"2026-10-20T06:42:24.039Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 12
+  },
+  "d7468c31f4ef2d0856fd3d9124b54428a02de50e8c6785ac2abdb2e1d9fa68b9": {
+   "response": {
+    "content": "",
+    "latency_ms": 9295,
+    "tokens_in": 1277,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T06:42:24.039Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 2
+  },
+  "f56931ce239fb66742446406c951710964a41c3384aae8c6777dd075e4e9864a": {
+   "response": {
+    "content": "",
+    "latency_ms": 10719,
+    "tokens_in": 2926,
+    "tokens_out": 63,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error",
+       "service": "gateway",
+       "severity": "ERROR",
+       "window": "[\"2026-10-20T06:32:44.051Z\", \"2026-10-20T06:42:24.039Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 17
+  }
+ },
+ "model": "llama3.2:3b"
+}

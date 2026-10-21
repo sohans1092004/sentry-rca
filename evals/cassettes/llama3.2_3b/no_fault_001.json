@@ -1,0 +1,443 @@
+{
+ "digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+ "entries": {
+  "0b7afe05afe409c052a61a8f9e04a12aad1b1a115c706785c2d55401e9822f6a": {
+   "response": {
+    "content": "",
+    "latency_ms": 10344,
+    "tokens_in": 2856,
+    "tokens_out": 64,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "gateway latency high",
+       "service": "gateway",
+       "severity": "WARN",
+       "window": "[\"2026-10-19T18:46:33.373Z\", \"2026-10-19T18:55:23.364Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 14
+  },
+  "25913ab0d16af3277ad4ef1b842097fc49a380c9b27b476b52cbf004b7176bb1": {
+   "response": {
+    "content": "",
+    "latency_ms": 10217,
+    "tokens_in": 2952,
+    "tokens_out": 64,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "gateway latency high",
+       "service": "gateway",
+       "severity": "WARN",
+       "window": "[\"2026-10-19T18:46:33.373Z\", \"2026-10-19T18:55:23.364Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 15
+  },
+  "2dac3a8a22a18a91e866fca1a60edbe069d0185cfad033739adae66a4828b954": {
+   "response": {
+    "content": "",
+    "latency_ms": 10905,
+    "tokens_in": 3432,
+    "tokens_out": 64,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "gateway latency high",
+       "service": "gateway",
+       "severity": "WARN",
+       "window": "[\"2026-10-19T18:46:33.373Z\", \"2026-10-19T18:55:23.364Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 20
+  },
+  "3c45ddeb3937ddeb3b5da1fd5655d82dd19badfcabf7aba575f74dbef51b37e6": {
+   "response": {
+    "content": "",
+    "latency_ms": 9859,
+    "tokens_in": 2088,
+    "tokens_out": 64,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "gateway latency high",
+       "service": "gateway",
+       "severity": "WARN",
+       "window": "[\"2026-10-19T18:46:33.373Z\", \"2026-10-19T18:55:23.364Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 6
+  },
+  "3e9a06615a636abeaa446120a8825f97fb253a710a6e11e76b1467a995cb01ca": {
+   "response": {
+    "content": "",
+    "latency_ms": 9812,
+    "tokens_in": 2760,
+    "tokens_out": 64,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "gateway latency high",
+       "service": "gateway",
+       "severity": "WARN",
+       "window": "[\"2026-10-19T18:46:33.373Z\", \"2026-10-19T18:55:23.364Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 13
+  },
+  "52225b0d16ee68fe9ef077d04674c823683953d28ffee0bda2979289525e7765": {
+   "response": {
+    "content": "",
+    "latency_ms": 8030,
+    "tokens_in": 1351,
+    "tokens_out": 60,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-19T18:55:23.364Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-19T18:31:33.373Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 3
+  },
+  "57108ee0335785edd87cb339136f9cb629b026a283d36761739dea9fcbd09402": {
+   "response": {
+    "content": "",
+    "latency_ms": 17015,
+    "tokens_in": 1896,
+    "tokens_out": 70,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "gateway latency high",
+       "service": "gateway",
+       "severity": "WARN",
+       "window": "[\"2026-10-19T18:46:33.373Z\", \"2026-10-19T18:55:23.364Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 4
+  },
+  "578f5cc1c834fe3d93b14459c9dd8bf7c4f1eba18d068f67660e18b88c5189ec": {
+   "response": {
+    "content": "",
+    "latency_ms": 9625,
+    "tokens_in": 2376,
+    "tokens_out": 64,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "gateway latency high",
+       "service": "gateway",
+       "severity": "WARN",
+       "window": "[\"2026-10-19T18:46:33.373Z\", \"2026-10-19T18:55:23.364Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 9
+  },
+  "641790c59a431b090e77ad7e289620404480b19b6d86daa19715b7b9b2bce557": {
+   "response": {
+    "content": "",
+    "latency_ms": 9719,
+    "tokens_in": 2472,
+    "tokens_out": 64,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "gateway latency high",
+       "service": "gateway",
+       "severity": "WARN",
+       "window": "[\"2026-10-19T18:46:33.373Z\", \"2026-10-19T18:55:23.364Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 10
+  },
+  "682140c098fa18255db97fd870daa5044f39801401747335c2bb9bb0faea0331": {
+   "response": {
+    "content": "",
+    "latency_ms": 10734,
+    "tokens_in": 3144,
+    "tokens_out": 64,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "gateway latency high",
+       "service": "gateway",
+       "severity": "WARN",
+       "window": "[\"2026-10-19T18:46:33.373Z\", \"2026-10-19T18:55:23.364Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 17
+  },
+  "68f8f4fcc6b03e720933058cf754300d4685da28a2eb81630ed9db921e92ff80": {
+   "response": {
+    "content": "",
+    "latency_ms": 11000,
+    "tokens_in": 3336,
+    "tokens_out": 64,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "gateway latency high",
+       "service": "gateway",
+       "severity": "WARN",
+       "window": "[\"2026-10-19T18:46:33.373Z\", \"2026-10-19T18:55:23.364Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 19
+  },
+  "6bfbbc1ab6f6031ca3eb7a34e9ad5f5f98099e595f9d61545048f3bd355e284a": {
+   "response": {
+    "content": "",
+    "latency_ms": 9062,
+    "tokens_in": 2184,
+    "tokens_out": 64,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "gateway latency high",
+       "service": "gateway",
+       "severity": "WARN",
+       "window": "[\"2026-10-19T18:46:33.373Z\", \"2026-10-19T18:55:23.364Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 7
+  },
+  "6f27402befcb08d81912ba73899b490ed09ce3f07085ca2de40526f62bc0aeab": {
+   "response": {
+    "content": "",
+    "latency_ms": 9469,
+    "tokens_in": 2280,
+    "tokens_out": 64,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "gateway latency high",
+       "service": "gateway",
+       "severity": "WARN",
+       "window": "[\"2026-10-19T18:46:33.373Z\", \"2026-10-19T18:55:23.364Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 8
+  },
+  "7234e9768c56b52b027c8ced94d8158b0e10041a62f3eff087d291ff360cb7c2": {
+   "response": {
+    "content": "",
+    "latency_ms": 11641,
+    "tokens_in": 3240,
+    "tokens_out": 64,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "gateway latency high",
+       "service": "gateway",
+       "severity": "WARN",
+       "window": "[\"2026-10-19T18:46:33.373Z\", \"2026-10-19T18:55:23.364Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 18
+  },
+  "a40b0d545987336be83a4c717168d94460d648ddbb104f6d68b2cf5b0749478b": {
+   "response": {
+    "content": "",
+    "latency_ms": 10594,
+    "tokens_in": 3048,
+    "tokens_out": 64,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "gateway latency high",
+       "service": "gateway",
+       "severity": "WARN",
+       "window": "[\"2026-10-19T18:46:33.373Z\", \"2026-10-19T18:55:23.364Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 16
+  },
+  "b0438f3f6e60b53bf539965cdb0b730c74d8ece990699049486eab593cf664cf": {
+   "response": {
+    "content": "",
+    "latency_ms": 38717,
+    "tokens_in": 1701,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-19T18:55:23.364Z",
+       "services": "['gateway', 'inventory', 'orders', 'payments']",
+       "start": "2026-10-19T18:31:33.373Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  },
+  "c07e4d82daae94713ee53b350baef4a5528d625121cb5bc4c10570f0d13cebba": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"gateway\", \"cause_kind\": \"other\", \"score\": 0.0, \"claims\": [{\"type\": \"log_pattern\", \"cites\": [{\"tool_call_seq\": 26, \"rows\": \"all\"}]}], \"narrative\": \"Gateway latency high\"}]}",
+    "latency_ms": 58500,
+    "tokens_in": 3522,
+    "tokens_out": 86,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 21
+  },
+  "c9ef6e05114684d4eb1166ebcd9f489a786ed4e030e56e2a80c08144637460cb": {
+   "response": {
+    "content": "",
+    "latency_ms": 10125,
+    "tokens_in": 2664,
+    "tokens_out": 64,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "gateway latency high",
+       "service": "gateway",
+       "severity": "WARN",
+       "window": "[\"2026-10-19T18:46:33.373Z\", \"2026-10-19T18:55:23.364Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 12
+  },
+  "d505607eff4c5b9945e651750b23934ab2d8dd6fc2b66dd27bcee70efbed9893": {
+   "response": {
+    "content": "",
+    "latency_ms": 10093,
+    "tokens_in": 2568,
+    "tokens_out": 64,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "gateway latency high",
+       "service": "gateway",
+       "severity": "WARN",
+       "window": "[\"2026-10-19T18:46:33.373Z\", \"2026-10-19T18:55:23.364Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 11
+  },
+  "f71e178b0beecc771875b7bf91b30f214c03a071d05d49e1917088d16b14b0b1": {
+   "response": {
+    "content": "",
+    "latency_ms": 10171,
+    "tokens_in": 1277,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-19T18:55:23.364Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 2
+  },
+  "ff476ff98c8ef770af1105fef8335fd3a918c07db0a36884eb62e1863701e0b7": {
+   "response": {
+    "content": "",
+    "latency_ms": 9562,
+    "tokens_in": 1992,
+    "tokens_out": 64,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "gateway latency high",
+       "service": "gateway",
+       "severity": "WARN",
+       "window": "[\"2026-10-19T18:46:33.373Z\", \"2026-10-19T18:55:23.364Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 5
+  }
+ },
+ "model": "llama3.2:3b"
+}

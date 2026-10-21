@@ -38,7 +38,8 @@ def _agent_for(args: argparse.Namespace) -> tuple[Any, dict[str, Any]]:
     inner: Any = None
     if args.llm == "record":
         inner = llm.Ollama(args.model) if args.provider == "ollama" else llm.OpenAICompatible(args.model)
-    folder = CASSETTES / args.model.replace(":", "_").replace("/", "_")
+    slug = args.model.replace(":", "_").replace("/", "_")
+    folder = CASSETTES / (f"{slug}-{args.tag}" if args.tag else slug)  # a tag keeps one experiment's cassettes apart
     cassettes: dict[str, Any] = {}
 
     def agent_for(fid: str, i: int, clean: bool) -> AgentConfig:
@@ -309,6 +310,7 @@ def main() -> None:
     e.add_argument("--max-tool-calls", type=int, default=20)
     e.add_argument("--max-tokens", type=int, default=60_000)
     e.add_argument("--wall-s", type=float, default=120.0)
+    e.add_argument("--tag", default="", help="cassette folder suffix, e.g. a dev iteration name")
     r = sub.add_parser("runbooks")
     r.add_argument("action", choices=["load", "verify-embeddings"])
     r.add_argument("--live", action="store_true")

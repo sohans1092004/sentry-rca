@@ -1,0 +1,443 @@
+{
+ "digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+ "entries": {
+  "14a6690806c6297a8fcddad33782d883c97238b06da49fa3b96258bb2af2a078": {
+   "response": {
+    "content": "",
+    "latency_ms": 19577,
+    "tokens_in": 1990,
+    "tokens_out": 75,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error rate exceeded 0.05",
+       "service": "orders",
+       "severity": "ERROR",
+       "window": "[\"2026-10-19T22:36:29.414Z\", \"2026-10-19T22:46:25.140Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 4
+  },
+  "18d97568175445281eb21c5be5cee081582faa65c5084964f8c509850ab0ff58": {
+   "response": {
+    "content": "",
+    "latency_ms": 19125,
+    "tokens_in": 1701,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-19T22:46:25.140Z",
+       "services": "['gateway', 'inventory', 'orders', 'payments']",
+       "start": "2026-10-19T22:21:40.152Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  },
+  "37f47160d06df01a49359f7af52dadf739a6104cb1b47bed7a52a20554da6c5b": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"orders\", \"cause_kind\": \"dependency_outage\", \"score\": 0.0, \"claims\": [{\"type\": \"log_pattern\", \"cites\": [{\"tool_call_seq\": 22, \"rows\": \"all\"}]}], \"narrative\": \"Orders service had a dependency outage\"}] }",
+    "latency_ms": 64515,
+    "tokens_in": 3701,
+    "tokens_out": 92,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 21
+  },
+  "420c17add7398da17d34dd0f09ab122a0eb8643b4077ddbba1228f25228871f5": {
+   "response": {
+    "content": "",
+    "latency_ms": 8922,
+    "tokens_in": 1351,
+    "tokens_out": 60,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-19T22:46:25.140Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-19T22:21:40.152Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 3
+  },
+  "4ae25149c9ea43d0405456d23e17fe46c1cc80551c983fcab53a68a690d1a901": {
+   "response": {
+    "content": "",
+    "latency_ms": 9952,
+    "tokens_in": 1277,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-19T22:46:25.140Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 2
+  },
+  "73494d576880a5e9f0ea5bb2661eca192c5459821855cdcc53f83851f2b521fa": {
+   "response": {
+    "content": "",
+    "latency_ms": 12313,
+    "tokens_in": 2899,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error rate exceeded 0.05",
+       "service": "orders",
+       "severity": "ERROR",
+       "window": "[\"2026-10-19T22:36:29.414Z\", \"2026-10-19T22:46:25.140Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 13
+  },
+  "79c61a39e1b2588fdf98b08cd975234653569c2d66fc199a84616eb979da2d19": {
+   "response": {
+    "content": "",
+    "latency_ms": 11296,
+    "tokens_in": 2091,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error rate exceeded 0.05",
+       "service": "orders",
+       "severity": "ERROR",
+       "window": "[\"2026-10-19T22:36:29.414Z\", \"2026-10-19T22:46:25.140Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 5
+  },
+  "7b0eeb6904b3fee9a845c39285b2b4415436fc6da198b45b7fac2792fb502f32": {
+   "response": {
+    "content": "",
+    "latency_ms": 13235,
+    "tokens_in": 3303,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error rate exceeded 0.05",
+       "service": "orders",
+       "severity": "ERROR",
+       "window": "[\"2026-10-19T22:36:29.414Z\", \"2026-10-19T22:46:25.140Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 17
+  },
+  "81a102c0bb84d97a570df18b9a902e30a67acaf273ec9f44409e12ce381bf985": {
+   "response": {
+    "content": "",
+    "latency_ms": 11656,
+    "tokens_in": 2697,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error rate exceeded 0.05",
+       "service": "orders",
+       "severity": "ERROR",
+       "window": "[\"2026-10-19T22:36:29.414Z\", \"2026-10-19T22:46:25.140Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 11
+  },
+  "8705ddf94524ea5cd831f37ab5a36a19fc32be204e3a53ed8c110f01f3d3b2c0": {
+   "response": {
+    "content": "",
+    "latency_ms": 11422,
+    "tokens_in": 2394,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error rate exceeded 0.05",
+       "service": "orders",
+       "severity": "ERROR",
+       "window": "[\"2026-10-19T22:36:29.414Z\", \"2026-10-19T22:46:25.140Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 8
+  },
+  "89f14e41c337a70b1eea4a15d3f8d68bdca6071e9c84c1db2be0e0fef5b35008": {
+   "response": {
+    "content": "",
+    "latency_ms": 13327,
+    "tokens_in": 3606,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error rate exceeded 0.05",
+       "service": "orders",
+       "severity": "ERROR",
+       "window": "[\"2026-10-19T22:36:29.414Z\", \"2026-10-19T22:46:25.140Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 20
+  },
+  "8c6176cb62b0328e399229f6294bfe768e177cff523a38c8768cee8f07c19242": {
+   "response": {
+    "content": "",
+    "latency_ms": 12640,
+    "tokens_in": 3202,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error rate exceeded 0.05",
+       "service": "orders",
+       "severity": "ERROR",
+       "window": "[\"2026-10-19T22:36:29.414Z\", \"2026-10-19T22:46:25.140Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 16
+  },
+  "9c659ab28c8e0ccb1d9267774745e2c2a7d0b4080cd1230481098728200e50db": {
+   "response": {
+    "content": "",
+    "latency_ms": 12921,
+    "tokens_in": 3505,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error rate exceeded 0.05",
+       "service": "orders",
+       "severity": "ERROR",
+       "window": "[\"2026-10-19T22:36:29.414Z\", \"2026-10-19T22:46:25.140Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 19
+  },
+  "a562eb94e5cdf13ef2e7f9daeeb57989be6cff06fbafdff54d4b95231d1fa48f": {
+   "response": {
+    "content": "",
+    "latency_ms": 12984,
+    "tokens_in": 3404,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error rate exceeded 0.05",
+       "service": "orders",
+       "severity": "ERROR",
+       "window": "[\"2026-10-19T22:36:29.414Z\", \"2026-10-19T22:46:25.140Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 18
+  },
+  "a6bbf546ae5a452a19d27b67330c07223e3cc4717213df0c512ff44fb1a65074": {
+   "response": {
+    "content": "",
+    "latency_ms": 12297,
+    "tokens_in": 2596,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error rate exceeded 0.05",
+       "service": "orders",
+       "severity": "ERROR",
+       "window": "[\"2026-10-19T22:36:29.414Z\", \"2026-10-19T22:46:25.140Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 10
+  },
+  "aa27026797ce6536ecab2e58787181b11a2d9904dd3afd99c9a436b7b515a5a7": {
+   "response": {
+    "content": "",
+    "latency_ms": 12109,
+    "tokens_in": 3000,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error rate exceeded 0.05",
+       "service": "orders",
+       "severity": "ERROR",
+       "window": "[\"2026-10-19T22:36:29.414Z\", \"2026-10-19T22:46:25.140Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 14
+  },
+  "af749a974789e3de1975a1f072bdaa23433842e98166522ff66937169d6f60ff": {
+   "response": {
+    "content": "",
+    "latency_ms": 11609,
+    "tokens_in": 2293,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error rate exceeded 0.05",
+       "service": "orders",
+       "severity": "ERROR",
+       "window": "[\"2026-10-19T22:36:29.414Z\", \"2026-10-19T22:46:25.140Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 7
+  },
+  "d5427416c4354883540967f642b59d6fa368bfa11a23a8dc001b617e284697ac": {
+   "response": {
+    "content": "",
+    "latency_ms": 12156,
+    "tokens_in": 2192,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error rate exceeded 0.05",
+       "service": "orders",
+       "severity": "ERROR",
+       "window": "[\"2026-10-19T22:36:29.414Z\", \"2026-10-19T22:46:25.140Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 6
+  },
+  "db9a88d96716d0154a3744a7c11a589fa177dd651c24b775096591c2f1936b8e": {
+   "response": {
+    "content": "",
+    "latency_ms": 12202,
+    "tokens_in": 2798,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error rate exceeded 0.05",
+       "service": "orders",
+       "severity": "ERROR",
+       "window": "[\"2026-10-19T22:36:29.414Z\", \"2026-10-19T22:46:25.140Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 12
+  },
+  "dd808118fb1d722ac28a65df214c21ed1cc8ba04469cab618c8803b7290576b7": {
+   "response": {
+    "content": "",
+    "latency_ms": 12375,
+    "tokens_in": 3101,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error rate exceeded 0.05",
+       "service": "orders",
+       "severity": "ERROR",
+       "window": "[\"2026-10-19T22:36:29.414Z\", \"2026-10-19T22:46:25.140Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 15
+  },
+  "f8c9d088deb375fbe37cc5fa817957955ee5778e5129c9a34de0b0e88025d87e": {
+   "response": {
+    "content": "",
+    "latency_ms": 10875,
+    "tokens_in": 2495,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "Gateway error rate exceeded 0.05",
+       "service": "orders",
+       "severity": "ERROR",
+       "window": "[\"2026-10-19T22:36:29.414Z\", \"2026-10-19T22:46:25.140Z\"]"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 9
+  }
+ },
+ "model": "llama3.2:3b"
+}
