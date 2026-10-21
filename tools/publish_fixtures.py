@@ -58,7 +58,7 @@ def main() -> None:
     exists = subprocess.run(["gh", "release", "view", TAG, "-R", REPO], capture_output=True).returncode == 0
     if not exists:
         subprocess.run(["gh", "release", "create", TAG, "-R", REPO, "--title", f"Fixture datasets {VERSION}",
-                        "--notes", "Phase 1 fixture datasets (Parquet + label/injection/manifest). "
+                        "--notes", f"Fixture datasets {VERSION} (Parquet + label/injection/manifest; v3 = dev and test splits). "
                         "Hashes in fixtures/index.json; fetch with tools/fetch_fixtures.py."], check=True)  # fmt: skip
     subprocess.run(["gh", "release", "upload", TAG, "-R", REPO, "--clobber", *[str(OUT / a["asset"]) for a in assets]],
                    check=True)  # fmt: skip

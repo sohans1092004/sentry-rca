@@ -373,9 +373,9 @@ def rejection_rates(conn: psycopg.Connection[Any], investigation_ids: list[str])
 
 
 def baseline_sha256() -> str:
-    return hashlib.sha256(
-        (Path(__file__).resolve().parent.parent / "investigation" / "baseline.py").read_bytes()
-    ).hexdigest()
+    """Of the file as git stores it (LF): a Windows checkout's CRLF must not read as a baseline change."""
+    source = (Path(__file__).resolve().parent.parent / "investigation" / "baseline.py").read_bytes()
+    return hashlib.sha256(source.replace(b"\r\n", b"\n")).hexdigest()
 
 
 def posthoc_reasons(accepted: dict[str, Any] | None, sha: str, spec: str) -> list[str]:
