@@ -471,3 +471,13 @@ def test_each_model_call_gets_only_the_wall_time_left_and_a_timeout_there_is_the
         run(Slow([]), Budget(wall_s=120.0), clock=clock)
     assert e.value.reason == "budget" and "during a model call" in str(e.value)
     assert limits == [120.0, 70.0, 20.0]
+
+
+def test_a_rejected_call_gets_the_servers_hint_and_a_repeat_is_named():
+    bad = {k: v for k, v in LOGS_CALL.items() if k != "start"}
+    provider = Script([tool("query_logs", **bad), tool("query_logs", **bad), answer({"hypotheses": []})])
+    run(provider)
+    results = [m["content"] for m in provider.seen[-1][0] if m["role"] == "tool"]
+    assert "query_logs needs end, service, start." in results[0]
+    assert "The window is start=2026-10-18T10:00:00.000Z, end=2026-10-18T10:30:00.000Z" in results[0]
+    assert "identical to your call 1" in results[1] and "identical" not in results[0]

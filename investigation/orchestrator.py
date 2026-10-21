@@ -204,8 +204,8 @@ def investigate(
             budget["agent_verified"] = len(ares.verified)
         r = ag.run
         budget["agent"] = {"tool_calls": r.tool_calls, "llm_calls": r.llm_calls, "tokens_in": r.tokens_in,
-                           "tokens_out": r.tokens_out, "parse_failures": r.parse_failures, "wall_ms": r.wall_ms,
-                           "turns": r.turns}  # fmt: skip
+                           "tokens_out": r.tokens_out, "parse_failures": r.parse_failures, "repairs": r.repairs,
+                           "wall_ms": r.wall_ms, "turns": r.turns}  # fmt: skip
         budget["agent_ms"] = int((time.monotonic() - t0) * 1000)
     budget["wall_ms"] = int((time.monotonic() - t0) * 1000)
     conn.execute(

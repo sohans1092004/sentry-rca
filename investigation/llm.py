@@ -27,6 +27,7 @@ import httpx
 
 OLLAMA = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 NUM_CTX = 8192  # context window asked of Ollama; part of the recorded request
+NUM_PREDICT = 1024  # most tokens one reply may generate (A40): a runaway reply ends instead of timing out
 RETRIES = 3  # §15 row 7: retry with backoff up to a cap, then the investigation degrades
 BACKOFF_S = 1.0
 BOUNDARY = re.compile(r"DATA-[0-9a-f]{16}")
@@ -66,7 +67,14 @@ class Provider(Protocol):
 
 def canonical_request(model: str, messages: list[dict[str, Any]], tools: list[dict[str, Any]],
                       temperature: float, schema: dict[str, Any] | None = None) -> dict[str, Any]:  # fmt: skip
-    req = {"model": model, "messages": messages, "tools": tools, "temperature": temperature, "num_ctx": NUM_CTX}
+    req = {
+        "model": model,
+        "messages": messages,
+        "tools": tools,
+        "temperature": temperature,
+        "num_ctx": NUM_CTX,
+        "num_predict": NUM_PREDICT,
+    }
     return req | ({"format": schema} if schema is not None else {})
 
 
@@ -107,7 +115,8 @@ class Ollama:
                  temperature: float = 0.0, schema: dict[str, Any] | None = None,
                  timeout_s: float | None = None) -> Response:  # fmt: skip
         body: dict[str, Any] = {"model": self.model, "messages": messages, "stream": False,
-                                "options": {"temperature": temperature, "seed": 0, "num_ctx": NUM_CTX}}  # fmt: skip
+                                "options": {"temperature": temperature, "seed": 0, "num_ctx": NUM_CTX,
+                                            "num_predict": NUM_PREDICT}}  # fmt: skip
         if tools:
             body["tools"] = tools
         if schema is not None:
@@ -156,7 +165,12 @@ class OpenAICompatible:
     def complete(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]],
                  temperature: float = 0.0, schema: dict[str, Any] | None = None,
                  timeout_s: float | None = None) -> Response:  # fmt: skip
-        body: dict[str, Any] = {"model": self.model, "messages": messages, "temperature": temperature}
+        body: dict[str, Any] = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": NUM_PREDICT,
+        }
         if tools:
             body["tools"] = tools
         if schema is not None:
