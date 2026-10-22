@@ -1,0 +1,783 @@
+{
+ "digest": "hosted:https://generativelanguage.googleapis.com/v1beta/openai",
+ "entries": {
+  "04d97aeb16b59f4b8e66e62ab8c6822e1ddf6c5fe6383755b48fd56919f1decd": {
+   "response": {
+    "content": "",
+    "latency_ms": 6610,
+    "tokens_in": 5540,
+    "tokens_out": 176,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T01:37:28.156Z",
+       "metric": "http.server.request.duration.mean",
+       "service": "payments",
+       "start": "2026-10-20T01:17:28.156Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TaA1LgiR64Tayx6oOYH3WzmrscOyQoOh7q6KruG0Pog48c69wpDIYTLPvZSlVutoY+guPFlMIUA4TI0/NckW8Pd6uGdLVnmyjxrbXBF7a0EMUAJxhPkGhjIg="
+       }
+      },
+      "name": "query_metrics"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T01:37:28.156Z",
+       "metric": "http.server.request.duration.mean",
+       "service": "orders",
+       "start": "2026-10-20T01:17:28.156Z"
+      },
+      "name": "query_metrics"
+     }
+    ]
+   },
+   "run_index": 1,
+   "seq": 5
+  },
+  "06c14980a82e67268167a9620f774aa15f9cb279c97635368cb0baa188c60e9f": {
+   "response": {
+    "content": "",
+    "latency_ms": 5969,
+    "tokens_in": 4325,
+    "tokens_out": 246,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T01:37:28.156Z",
+       "service": "payments",
+       "start": "2026-10-20T01:27:28.156Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0Tc58lE7JPybdFhdGzAIIvG+UBrwW2LcNTlwS4JOPxt3TBX48N1mrQHV9fXAiQdZPCbaseUdGkyHD1GeMkFfs0dQlOCT0SlvoRA7j/Xco5aUUl5wGb5/j7Q1U="
+       }
+      },
+      "name": "query_logs"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T01:37:28.156Z",
+       "metric": "http.server.request.duration.mean",
+       "service": "payments",
+       "start": "2026-10-20T01:17:28.156Z"
+      },
+      "name": "query_metrics"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T01:37:28.156Z",
+       "min_duration_ms": 500,
+       "service": "payments",
+       "start": "2026-10-20T01:32:28.156Z"
+      },
+      "name": "query_traces"
+     }
+    ]
+   },
+   "run_index": 2,
+   "seq": 3
+  },
+  "0b4195332b5a3eb0697c782a2c00135f5c61115d47695d821331abdfe3b08623": {
+   "response": {
+    "content": "",
+    "latency_ms": 21125,
+    "tokens_in": 5947,
+    "tokens_out": 86,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T01:37:28.156Z",
+       "limit": 100,
+       "service": "payments",
+       "severity": "ERROR",
+       "start": "2026-10-20T01:27:28.156Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TjgwWJWaaOJgqzZP3QfAzZ2gpBMKjVqPoQMWXtJS3IB36GauAWRQWh++GUvx6cgwNuwXq3G+bk5P185raH7EMZrVKIPV5Rg1z8OHfo3jGrqth/XnxIg2dqz0="
+       }
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 2,
+   "seq": 6
+  },
+  "0f1039376362f614fff7d751a0955bb217a8c3fd26fe7dc6cc7d9a86c0730266": {
+   "response": {
+    "content": "",
+    "latency_ms": 5610,
+    "tokens_in": 5186,
+    "tokens_out": 90,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "provider charge failed after 3 retries: timed out",
+       "end": "2026-10-20T01:37:28.156Z",
+       "service": "payments",
+       "start": "2026-10-20T01:22:28.156Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TBf4BL+/WzOvk+9JVM86uEklFfDTGvpX1OXPweSxwh0knZ58dKVPR9xXcKTrNgiy8rUxKh/5wIo/nfAXez9DArSaMaEVXus41pgygvjJWXGCPaXfm1lNrns8="
+       }
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 1,
+   "seq": 4
+  },
+  "130004ab6f02e7dfe51b72f001b38230be1654fab6866e4e198481370adb6693": {
+   "response": {
+    "content": "",
+    "latency_ms": 7046,
+    "tokens_in": 3380,
+    "tokens_out": 312,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T01:41:59.716Z",
+       "service": "payments",
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TzM47JCoDUML50Lqpg56hv5VsTTZYMhE1681Ss8YGV7W8UCVesFMteydA2xv4oA+UX8ssS0e3Z9CNDWXFeO+3LU1lKHwR3N0Jycv6hJ1Kw2y1h25+/diCk+I="
+       }
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T01:41:59.716Z",
+       "service": "orders",
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T01:41:59.716Z",
+       "service": "gateway",
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T01:41:59.716Z",
+       "service": "inventory",
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "name": "get_recent_deploys"
+     }
+    ]
+   },
+   "run_index": 1,
+   "seq": 2
+  },
+  "23ca35746715bc4a168b88fc2412786735b56cf97bb7c13870c5aa475df3df7e": {
+   "response": {
+    "content": "",
+    "latency_ms": 15266,
+    "tokens_in": 5369,
+    "tokens_out": 80,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T01:35:00Z",
+       "metric": "http.server.request.duration.mean",
+       "service": "payments",
+       "start": "2026-10-20T01:15:00Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0Tb50VZBncLwwmh9dgBuul7FmQLiqwdqJl9OoxgcNG8YKdsrf7uoPhtBgC1UC03wjJ+yJVIFUu64cVjAXwoDu6PuA/Q+GgV61tGxlO0AlCzsX9wqpVp+Z9JD4="
+       }
+      },
+      "name": "query_metrics"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 7
+  },
+  "34111732154bbd74a3156a2bd7263f7526a50f6f7eb11b7fbe4e2cce8e6de123": {
+   "response": {
+    "content": "",
+    "latency_ms": 16093,
+    "tokens_in": 4946,
+    "tokens_out": 73,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "timed out",
+       "end": "2026-10-20T01:34:00Z",
+       "service": "payments",
+       "start": "2026-10-20T01:28:00Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TliFtu2JdLK18LAphuueW4T8cPSVbJLTed4cHuqJelaNubNIPOO/WR3wg1J7T2qoNiMAyZsbIUBF0yeUkNtncQDvKsqTXYulgbDgWmlNokAui/Xz38eTj2/Q="
+       }
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 6
+  },
+  "39ddbd7c9923f08b31ba8374d0bc3f83c21e4014d7e1bc32f2cb77cbc66f670f": {
+   "response": {
+    "content": "",
+    "latency_ms": 21766,
+    "tokens_in": 5525,
+    "tokens_out": 21,
+    "tool_calls": [
+     {
+      "arguments": {
+       "query": "provider charge timed out payments"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0Tm1FQbRb78HU6pDcLiWadh8Zq/txT43lniOunxNXwzYSg0KusOTI8Wy6m25aOUwWwvcaMFOua8aqmdZvvE/9pdBpGloIocvEAC/ANbMBgWAkPU7RfT5euMYA="
+       }
+      },
+      "name": "search_runbooks"
+     }
+    ]
+   },
+   "run_index": 2,
+   "seq": 8
+  },
+  "422de7fbcb3b211f2c2fd39d67d9ef36fb97d43398a3465458ecc65fe66d18c1": {
+   "response": {
+    "content": "",
+    "latency_ms": 18718,
+    "tokens_in": 5168,
+    "tokens_out": 90,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "provider charge failed after 3 retries: timed out",
+       "end": "2026-10-20T01:37:28.156Z",
+       "service": "payments",
+       "start": "2026-10-20T01:27:28.156Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TanW80vJZbLCsT2e8SpN+lg3DwjYQFGYlBoCxwb6ofOTQPj34Fk8lTmkdc6UhfNI8PSjbhoTH+VVkbZMcRD7AHSCyrb5vc4fHWPE3uM6fEj+d+FQJGjWE7eE="
+       }
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 2,
+   "seq": 7
+  },
+  "4759c7e16cc7c4c5923b328c5f688b3c1041f16799fe8a053441305ed434521e": {
+   "response": {
+    "content": "",
+    "latency_ms": 2062,
+    "tokens_in": 2529,
+    "tokens_out": 88,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T01:41:59.716Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TsHztw9ej1g5AnFT2JniTz+3b6LF8bTrn/8qVoWlVRl0GihWY2p5kJJiEj+TjumwVsqfy4D+lP/CuK+4Z3oHoqWIwGutOhWs+q4Ap15LPALN2MhmgsbbjtGo="
+       }
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  },
+  "4b99eecaa99b4064c12d4f89185a7bc594351c5aa249ac77e4319641b1a1b84c": {
+   "response": {
+    "content": "",
+    "latency_ms": 5843,
+    "tokens_in": 3382,
+    "tokens_out": 312,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T01:41:59.716Z",
+       "service": "payments",
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TYGGOKX9diLuGC0XAkv407StQiRvVPnv0N7sDcELLaPpeHdI/xG+kSTzOEuV3P3aiHnLAARbggKjUHPcLyHeTzv4hF9ZDWmd+U20QKf7uRMmea09zG17S28M="
+       }
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T01:41:59.716Z",
+       "service": "gateway",
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T01:41:59.716Z",
+       "service": "orders",
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T01:41:59.716Z",
+       "service": "inventory",
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "name": "get_recent_deploys"
+     }
+    ]
+   },
+   "run_index": 2,
+   "seq": 2
+  },
+  "6ac6a7401e3396753e8e1e4a1b81a9a6267783be686547a2a1dfdde790c32e0c": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"payments\", \"cause_kind\": \"dependency_outage\", \"score\": 0.95, \"claims\": [{\"type\": \"metric_change\", \"service\": \"payments\", \"metric\": \"http.server.request.duration.mean\", \"window\": [\"2026-10-20T01:32:34.725Z\", \"2026-10-20T01:37:28.156Z\"], \"direction\": \"up\", \"min_magnitude\": 0.5, \"cites\": [{\"tool_call_seq\": 9, \"rows\": \"all\"}]}], \"narrative\": \"Payments service experienced a dependency outage caused by timeouts when reaching out to the third-party payment provider.\"}]}",
+    "latency_ms": 16296,
+    "tokens_in": 6616,
+    "tokens_out": 202,
+    "tool_calls": []
+   },
+   "run_index": 1,
+   "seq": 7
+  },
+  "78a0310c22d962901e5ebe315a8d36ff49bd14bb71f8e891c0d1f74526d5a958": {
+   "response": {
+    "content": "",
+    "latency_ms": 13485,
+    "tokens_in": 5912,
+    "tokens_out": 19,
+    "tool_calls": [
+     {
+      "arguments": {
+       "query": "payments timed out"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TkvoF5eSlbYOJEzGGXji/fkhdG3s4FZ4ECzUBQBPylYBYH4QTrTf99cGqXaDAZmpen8aNA869fbH0IspYS4EkSZ01XlUccP5dq1/75yiPKXE1dUADwY7/qP0="
+       }
+      },
+      "name": "search_runbooks"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 9
+  },
+  "79bd8549de21efc8ca8a11640737f0e136474b223089b06119f78162d28ff6c3": {
+   "response": {
+    "content": "",
+    "latency_ms": 4468,
+    "tokens_in": 2529,
+    "tokens_out": 88,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T01:41:59.716Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TtMZx58HMCszslXtWj4HKg89SB6DyaFqhgB4r/ZVmu+V/qt320H1dzT135BkvQF25nx6Hy5VnBxdgTyNotc8mZWfzjgF6jgTW2GcXbkBYjpmQTD04fy7glxw="
+       }
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 1,
+   "seq": 1
+  },
+  "7f7e8f5528cd1648a1ca5a5074a1c470ae6e6f11b02f9457d7f66c0420a5df53": {
+   "response": {
+    "content": "",
+    "latency_ms": 12812,
+    "tokens_in": 5604,
+    "tokens_out": 81,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T01:35:00Z",
+       "metric": "container.cpu.utilization",
+       "service": "payments",
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TUspr+fTTnklKC4y7SitkpaXQmn+f2hMvBOYZK/BryBVGKtBgoggioUwYqiVYVyr+3v9JIhjInQRFQmBHKSTElMnvdD9tkpfJor2cc6fCerdaGQ/yEDrAXHg="
+       }
+      },
+      "name": "query_metrics"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 8
+  },
+  "82739472d790a10bf70806e0125a35360cf72f4cb677c0a0787cb6f3a24c47ae": {
+   "response": {
+    "content": "",
+    "latency_ms": 8233,
+    "tokens_in": 5904,
+    "tokens_out": 77,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T01:35:00Z",
+       "min_duration_ms": 1000,
+       "service": "payments",
+       "start": "2026-10-20T01:32:00Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TETQqJ1ByfGTqPwQ4HjsPmTciCiN6tYueTSa4sTTbf8oLIvOYDBSnLiSdZpH5KAGuy+tZ36QumznCrzztuv+chdDjPEV6QOgqVsCxHewfi2a8ZGK0oRQ6fYg="
+       }
+      },
+      "name": "query_traces"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 10
+  },
+  "871abd40f1b24d2e9c4483fe494ca514c44cfeb7e40cfb9ea3689580334a9eca": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"payments\", \"cause_kind\": \"dependency_outage\", \"score\": 0.95, \"claims\": [{\"type\": \"log_pattern\", \"service\": \"payments\", \"window\": [\"2026-10-20T01:32:34.725Z\", \"2026-10-20T01:37:28.156Z\"], \"pattern\": \"provider charge failed after 3 retries: timed out\", \"min_count\": 5, \"min_ratio\": 2.0, \"cites\": [{\"tool_call_seq\": 12, \"rows\": \"all\"}]}, {\"type\": \"metric_change\", \"service\": \"payments\", \"metric\": \"http.server.request.duration.mean\", \"window\": [\"2026-10-20T01:32:34.725Z\", \"2026-10-20T01:37:28.156Z\"], \"direction\": \"up\", \"min_magnitude\": 0.5, \"cites\": [{\"tool_call_seq\": 7, \"rows\": \"all\"}]}, {\"type\": \"runbook_match\", \"cites\": [{\"tool_call_seq\": 13, \"rows\": \"all\"}]}], \"narrative\": \"The incident was triggered by a third-party dependency outage affecting payments, leading to timeouts and elevated request durations.\"}]}",
+    "latency_ms": 18812,
+    "tokens_in": 6220,
+    "tokens_out": 360,
+    "tool_calls": []
+   },
+   "run_index": 2,
+   "seq": 9
+  },
+  "89a28e7e116c9f5b3ec8c5e062b3406a3ae9b8e1e67bf89898595c705023334f": {
+   "response": {
+    "content": "",
+    "latency_ms": 21108,
+    "tokens_in": 5698,
+    "tokens_out": 80,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "timeout",
+       "end": "2026-10-20T01:37:28.156Z",
+       "service": "payments",
+       "start": "2026-10-20T01:27:28.156Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TsSz+cTD2cviSV2sAM5f84M8HMMobLt6EPN1Orh0VY8rR03N2P4Cm15pxt3RTbU/i3jb47eN4NiUAxZtgH7drpgu4LS19j+1wEg+EkQv3zbVKEEvlr3Stue0="
+       }
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 2,
+   "seq": 5
+  },
+  "8ae042bf64061db6c7a792dc6eea8d493df540030f879297e58206c89db1a936": {
+   "response": {
+    "content": "",
+    "latency_ms": 8562,
+    "tokens_in": 4055,
+    "tokens_out": 73,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "timed out",
+       "end": "2026-10-20T01:37:00Z",
+       "service": "payments",
+       "start": "2026-10-20T01:27:00Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TW6ruskQJfwvSaEr8yZ8h83NWhuEqlxrTo/oQt2asW5FVhLWKlt2uXCgy2360zn8wSxbKfb4sg058nE95+lSYV7rf+O6acYzkIUnoFOH/gOhGtmBSZPwfJ/A="
+       }
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 4
+  },
+  "9188e5cc8a8535bf7a9afe4aecb660db4dca9d2f16326da1487e151bed52a52d": {
+   "response": {
+    "content": "",
+    "latency_ms": 2937,
+    "tokens_in": 2529,
+    "tokens_out": 88,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T01:41:59.716Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TGbFNK9FDPNvhVNu50vf7eDWcze9fHR7Pv4++00/emTCuedEmAz1JlrJJ0pyJgG9lO+y3/dzSbZMNo0AgFElqlZneXNvCOvTJU4zQUTHxrk6nqBZrS1nJHsI="
+       }
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 2,
+   "seq": 1
+  },
+  "a2b7991280d1f324224fbe64f6d3afbbb85f22f520e4176955e83f11d48a38d4": {
+   "response": {
+    "content": "",
+    "latency_ms": 8000,
+    "tokens_in": 3612,
+    "tokens_out": 66,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T01:37:00Z",
+       "service": "payments",
+       "start": "2026-10-20T01:27:00Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0THFcA8LGvH0I9L82Cr8OHqkrV4hmY3fAJ4MTiMaPbNfbm1Q0x6Ntk94q6NugltykukGrDxjW9uFbPuyBUKncqWFLv10wCEUJLxN7ozdYfxxquP7M71Fs4pAs="
+       }
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 3
+  },
+  "abb560bb7c4d72578fc6e4399fb0d36351b9062cabc53605074072a9780c04dc": {
+   "response": {
+    "content": "",
+    "latency_ms": 5702,
+    "tokens_in": 6048,
+    "tokens_out": 118,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T01:32:45.000Z",
+       "min_duration_ms": 1000,
+       "service": "payments",
+       "start": "2026-10-20T01:32:28.156Z",
+       "trace_id": "a1c183c0fbbb38ee071bd17c1e989cab"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0T7pkHor4ZE6TUt/m9PjtTEBf18rK9a3fn3/7h0sYYzCPA+Rii5PmS2C3wMjU4xvTx0S9mVXZjPs6q4ZqwMCilAy7EfkJQtrJ7aW3PC2D0/Htz/4Swpv0KUdU="
+       }
+      },
+      "name": "query_traces"
+     }
+    ]
+   },
+   "run_index": 2,
+   "seq": 4
+  },
+  "ae88328052024df7d575bcbec5d9804dbca595229182813b63256809bf30a9d4": {
+   "response": {
+    "content": "",
+    "latency_ms": 15218,
+    "tokens_in": 6236,
+    "tokens_out": 19,
+    "tool_calls": [
+     {
+      "arguments": {
+       "query": "payments timeout charge"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0T5ieSAhkG22sAOsAvMiIrkTsOp766g7jRzH2vk9CtJK0HePA0EdTv0pZivmUcV9pWoDysuH6TPx0pzcBLEJZkXdzHlVVdwEulBHRHWCCVqflVRq7EE0Lp0SI="
+       }
+      },
+      "name": "search_runbooks"
+     }
+    ]
+   },
+   "run_index": 1,
+   "seq": 6
+  },
+  "aeb3576270220893bdc0ba5964e7b34c9cab564e1d2cdba0325e03037927a326": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"payments\", \"cause_kind\": \"dependency_outage\", \"score\": 0.95, \"claims\": [{\"type\": \"log_pattern\", \"service\": \"payments\", \"window\": [\"2026-10-20T01:32:34.725Z\", \"2026-10-20T01:37:28.156Z\"], \"pattern\": \"provider charge failed after 3 retries: timed out\", \"min_count\": 5, \"min_ratio\": 2.0, \"cites\": [{\"tool_call_seq\": 12, \"rows\": \"all\"}]}, {\"type\": \"metric_change\", \"service\": \"payments\", \"metric\": \"http.server.request.duration.mean\", \"window\": [\"2026-10-20T01:32:34.725Z\", \"2026-10-20T01:37:28.156Z\"], \"direction\": \"up\", \"min_magnitude\": 0.5, \"cites\": [{\"tool_call_seq\": 14, \"rows\": \"all\"}]}], \"narrative\": \"The incident was triggered by a third-party dependency outage affecting payments, leading to timeouts and elevated request durations.\"}]}",
+    "latency_ms": 18375,
+    "tokens_in": 7460,
+    "tokens_out": 330,
+    "tool_calls": []
+   },
+   "run_index": 2,
+   "seq": 11
+  },
+  "b251743edd14482d9f03f953637072f4f6656f95bfe0a696a5b22827022b5fb9": {
+   "response": {
+    "content": "{\"hypotheses\": []}",
+    "latency_ms": 9125,
+    "tokens_in": 6679,
+    "tokens_out": 7,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 11
+  },
+  "caa5d9e282ce28322044602e573f5f210ea69a2d096537cdc949bd0fd4b0c085": {
+   "response": {
+    "content": "",
+    "latency_ms": 7343,
+    "tokens_in": 3376,
+    "tokens_out": 78,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T01:41:59.716Z",
+       "service": "payments",
+       "start": "2026-10-20T01:17:34.725Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TTsUKsjY283BsruqUB329XLirdG0tAyE+QMNcDe5b3wrx0gnN1a46PZOEwq8y7/cFqb8Nk0vjXq9/QkP+RBAfDcCWjPSv//aMDIV461YrUKhrNsIC07ENYeA="
+       }
+      },
+      "name": "get_recent_deploys"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 2
+  },
+  "d003d975d652d68cb660b4f65c9de23072c7bd9812d8c76749b41adb823ddd64": {
+   "response": {
+    "content": "",
+    "latency_ms": 6406,
+    "tokens_in": 4325,
+    "tokens_out": 154,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T01:37:28.156Z",
+       "service": "payments",
+       "start": "2026-10-20T01:27:28.156Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0Tmu3aHw9m65yPl2iENDMMs6IfXkMdmTSgbycIMvMbMw04TnEKdCcNGCqc1OcjgaERiom1hhMyhPduen7C1H1sZctVYXvleKF9ylrmjLhVgEbXELiGx/dyk4c="
+       }
+      },
+      "name": "query_logs"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T01:37:28.156Z",
+       "service": "payments",
+       "severity": "ERROR",
+       "start": "2026-10-20T01:27:28.156Z"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 1,
+   "seq": 3
+  },
+  "e95201891301003f98353ff21030f2440c0f677bf9dcff4582fcba8c02a83df4": {
+   "response": {
+    "content": "",
+    "latency_ms": 10639,
+    "tokens_in": 4516,
+    "tokens_out": 73,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "timed out",
+       "end": "2026-10-20T01:34:00Z",
+       "service": "payments",
+       "start": "2026-10-20T01:30:00Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0Tmesqea7vmm4iEyDTW2cSEAd2kB5rm/VJjtRuHrlUsaZaw76kyxGrAFP7QXsbHOU+deOz+KWHz9GLuE4phDexX1qcw6p1IETs6yBYONg8ud6lPeAcNMUEmEk="
+       }
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 5
+  },
+  "eb2da44e3f83a4daa549fd24e21d0567026e5fb0a4143acf786c3c71b36832fb": {
+   "response": {
+    "content": "",
+    "latency_ms": 17671,
+    "tokens_in": 6650,
+    "tokens_out": 88,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T01:37:28.156Z",
+       "metric": "http.server.request.duration.mean",
+       "service": "payments",
+       "start": "2026-10-20T01:17:28.156Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TXYMVuB0PWOK0JoGMPmD618zlzl7DxaUlPR0y+fF5LOrysi4iJfoyGmOkHBQ7XexVw6E94+/6T45LWaBtQrkG+Fw64Z23ZJ5npSWqArBFqGItn5jifSmIZrE="
+       }
+      },
+      "name": "query_metrics"
+     }
+    ]
+   },
+   "run_index": 2,
+   "seq": 10
+  }
+ },
+ "model": "gemini-3.5-flash-lite"
+}
