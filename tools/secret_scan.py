@@ -4,7 +4,8 @@ Scans every tracked file plus `evals/cassettes/` (tracked or not). Patterns cove
 project could plausibly hold. The hosted provider puts its key only in an HTTP header and never in a
 request body, so no recorded exchange should ever contain one.
 
-    uv run python tools/secret_scan.py      # exit 1 and list file:line on any match
+    uv run python tools/secret_scan.py          # exit 1 and list file:line on any match
+    uv run python tools/secret_scan.py _site    # also every file under these folders (the viewer export)
 """
 
 import re
@@ -46,8 +47,9 @@ def scan(paths: list[Path]) -> list[tuple[str, int, str]]:
 
 
 if __name__ == "__main__":
-    found = scan(files())
+    paths = files() + sorted(p for d in sys.argv[1:] for p in Path(d).rglob("*") if p.is_file())
+    found = scan(paths)
     for f, n, name in found:
         print(f"SECRET? {f}:{n} looks like {name}")
-    print(f"{len(files())} files scanned, {len(found)} key-shaped strings")
+    print(f"{len(paths)} files scanned, {len(found)} key-shaped strings")
     sys.exit(1 if found else 0)
