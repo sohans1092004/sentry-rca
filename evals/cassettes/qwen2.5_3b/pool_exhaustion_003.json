@@ -1,0 +1,99 @@
+{
+ "digest": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+ "entries": {
+  "52f97667a776e236b38083f517b07b5def05a8059df6db98e7265be06ff53fe2": {
+   "response": {
+    "content": "",
+    "latency_ms": 11718,
+    "tokens_in": 1690,
+    "tokens_out": 89,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T06:42:24.039Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-20T06:17:44.051Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  },
+  "9b71a778e3dc51939474533730985dc45c39ab9c439c01c6d260579eb63100a3": {
+   "response": {
+    "content": "",
+    "latency_ms": 69250,
+    "tokens_in": 2835,
+    "tokens_out": 357,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "ERROR",
+       "end": "2026-10-20T06:42:24.039Z",
+       "limit": 10,
+       "service": "gateway",
+       "start": "2026-10-20T06:17:44.051Z"
+      },
+      "name": "query_logs"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T06:42:24.039Z",
+       "labels": {
+        "service": "gateway"
+       },
+       "metric": "http.server.request.duration.mean",
+       "start": "2026-10-20T06:17:44.051Z"
+      },
+      "name": "query_metrics"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T06:42:24.039Z",
+       "limit": 10,
+       "min_duration_ms": 100,
+       "service": "gateway",
+       "start": "2026-10-20T06:17:44.051Z"
+      },
+      "name": "query_traces"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T06:42:24.039Z",
+       "service": "gateway"
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "query": "gateway",
+       "top_k": 1
+      },
+      "name": "search_runbooks"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 2
+  },
+  "ee1e84e6cb272f1ee6bf588eeba2bf26ae97e6c5fd870c046e84c91f15f27441": {
+   "response": {
+    "content": "{\n  \"hypotheses\": [\n    {\n      \"rank\": 1,\n      \"causal_role\": \"candidate_root_cause\",\n      \"cause_service\": \"inventory\",\n      \"cause_kind\": \"slow_query\",\n      \"score\": 0.9,\n      \"claims\": [\n        {\n          \"type\": \"log_pattern\",\n          \"service\": \"gateway\",\n          \"window\": [\"2026-10-20T06:17:44.051Z\", \"2026-10-20T06:42:24.039Z\"],\n          \"pattern\": \"ERROR\",\n          \"min_count\": 1,\n          \"min_ratio\": 2.0,\n          \"cites\": [\n            {\n              \"tool_call_seq\": 28,\n              \"rows\": \"all\"\n            }\n          ]\n        },\n        {\n          \"type\": \"metric_change\",\n          \"service\": \"gateway\",\n          \"metric\": \"http.server.request.duration.mean\",\n          \"window\": [\"2026-10-20T06:17:44.051Z\", \"2026-10-20T06:42:24.039Z\"],\n          \"direction\": \"up\",\n          \"min_magnitude\": 0.5,\n          \"cites\": [\n            {\n              \"tool_call_seq\": 30,\n              \"rows\": \"all\"\n            }\n          ]\n        }\n      ],\n      \"narrative\": \"The gateway service experienced a significant increase in error rate and request latency, likely due to a slow query in the inventory service.\"\n    },\n    {\n      \"rank\": 2,\n      \"causal_role\": \"downstream_symptom\",\n      \"cause_service\": \"gateway\",\n      \"cause_kind\": \"other\",\n      \"score\": 0.8,\n      \"claims\": [\n        {\n          \"type\": \"trace_dependency\",\n          \"parent_service\": \"inventory\",\n          \"child_service\": \"gateway\",\n          \"trace_ids\": [\"8c74914d492b34aa742acab5e044e369\", \"7dd4e975d19c80b8c65e739cfb635966\", \"f97c221515ef85190ea838aa8804f52e\", \"a23bf027ce84c5253405d9e752051289\", \"7b08562cf8af68c0fe066980ea5b097a\", \"84f86289281d9cc77a51b3cbf0376b50\"],\n          \"cites\": [\n            {\n              \"tool_call_seq\": 32,\n              \"rows\": \"all\"\n            }\n          ]\n        }\n      ],\n      \"narrative\": \"The gateway service's issues are likely caused by slow queries in the inventory service, which are propagated through call edges.\"\n    }\n  ]\n}",
+    "latency_ms": 139671,
+    "tokens_in": 4483,
+    "tokens_out": 697,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 3
+  }
+ },
+ "model": "qwen2.5:3b"
+}

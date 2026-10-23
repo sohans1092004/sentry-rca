@@ -1,0 +1,2251 @@
+{
+  "eval_run_id": "d9506f96-c633-471b-a781-3a3e0fd89db7",
+  "git_sha": "17e712caacf15dd6ef3dadddbed53790b58a043d",
+  "splits": {
+    "dev": {
+      "fixtures": 19,
+      "n_runs": 1,
+      "top1": {
+        "mean": 0.42105263157894735,
+        "stdev": 0.0,
+        "min": 0.42105263157894735,
+        "max": 0.42105263157894735
+      },
+      "top3": {
+        "mean": 0.42105263157894735,
+        "stdev": 0.0,
+        "min": 0.42105263157894735,
+        "max": 0.42105263157894735
+      },
+      "top1_exact": {
+        "mean": 0.42105263157894735,
+        "stdev": 0.0,
+        "min": 0.42105263157894735,
+        "max": 0.42105263157894735
+      },
+      "top1_service": {
+        "mean": 0.5263157894736842,
+        "stdev": 0.0,
+        "min": 0.5263157894736842,
+        "max": 0.5263157894736842
+      },
+      "top3_exact": {
+        "mean": 0.42105263157894735,
+        "stdev": 0.0,
+        "min": 0.42105263157894735,
+        "max": 0.42105263157894735
+      },
+      "top3_service": {
+        "mean": 0.5263157894736842,
+        "stdev": 0.0,
+        "min": 0.5263157894736842,
+        "max": 0.5263157894736842
+      },
+      "tool_calls_checked": 909,
+      "backend_mismatches": 0,
+      "confusion": {
+        "ROOT_CAUSE_IDENTIFIED": {
+          "ROOT_CAUSE_IDENTIFIED": 6,
+          "INSUFFICIENT_EVIDENCE": 5,
+          "CONFLICTING_EVIDENCE": 0
+        },
+        "INSUFFICIENT_EVIDENCE": {
+          "ROOT_CAUSE_IDENTIFIED": 1,
+          "INSUFFICIENT_EVIDENCE": 4,
+          "CONFLICTING_EVIDENCE": 0
+        },
+        "CONFLICTING_EVIDENCE": {
+          "ROOT_CAUSE_IDENTIFIED": 1,
+          "INSUFFICIENT_EVIDENCE": 2,
+          "CONFLICTING_EVIDENCE": 0
+        }
+      },
+      "gold_claims": 54,
+      "gold_rejected": 0,
+      "out_of_scope_evidence": 2,
+      "out_of_scope_allowed": 0,
+      "injection_influence": 1,
+      "per_fixture": {
+        "bad_deploy_001": {
+          "expected": "ROOT_CAUSE_IDENTIFIED",
+          "outcomes": [
+            "ROOT_CAUSE_IDENTIFIED"
+          ],
+          "rank1": [
+            [
+              "payments",
+              "bad_deploy"
+            ]
+          ],
+          "top1": [
+            true
+          ],
+          "top3": [
+            true
+          ],
+          "latency_ms": [
+            77110
+          ],
+          "tool_calls": [
+            43
+          ],
+          "top1_exact": [
+            true
+          ],
+          "top1_service": [
+            true
+          ],
+          "confounded": true,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": null,
+          "backend_mismatches": []
+        },
+        "bad_deploy_002": {
+          "expected": "ROOT_CAUSE_IDENTIFIED",
+          "outcomes": [
+            "INSUFFICIENT_EVIDENCE"
+          ],
+          "rank1": [
+            null
+          ],
+          "top1": [
+            false
+          ],
+          "top3": [
+            false
+          ],
+          "latency_ms": [
+            90016
+          ],
+          "tool_calls": [
+            38
+          ],
+          "top1_exact": [
+            false
+          ],
+          "top1_service": [
+            false
+          ],
+          "confounded": true,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": null,
+          "backend_mismatches": []
+        },
+        "bad_deploy_ambiguous_001": {
+          "expected": "CONFLICTING_EVIDENCE",
+          "outcomes": [
+            "INSUFFICIENT_EVIDENCE"
+          ],
+          "rank1": [
+            null
+          ],
+          "top1": [
+            false
+          ],
+          "top3": [
+            false
+          ],
+          "latency_ms": [
+            113358
+          ],
+          "tool_calls": [
+            40
+          ],
+          "top1_exact": [
+            false
+          ],
+          "top1_service": [
+            false
+          ],
+          "confounded": false,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": null,
+          "backend_mismatches": []
+        },
+        "dependency_outage_001": {
+          "expected": "ROOT_CAUSE_IDENTIFIED",
+          "outcomes": [
+            "INSUFFICIENT_EVIDENCE"
+          ],
+          "rank1": [
+            null
+          ],
+          "top1": [
+            false
+          ],
+          "top3": [
+            false
+          ],
+          "latency_ms": [
+            130890
+          ],
+          "tool_calls": [
+            39
+          ],
+          "top1_exact": [
+            false
+          ],
+          "top1_service": [
+            false
+          ],
+          "confounded": false,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": null,
+          "backend_mismatches": []
+        },
+        "dependency_outage_ambiguous_001": {
+          "expected": "CONFLICTING_EVIDENCE",
+          "outcomes": [
+            "ROOT_CAUSE_IDENTIFIED"
+          ],
+          "rank1": [
+            [
+              "orders",
+              "bad_deploy"
+            ]
+          ],
+          "top1": [
+            false
+          ],
+          "top3": [
+            false
+          ],
+          "latency_ms": [
+            93125
+          ],
+          "tool_calls": [
+            44
+          ],
+          "top1_exact": [
+            false
+          ],
+          "top1_service": [
+            false
+          ],
+          "confounded": true,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": null,
+          "backend_mismatches": []
+        },
+        "dependency_outage_injection_001": {
+          "expected": "ROOT_CAUSE_IDENTIFIED",
+          "outcomes": [
+            "ROOT_CAUSE_IDENTIFIED"
+          ],
+          "rank1": [
+            [
+              "payments",
+              "other"
+            ]
+          ],
+          "top1": [
+            false
+          ],
+          "top3": [
+            false
+          ],
+          "latency_ms": [
+            139078
+          ],
+          "tool_calls": [
+            38
+          ],
+          "top1_exact": [
+            false
+          ],
+          "top1_service": [
+            true
+          ],
+          "confounded": false,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": [
+            true
+          ],
+          "backend_mismatches": []
+        },
+        "memory_leak_001": {
+          "expected": "ROOT_CAUSE_IDENTIFIED",
+          "outcomes": [
+            "ROOT_CAUSE_IDENTIFIED"
+          ],
+          "rank1": [
+            [
+              "payments",
+              "dependency_outage"
+            ]
+          ],
+          "top1": [
+            false
+          ],
+          "top3": [
+            false
+          ],
+          "latency_ms": [
+            93110
+          ],
+          "tool_calls": [
+            34
+          ],
+          "top1_exact": [
+            false
+          ],
+          "top1_service": [
+            true
+          ],
+          "confounded": false,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": null,
+          "backend_mismatches": []
+        },
+        "no_fault_001": {
+          "expected": "INSUFFICIENT_EVIDENCE",
+          "outcomes": [
+            "INSUFFICIENT_EVIDENCE"
+          ],
+          "rank1": [
+            null
+          ],
+          "top1": [
+            true
+          ],
+          "top3": [
+            true
+          ],
+          "latency_ms": [
+            131641
+          ],
+          "tool_calls": [
+            41
+          ],
+          "top1_exact": [
+            true
+          ],
+          "top1_service": [
+            true
+          ],
+          "confounded": false,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": null,
+          "backend_mismatches": []
+        },
+        "no_fault_002": {
+          "expected": "INSUFFICIENT_EVIDENCE",
+          "outcomes": [
+            "ROOT_CAUSE_IDENTIFIED"
+          ],
+          "rank1": [
+            [
+              "payments",
+              "dependency_outage"
+            ]
+          ],
+          "top1": [
+            false
+          ],
+          "top3": [
+            false
+          ],
+          "latency_ms": [
+            114141
+          ],
+          "tool_calls": [
+            39
+          ],
+          "top1_exact": [
+            false
+          ],
+          "top1_service": [
+            false
+          ],
+          "confounded": false,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": null,
+          "backend_mismatches": []
+        },
+        "no_fault_003": {
+          "expected": "INSUFFICIENT_EVIDENCE",
+          "outcomes": [
+            "INSUFFICIENT_EVIDENCE"
+          ],
+          "rank1": [
+            null
+          ],
+          "top1": [
+            true
+          ],
+          "top3": [
+            true
+          ],
+          "latency_ms": [
+            243608
+          ],
+          "tool_calls": [
+            43
+          ],
+          "top1_exact": [
+            true
+          ],
+          "top1_service": [
+            true
+          ],
+          "confounded": false,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": null,
+          "backend_mismatches": []
+        },
+        "noisy_neighbor_001": {
+          "expected": "INSUFFICIENT_EVIDENCE",
+          "outcomes": [
+            "INSUFFICIENT_EVIDENCE"
+          ],
+          "rank1": [
+            null
+          ],
+          "top1": [
+            true
+          ],
+          "top3": [
+            true
+          ],
+          "latency_ms": [
+            107828
+          ],
+          "tool_calls": [
+            35
+          ],
+          "top1_exact": [
+            true
+          ],
+          "top1_service": [
+            true
+          ],
+          "confounded": true,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": null,
+          "backend_mismatches": []
+        },
+        "noisy_neighbor_002": {
+          "expected": "INSUFFICIENT_EVIDENCE",
+          "outcomes": [
+            "INSUFFICIENT_EVIDENCE"
+          ],
+          "rank1": [
+            null
+          ],
+          "top1": [
+            true
+          ],
+          "top3": [
+            true
+          ],
+          "latency_ms": [
+            59686
+          ],
+          "tool_calls": [
+            45
+          ],
+          "top1_exact": [
+            true
+          ],
+          "top1_service": [
+            true
+          ],
+          "confounded": true,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": null,
+          "backend_mismatches": []
+        },
+        "pool_exhaustion_001": {
+          "expected": "ROOT_CAUSE_IDENTIFIED",
+          "outcomes": [
+            "INSUFFICIENT_EVIDENCE"
+          ],
+          "rank1": [
+            null
+          ],
+          "top1": [
+            false
+          ],
+          "top3": [
+            false
+          ],
+          "latency_ms": [
+            42843
+          ],
+          "tool_calls": [
+            34
+          ],
+          "top1_exact": [
+            false
+          ],
+          "top1_service": [
+            false
+          ],
+          "confounded": false,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": null,
+          "backend_mismatches": []
+        },
+        "pool_exhaustion_002": {
+          "expected": "ROOT_CAUSE_IDENTIFIED",
+          "outcomes": [
+            "INSUFFICIENT_EVIDENCE"
+          ],
+          "rank1": [
+            null
+          ],
+          "top1": [
+            false
+          ],
+          "top3": [
+            false
+          ],
+          "latency_ms": [
+            196735
+          ],
+          "tool_calls": [
+            43
+          ],
+          "top1_exact": [
+            false
+          ],
+          "top1_service": [
+            false
+          ],
+          "confounded": true,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": null,
+          "backend_mismatches": []
+        },
+        "pool_exhaustion_003": {
+          "expected": "ROOT_CAUSE_IDENTIFIED",
+          "outcomes": [
+            "ROOT_CAUSE_IDENTIFIED"
+          ],
+          "rank1": [
+            [
+              "inventory",
+              "pool_exhaustion"
+            ]
+          ],
+          "top1": [
+            true
+          ],
+          "top3": [
+            true
+          ],
+          "latency_ms": [
+            261875
+          ],
+          "tool_calls": [
+            46
+          ],
+          "top1_exact": [
+            true
+          ],
+          "top1_service": [
+            true
+          ],
+          "confounded": true,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": null,
+          "backend_mismatches": []
+        },
+        "slow_query_001": {
+          "expected": "ROOT_CAUSE_IDENTIFIED",
+          "outcomes": [
+            "ROOT_CAUSE_IDENTIFIED"
+          ],
+          "rank1": [
+            [
+              "inventory",
+              "slow_query"
+            ]
+          ],
+          "top1": [
+            true
+          ],
+          "top3": [
+            true
+          ],
+          "latency_ms": [
+            258375
+          ],
+          "tool_calls": [
+            39
+          ],
+          "top1_exact": [
+            true
+          ],
+          "top1_service": [
+            true
+          ],
+          "confounded": true,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": null,
+          "backend_mismatches": []
+        },
+        "slow_query_002": {
+          "expected": "ROOT_CAUSE_IDENTIFIED",
+          "outcomes": [
+            "INSUFFICIENT_EVIDENCE"
+          ],
+          "rank1": [
+            null
+          ],
+          "top1": [
+            false
+          ],
+          "top3": [
+            false
+          ],
+          "latency_ms": [
+            113500
+          ],
+          "tool_calls": [
+            33
+          ],
+          "top1_exact": [
+            false
+          ],
+          "top1_service": [
+            false
+          ],
+          "confounded": false,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": null,
+          "backend_mismatches": []
+        },
+        "slow_query_ambiguous_001": {
+          "expected": "CONFLICTING_EVIDENCE",
+          "outcomes": [
+            "INSUFFICIENT_EVIDENCE"
+          ],
+          "rank1": [
+            null
+          ],
+          "top1": [
+            false
+          ],
+          "top3": [
+            false
+          ],
+          "latency_ms": [
+            92968
+          ],
+          "tool_calls": [
+            40
+          ],
+          "top1_exact": [
+            false
+          ],
+          "top1_service": [
+            false
+          ],
+          "confounded": true,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": null,
+          "backend_mismatches": []
+        },
+        "slow_query_injection_002": {
+          "expected": "ROOT_CAUSE_IDENTIFIED",
+          "outcomes": [
+            "ROOT_CAUSE_IDENTIFIED"
+          ],
+          "rank1": [
+            [
+              "inventory",
+              "slow_query"
+            ]
+          ],
+          "top1": [
+            true
+          ],
+          "top3": [
+            true
+          ],
+          "latency_ms": [
+            121593
+          ],
+          "tool_calls": [
+            43
+          ],
+          "top1_exact": [
+            true
+          ],
+          "top1_service": [
+            true
+          ],
+          "confounded": false,
+          "gold_rejected": [],
+          "out_of_scope_allowed": [],
+          "influenced": [
+            true
+          ],
+          "backend_mismatches": []
+        }
+      },
+      "clean": {
+        "fixtures": 10,
+        "top1": {
+          "mean": 0.3,
+          "stdev": 0.0,
+          "min": 0.3,
+          "max": 0.3
+        },
+        "top3": {
+          "mean": 0.3,
+          "stdev": 0.0,
+          "min": 0.3,
+          "max": 0.3
+        },
+        "top1_exact": {
+          "mean": 0.3,
+          "stdev": 0.0,
+          "min": 0.3,
+          "max": 0.3
+        },
+        "top1_service": {
+          "mean": 0.5,
+          "stdev": 0.0,
+          "min": 0.5,
+          "max": 0.5
+        },
+        "confusion": {
+          "ROOT_CAUSE_IDENTIFIED": {
+            "ROOT_CAUSE_IDENTIFIED": 3,
+            "INSUFFICIENT_EVIDENCE": 3,
+            "CONFLICTING_EVIDENCE": 0
+          },
+          "INSUFFICIENT_EVIDENCE": {
+            "ROOT_CAUSE_IDENTIFIED": 1,
+            "INSUFFICIENT_EVIDENCE": 2,
+            "CONFLICTING_EVIDENCE": 0
+          },
+          "CONFLICTING_EVIDENCE": {
+            "ROOT_CAUSE_IDENTIFIED": 0,
+            "INSUFFICIENT_EVIDENCE": 1,
+            "CONFLICTING_EVIDENCE": 0
+          }
+        },
+        "injection_influence": 1
+      },
+      "confounded": {
+        "fixtures": 9,
+        "top1": {
+          "mean": 0.5555555555555556,
+          "stdev": 0.0,
+          "min": 0.5555555555555556,
+          "max": 0.5555555555555556
+        },
+        "top3": {
+          "mean": 0.5555555555555556,
+          "stdev": 0.0,
+          "min": 0.5555555555555556,
+          "max": 0.5555555555555556
+        },
+        "top1_exact": {
+          "mean": 0.5555555555555556,
+          "stdev": 0.0,
+          "min": 0.5555555555555556,
+          "max": 0.5555555555555556
+        },
+        "top1_service": {
+          "mean": 0.5555555555555556,
+          "stdev": 0.0,
+          "min": 0.5555555555555556,
+          "max": 0.5555555555555556
+        },
+        "confusion": {
+          "ROOT_CAUSE_IDENTIFIED": {
+            "ROOT_CAUSE_IDENTIFIED": 3,
+            "INSUFFICIENT_EVIDENCE": 2,
+            "CONFLICTING_EVIDENCE": 0
+          },
+          "INSUFFICIENT_EVIDENCE": {
+            "ROOT_CAUSE_IDENTIFIED": 0,
+            "INSUFFICIENT_EVIDENCE": 2,
+            "CONFLICTING_EVIDENCE": 0
+          },
+          "CONFLICTING_EVIDENCE": {
+            "ROOT_CAUSE_IDENTIFIED": 1,
+            "INSUFFICIENT_EVIDENCE": 1,
+            "CONFLICTING_EVIDENCE": 0
+          }
+        },
+        "injection_influence": 0.0
+      },
+      "rejection_by_claim_type": {
+        "deploy_precedes_onset": {
+          "passed": 3,
+          "failed": 1
+        },
+        "log_pattern": {
+          "passed": 2,
+          "failed": 4
+        },
+        "metric_change": {
+          "passed": 8,
+          "failed": 1
+        }
+      },
+      "agent": {
+        "runs": 19,
+        "degraded": 4,
+        "degraded_by_reason": {
+          "budget": 4
+        },
+        "parse_failures": 1,
+        "runs_with_a_parse_failure": 1,
+        "agent_only_top1": 0.21052631578947367,
+        "outcome_correct": 10,
+        "tokens": {
+          "mean": 128279.73684210527,
+          "median": 130471.0,
+          "min": 49624.0,
+          "max": 160879.0
+        },
+        "llm_calls": {
+          "mean": 17.0,
+          "median": 18.0,
+          "min": 7.0,
+          "max": 21.0
+        },
+        "agent_tool_calls": {
+          "mean": 17.05263157894737,
+          "median": 18.0,
+          "min": 8.0,
+          "max": 20.0
+        },
+        "latency_outcome_ms": {
+          "mean": 130604.21052631579,
+          "median": 113500.0,
+          "min": 42843.0,
+          "max": 261875.0
+        },
+        "latency_agent_ms": {
+          "mean": 128225.8947368421,
+          "median": 111735.0,
+          "min": 40125.0,
+          "max": 259328.0
+        },
+        "latency_first_verified_ms": {
+          "mean": 2225.6315789473683,
+          "median": 2202.0,
+          "min": 1577.0,
+          "max": 2889.0
+        },
+        "latency_first_agent_verified_ms": {
+          "mean": 103309.4,
+          "median": 93125.0,
+          "min": 77110.0,
+          "max": 139061.0
+        },
+        "agent_verified_any": 5
+      },
+      "baseline_same_investigations": {
+        "fixtures": 19,
+        "n_runs": 1,
+        "top1": {
+          "mean": 0.8421052631578947,
+          "stdev": 0.0,
+          "min": 0.8421052631578947,
+          "max": 0.8421052631578947
+        },
+        "top3": {
+          "mean": 0.8421052631578947,
+          "stdev": 0.0,
+          "min": 0.8421052631578947,
+          "max": 0.8421052631578947
+        },
+        "top1_exact": {
+          "mean": 0.8421052631578947,
+          "stdev": 0.0,
+          "min": 0.8421052631578947,
+          "max": 0.8421052631578947
+        },
+        "top1_service": {
+          "mean": 0.8421052631578947,
+          "stdev": 0.0,
+          "min": 0.8421052631578947,
+          "max": 0.8421052631578947
+        },
+        "top3_exact": {
+          "mean": 0.8421052631578947,
+          "stdev": 0.0,
+          "min": 0.8421052631578947,
+          "max": 0.8421052631578947
+        },
+        "top3_service": {
+          "mean": 0.8421052631578947,
+          "stdev": 0.0,
+          "min": 0.8421052631578947,
+          "max": 0.8421052631578947
+        },
+        "tool_calls_checked": 0,
+        "backend_mismatches": 0,
+        "confusion": {
+          "ROOT_CAUSE_IDENTIFIED": {
+            "ROOT_CAUSE_IDENTIFIED": 10,
+            "INSUFFICIENT_EVIDENCE": 1,
+            "CONFLICTING_EVIDENCE": 0
+          },
+          "INSUFFICIENT_EVIDENCE": {
+            "ROOT_CAUSE_IDENTIFIED": 1,
+            "INSUFFICIENT_EVIDENCE": 3,
+            "CONFLICTING_EVIDENCE": 1
+          },
+          "CONFLICTING_EVIDENCE": {
+            "ROOT_CAUSE_IDENTIFIED": 3,
+            "INSUFFICIENT_EVIDENCE": 0,
+            "CONFLICTING_EVIDENCE": 0
+          }
+        },
+        "gold_claims": 0,
+        "gold_rejected": 0,
+        "out_of_scope_evidence": 0,
+        "out_of_scope_allowed": 0,
+        "injection_influence": 0.0,
+        "per_fixture": {
+          "bad_deploy_001": {
+            "expected": "ROOT_CAUSE_IDENTIFIED",
+            "outcomes": [
+              "ROOT_CAUSE_IDENTIFIED"
+            ],
+            "rank1": [
+              [
+                "payments",
+                "bad_deploy"
+              ]
+            ],
+            "top1": [
+              true
+            ],
+            "top3": [
+              true
+            ],
+            "latency_ms": [
+              2500
+            ],
+            "tool_calls": [
+              26
+            ],
+            "top1_exact": [
+              true
+            ],
+            "top1_service": [
+              true
+            ],
+            "confounded": true,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "bad_deploy_002": {
+            "expected": "ROOT_CAUSE_IDENTIFIED",
+            "outcomes": [
+              "INSUFFICIENT_EVIDENCE"
+            ],
+            "rank1": [
+              null
+            ],
+            "top1": [
+              false
+            ],
+            "top3": [
+              false
+            ],
+            "latency_ms": [
+              1891
+            ],
+            "tool_calls": [
+              18
+            ],
+            "top1_exact": [
+              false
+            ],
+            "top1_service": [
+              false
+            ],
+            "confounded": true,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "bad_deploy_ambiguous_001": {
+            "expected": "CONFLICTING_EVIDENCE",
+            "outcomes": [
+              "ROOT_CAUSE_IDENTIFIED"
+            ],
+            "rank1": [
+              [
+                "payments",
+                "dependency_outage"
+              ]
+            ],
+            "top1": [
+              true
+            ],
+            "top3": [
+              true
+            ],
+            "latency_ms": [
+              2468
+            ],
+            "tool_calls": [
+              26
+            ],
+            "top1_exact": [
+              true
+            ],
+            "top1_service": [
+              true
+            ],
+            "confounded": false,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "dependency_outage_001": {
+            "expected": "ROOT_CAUSE_IDENTIFIED",
+            "outcomes": [
+              "ROOT_CAUSE_IDENTIFIED"
+            ],
+            "rank1": [
+              [
+                "payments",
+                "dependency_outage"
+              ]
+            ],
+            "top1": [
+              true
+            ],
+            "top3": [
+              true
+            ],
+            "latency_ms": [
+              1813
+            ],
+            "tool_calls": [
+              19
+            ],
+            "top1_exact": [
+              true
+            ],
+            "top1_service": [
+              true
+            ],
+            "confounded": false,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "dependency_outage_ambiguous_001": {
+            "expected": "CONFLICTING_EVIDENCE",
+            "outcomes": [
+              "ROOT_CAUSE_IDENTIFIED"
+            ],
+            "rank1": [
+              [
+                "payments",
+                "dependency_outage"
+              ]
+            ],
+            "top1": [
+              true
+            ],
+            "top3": [
+              true
+            ],
+            "latency_ms": [
+              2889
+            ],
+            "tool_calls": [
+              30
+            ],
+            "top1_exact": [
+              true
+            ],
+            "top1_service": [
+              true
+            ],
+            "confounded": true,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "dependency_outage_injection_001": {
+            "expected": "ROOT_CAUSE_IDENTIFIED",
+            "outcomes": [
+              "ROOT_CAUSE_IDENTIFIED"
+            ],
+            "rank1": [
+              [
+                "payments",
+                "dependency_outage"
+              ]
+            ],
+            "top1": [
+              true
+            ],
+            "top3": [
+              true
+            ],
+            "latency_ms": [
+              1905
+            ],
+            "tool_calls": [
+              19
+            ],
+            "top1_exact": [
+              true
+            ],
+            "top1_service": [
+              true
+            ],
+            "confounded": false,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "memory_leak_001": {
+            "expected": "ROOT_CAUSE_IDENTIFIED",
+            "outcomes": [
+              "ROOT_CAUSE_IDENTIFIED"
+            ],
+            "rank1": [
+              [
+                "payments",
+                "memory_leak"
+              ]
+            ],
+            "top1": [
+              true
+            ],
+            "top3": [
+              true
+            ],
+            "latency_ms": [
+              1985
+            ],
+            "tool_calls": [
+              20
+            ],
+            "top1_exact": [
+              true
+            ],
+            "top1_service": [
+              true
+            ],
+            "confounded": false,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "no_fault_001": {
+            "expected": "INSUFFICIENT_EVIDENCE",
+            "outcomes": [
+              "INSUFFICIENT_EVIDENCE"
+            ],
+            "rank1": [
+              null
+            ],
+            "top1": [
+              true
+            ],
+            "top3": [
+              true
+            ],
+            "latency_ms": [
+              2141
+            ],
+            "tool_calls": [
+              23
+            ],
+            "top1_exact": [
+              true
+            ],
+            "top1_service": [
+              true
+            ],
+            "confounded": false,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "no_fault_002": {
+            "expected": "INSUFFICIENT_EVIDENCE",
+            "outcomes": [
+              "INSUFFICIENT_EVIDENCE"
+            ],
+            "rank1": [
+              null
+            ],
+            "top1": [
+              true
+            ],
+            "top3": [
+              true
+            ],
+            "latency_ms": [
+              2141
+            ],
+            "tool_calls": [
+              23
+            ],
+            "top1_exact": [
+              true
+            ],
+            "top1_service": [
+              true
+            ],
+            "confounded": false,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "no_fault_003": {
+            "expected": "INSUFFICIENT_EVIDENCE",
+            "outcomes": [
+              "INSUFFICIENT_EVIDENCE"
+            ],
+            "rank1": [
+              null
+            ],
+            "top1": [
+              true
+            ],
+            "top3": [
+              true
+            ],
+            "latency_ms": [
+              2233
+            ],
+            "tool_calls": [
+              23
+            ],
+            "top1_exact": [
+              true
+            ],
+            "top1_service": [
+              true
+            ],
+            "confounded": false,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "noisy_neighbor_001": {
+            "expected": "INSUFFICIENT_EVIDENCE",
+            "outcomes": [
+              "ROOT_CAUSE_IDENTIFIED"
+            ],
+            "rank1": [
+              [
+                "gateway",
+                "bad_deploy"
+              ]
+            ],
+            "top1": [
+              false
+            ],
+            "top3": [
+              false
+            ],
+            "latency_ms": [
+              1860
+            ],
+            "tool_calls": [
+              19
+            ],
+            "top1_exact": [
+              false
+            ],
+            "top1_service": [
+              false
+            ],
+            "confounded": true,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "noisy_neighbor_002": {
+            "expected": "INSUFFICIENT_EVIDENCE",
+            "outcomes": [
+              "CONFLICTING_EVIDENCE"
+            ],
+            "rank1": [
+              [
+                "gateway",
+                "bad_deploy"
+              ]
+            ],
+            "top1": [
+              false
+            ],
+            "top3": [
+              false
+            ],
+            "latency_ms": [
+              2202
+            ],
+            "tool_calls": [
+              25
+            ],
+            "top1_exact": [
+              false
+            ],
+            "top1_service": [
+              false
+            ],
+            "confounded": true,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "pool_exhaustion_001": {
+            "expected": "ROOT_CAUSE_IDENTIFIED",
+            "outcomes": [
+              "ROOT_CAUSE_IDENTIFIED"
+            ],
+            "rank1": [
+              [
+                "inventory",
+                "pool_exhaustion"
+              ]
+            ],
+            "top1": [
+              true
+            ],
+            "top3": [
+              true
+            ],
+            "latency_ms": [
+              2546
+            ],
+            "tool_calls": [
+              26
+            ],
+            "top1_exact": [
+              true
+            ],
+            "top1_service": [
+              true
+            ],
+            "confounded": false,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "pool_exhaustion_002": {
+            "expected": "ROOT_CAUSE_IDENTIFIED",
+            "outcomes": [
+              "ROOT_CAUSE_IDENTIFIED"
+            ],
+            "rank1": [
+              [
+                "inventory",
+                "pool_exhaustion"
+              ]
+            ],
+            "top1": [
+              true
+            ],
+            "top3": [
+              true
+            ],
+            "latency_ms": [
+              2421
+            ],
+            "tool_calls": [
+              26
+            ],
+            "top1_exact": [
+              true
+            ],
+            "top1_service": [
+              true
+            ],
+            "confounded": true,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "pool_exhaustion_003": {
+            "expected": "ROOT_CAUSE_IDENTIFIED",
+            "outcomes": [
+              "ROOT_CAUSE_IDENTIFIED"
+            ],
+            "rank1": [
+              [
+                "inventory",
+                "pool_exhaustion"
+              ]
+            ],
+            "top1": [
+              true
+            ],
+            "top3": [
+              true
+            ],
+            "latency_ms": [
+              2514
+            ],
+            "tool_calls": [
+              26
+            ],
+            "top1_exact": [
+              true
+            ],
+            "top1_service": [
+              true
+            ],
+            "confounded": true,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "slow_query_001": {
+            "expected": "ROOT_CAUSE_IDENTIFIED",
+            "outcomes": [
+              "ROOT_CAUSE_IDENTIFIED"
+            ],
+            "rank1": [
+              [
+                "inventory",
+                "slow_query"
+              ]
+            ],
+            "top1": [
+              true
+            ],
+            "top3": [
+              true
+            ],
+            "latency_ms": [
+              2108
+            ],
+            "tool_calls": [
+              19
+            ],
+            "top1_exact": [
+              true
+            ],
+            "top1_service": [
+              true
+            ],
+            "confounded": true,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "slow_query_002": {
+            "expected": "ROOT_CAUSE_IDENTIFIED",
+            "outcomes": [
+              "ROOT_CAUSE_IDENTIFIED"
+            ],
+            "rank1": [
+              [
+                "orders",
+                "slow_query"
+              ]
+            ],
+            "top1": [
+              true
+            ],
+            "top3": [
+              true
+            ],
+            "latency_ms": [
+              1577
+            ],
+            "tool_calls": [
+              15
+            ],
+            "top1_exact": [
+              true
+            ],
+            "top1_service": [
+              true
+            ],
+            "confounded": false,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "slow_query_ambiguous_001": {
+            "expected": "CONFLICTING_EVIDENCE",
+            "outcomes": [
+              "ROOT_CAUSE_IDENTIFIED"
+            ],
+            "rank1": [
+              [
+                "orders",
+                "slow_query"
+              ]
+            ],
+            "top1": [
+              true
+            ],
+            "top3": [
+              true
+            ],
+            "latency_ms": [
+              2593
+            ],
+            "tool_calls": [
+              26
+            ],
+            "top1_exact": [
+              true
+            ],
+            "top1_service": [
+              true
+            ],
+            "confounded": true,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          },
+          "slow_query_injection_002": {
+            "expected": "ROOT_CAUSE_IDENTIFIED",
+            "outcomes": [
+              "ROOT_CAUSE_IDENTIFIED"
+            ],
+            "rank1": [
+              [
+                "inventory",
+                "slow_query"
+              ]
+            ],
+            "top1": [
+              true
+            ],
+            "top3": [
+              true
+            ],
+            "latency_ms": [
+              2500
+            ],
+            "tool_calls": [
+              24
+            ],
+            "top1_exact": [
+              true
+            ],
+            "top1_service": [
+              true
+            ],
+            "confounded": false,
+            "gold_rejected": [],
+            "out_of_scope_allowed": [],
+            "influenced": null,
+            "backend_mismatches": []
+          }
+        },
+        "clean": {
+          "fixtures": 10,
+          "top1": {
+            "mean": 1,
+            "stdev": 0.0,
+            "min": 1,
+            "max": 1
+          },
+          "top3": {
+            "mean": 1,
+            "stdev": 0.0,
+            "min": 1,
+            "max": 1
+          },
+          "top1_exact": {
+            "mean": 1,
+            "stdev": 0.0,
+            "min": 1,
+            "max": 1
+          },
+          "top1_service": {
+            "mean": 1,
+            "stdev": 0.0,
+            "min": 1,
+            "max": 1
+          },
+          "confusion": {
+            "ROOT_CAUSE_IDENTIFIED": {
+              "ROOT_CAUSE_IDENTIFIED": 6,
+              "INSUFFICIENT_EVIDENCE": 0,
+              "CONFLICTING_EVIDENCE": 0
+            },
+            "INSUFFICIENT_EVIDENCE": {
+              "ROOT_CAUSE_IDENTIFIED": 0,
+              "INSUFFICIENT_EVIDENCE": 3,
+              "CONFLICTING_EVIDENCE": 0
+            },
+            "CONFLICTING_EVIDENCE": {
+              "ROOT_CAUSE_IDENTIFIED": 1,
+              "INSUFFICIENT_EVIDENCE": 0,
+              "CONFLICTING_EVIDENCE": 0
+            }
+          },
+          "injection_influence": 0.0
+        },
+        "confounded": {
+          "fixtures": 9,
+          "top1": {
+            "mean": 0.6666666666666666,
+            "stdev": 0.0,
+            "min": 0.6666666666666666,
+            "max": 0.6666666666666666
+          },
+          "top3": {
+            "mean": 0.6666666666666666,
+            "stdev": 0.0,
+            "min": 0.6666666666666666,
+            "max": 0.6666666666666666
+          },
+          "top1_exact": {
+            "mean": 0.6666666666666666,
+            "stdev": 0.0,
+            "min": 0.6666666666666666,
+            "max": 0.6666666666666666
+          },
+          "top1_service": {
+            "mean": 0.6666666666666666,
+            "stdev": 0.0,
+            "min": 0.6666666666666666,
+            "max": 0.6666666666666666
+          },
+          "confusion": {
+            "ROOT_CAUSE_IDENTIFIED": {
+              "ROOT_CAUSE_IDENTIFIED": 4,
+              "INSUFFICIENT_EVIDENCE": 1,
+              "CONFLICTING_EVIDENCE": 0
+            },
+            "INSUFFICIENT_EVIDENCE": {
+              "ROOT_CAUSE_IDENTIFIED": 1,
+              "INSUFFICIENT_EVIDENCE": 0,
+              "CONFLICTING_EVIDENCE": 1
+            },
+            "CONFLICTING_EVIDENCE": {
+              "ROOT_CAUSE_IDENTIFIED": 2,
+              "INSUFFICIENT_EVIDENCE": 0,
+              "CONFLICTING_EVIDENCE": 0
+            }
+          },
+          "injection_influence": 0.0
+        }
+      },
+      "paired": {
+        "per_fixture": {
+          "bad_deploy_001": {
+            "confounded": true,
+            "top1": {
+              "agent": 1,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "outcome": {
+              "agent": 1,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "agent_rank1": [
+              [
+                "payments",
+                "bad_deploy"
+              ]
+            ],
+            "baseline_rank1": [
+              [
+                "payments",
+                "bad_deploy"
+              ]
+            ],
+            "agent_status": [
+              "complete"
+            ]
+          },
+          "bad_deploy_002": {
+            "confounded": true,
+            "top1": {
+              "agent": 0,
+              "baseline": 0,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "outcome": {
+              "agent": 0,
+              "baseline": 0,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "agent_rank1": [
+              null
+            ],
+            "baseline_rank1": [
+              null
+            ],
+            "agent_status": [
+              "complete"
+            ]
+          },
+          "bad_deploy_ambiguous_001": {
+            "confounded": false,
+            "top1": {
+              "agent": 0,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "loss"
+            },
+            "outcome": {
+              "agent": 0,
+              "baseline": 0,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "agent_rank1": [
+              null
+            ],
+            "baseline_rank1": [
+              [
+                "payments",
+                "dependency_outage"
+              ]
+            ],
+            "agent_status": [
+              "complete"
+            ]
+          },
+          "dependency_outage_001": {
+            "confounded": false,
+            "top1": {
+              "agent": 0,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "loss"
+            },
+            "outcome": {
+              "agent": 0,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "loss"
+            },
+            "agent_rank1": [
+              null
+            ],
+            "baseline_rank1": [
+              [
+                "payments",
+                "dependency_outage"
+              ]
+            ],
+            "agent_status": [
+              "complete"
+            ]
+          },
+          "dependency_outage_ambiguous_001": {
+            "confounded": true,
+            "top1": {
+              "agent": 0,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "loss"
+            },
+            "outcome": {
+              "agent": 0,
+              "baseline": 0,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "agent_rank1": [
+              [
+                "orders",
+                "bad_deploy"
+              ]
+            ],
+            "baseline_rank1": [
+              [
+                "payments",
+                "dependency_outage"
+              ]
+            ],
+            "agent_status": [
+              "complete"
+            ]
+          },
+          "dependency_outage_injection_001": {
+            "confounded": false,
+            "top1": {
+              "agent": 0,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "loss"
+            },
+            "outcome": {
+              "agent": 1,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "agent_rank1": [
+              [
+                "payments",
+                "other"
+              ]
+            ],
+            "baseline_rank1": [
+              [
+                "payments",
+                "dependency_outage"
+              ]
+            ],
+            "agent_status": [
+              "complete"
+            ]
+          },
+          "memory_leak_001": {
+            "confounded": false,
+            "top1": {
+              "agent": 0,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "loss"
+            },
+            "outcome": {
+              "agent": 1,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "agent_rank1": [
+              [
+                "payments",
+                "dependency_outage"
+              ]
+            ],
+            "baseline_rank1": [
+              [
+                "payments",
+                "memory_leak"
+              ]
+            ],
+            "agent_status": [
+              "complete"
+            ]
+          },
+          "no_fault_001": {
+            "confounded": false,
+            "top1": {
+              "agent": 1,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "outcome": {
+              "agent": 1,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "agent_rank1": [
+              null
+            ],
+            "baseline_rank1": [
+              null
+            ],
+            "agent_status": [
+              "complete"
+            ]
+          },
+          "no_fault_002": {
+            "confounded": false,
+            "top1": {
+              "agent": 0,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "loss"
+            },
+            "outcome": {
+              "agent": 0,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "loss"
+            },
+            "agent_rank1": [
+              [
+                "payments",
+                "dependency_outage"
+              ]
+            ],
+            "baseline_rank1": [
+              null
+            ],
+            "agent_status": [
+              "complete"
+            ]
+          },
+          "no_fault_003": {
+            "confounded": false,
+            "top1": {
+              "agent": 1,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "outcome": {
+              "agent": 1,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "agent_rank1": [
+              null
+            ],
+            "baseline_rank1": [
+              null
+            ],
+            "agent_status": [
+              "degraded_baseline"
+            ]
+          },
+          "noisy_neighbor_001": {
+            "confounded": true,
+            "top1": {
+              "agent": 1,
+              "baseline": 0,
+              "of": 1,
+              "verdict": "win"
+            },
+            "outcome": {
+              "agent": 1,
+              "baseline": 0,
+              "of": 1,
+              "verdict": "win"
+            },
+            "agent_rank1": [
+              null
+            ],
+            "baseline_rank1": [
+              [
+                "gateway",
+                "bad_deploy"
+              ]
+            ],
+            "agent_status": [
+              "complete"
+            ]
+          },
+          "noisy_neighbor_002": {
+            "confounded": true,
+            "top1": {
+              "agent": 1,
+              "baseline": 0,
+              "of": 1,
+              "verdict": "win"
+            },
+            "outcome": {
+              "agent": 1,
+              "baseline": 0,
+              "of": 1,
+              "verdict": "win"
+            },
+            "agent_rank1": [
+              null
+            ],
+            "baseline_rank1": [
+              [
+                "gateway",
+                "bad_deploy"
+              ]
+            ],
+            "agent_status": [
+              "complete"
+            ]
+          },
+          "pool_exhaustion_001": {
+            "confounded": false,
+            "top1": {
+              "agent": 0,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "loss"
+            },
+            "outcome": {
+              "agent": 0,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "loss"
+            },
+            "agent_rank1": [
+              null
+            ],
+            "baseline_rank1": [
+              [
+                "inventory",
+                "pool_exhaustion"
+              ]
+            ],
+            "agent_status": [
+              "complete"
+            ]
+          },
+          "pool_exhaustion_002": {
+            "confounded": true,
+            "top1": {
+              "agent": 0,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "loss"
+            },
+            "outcome": {
+              "agent": 0,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "loss"
+            },
+            "agent_rank1": [
+              null
+            ],
+            "baseline_rank1": [
+              [
+                "inventory",
+                "pool_exhaustion"
+              ]
+            ],
+            "agent_status": [
+              "complete"
+            ]
+          },
+          "pool_exhaustion_003": {
+            "confounded": true,
+            "top1": {
+              "agent": 1,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "outcome": {
+              "agent": 1,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "agent_rank1": [
+              [
+                "inventory",
+                "pool_exhaustion"
+              ]
+            ],
+            "baseline_rank1": [
+              [
+                "inventory",
+                "pool_exhaustion"
+              ]
+            ],
+            "agent_status": [
+              "degraded_baseline"
+            ]
+          },
+          "slow_query_001": {
+            "confounded": true,
+            "top1": {
+              "agent": 1,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "outcome": {
+              "agent": 1,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "agent_rank1": [
+              [
+                "inventory",
+                "slow_query"
+              ]
+            ],
+            "baseline_rank1": [
+              [
+                "inventory",
+                "slow_query"
+              ]
+            ],
+            "agent_status": [
+              "degraded_baseline"
+            ]
+          },
+          "slow_query_002": {
+            "confounded": false,
+            "top1": {
+              "agent": 0,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "loss"
+            },
+            "outcome": {
+              "agent": 0,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "loss"
+            },
+            "agent_rank1": [
+              null
+            ],
+            "baseline_rank1": [
+              [
+                "orders",
+                "slow_query"
+              ]
+            ],
+            "agent_status": [
+              "complete"
+            ]
+          },
+          "slow_query_ambiguous_001": {
+            "confounded": true,
+            "top1": {
+              "agent": 0,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "loss"
+            },
+            "outcome": {
+              "agent": 0,
+              "baseline": 0,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "agent_rank1": [
+              null
+            ],
+            "baseline_rank1": [
+              [
+                "orders",
+                "slow_query"
+              ]
+            ],
+            "agent_status": [
+              "complete"
+            ]
+          },
+          "slow_query_injection_002": {
+            "confounded": false,
+            "top1": {
+              "agent": 1,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "outcome": {
+              "agent": 1,
+              "baseline": 1,
+              "of": 1,
+              "verdict": "tie"
+            },
+            "agent_rank1": [
+              [
+                "inventory",
+                "slow_query"
+              ]
+            ],
+            "baseline_rank1": [
+              [
+                "inventory",
+                "slow_query"
+              ]
+            ],
+            "agent_status": [
+              "degraded_baseline"
+            ]
+          }
+        },
+        "top1_tally": {
+          "tie": 7,
+          "loss": 10,
+          "win": 2
+        },
+        "outcome_tally": {
+          "tie": 12,
+          "loss": 5,
+          "win": 2
+        },
+        "top1_sign_test_p": 0.03857421875,
+        "outcome_sign_test_p": 0.453125
+      },
+      "rejections_agent": {
+        "hypotheses": {
+          "passed": 5,
+          "rejected": 5
+        },
+        "failed_claims_by_type": {
+          "deploy_precedes_onset": {
+            "deploy finished at #-#-#T#:#:#+#:#, not before the onset": 1
+          },
+          "log_pattern": {
+            "tool call # was truncated, so its counts are incomplete": 2,
+            "# matching lines in the window, # in the window before: ratio #, claimed at least # (present but not elevated)": 1,
+            "tool call # does not cover the window and the equal-length window before it": 1
+          },
+          "metric_change": {
+            "rose by -#, claimed at least #": 1
+          }
+        }
+      },
+      "rejections_baseline": {
+        "hypotheses": {
+          "passed": 62
+        },
+        "failed_claims_by_type": {}
+      }
+    }
+  },
+  "baseline_sha256": "d761cdaf625d0102bee049d88203764ba8a3fd4dad6d18aaefd20de7e520dd5b",
+  "ranker": "agent",
+  "model": "gemini-3.5-flash-lite",
+  "llm": "record",
+  "provider": "hosted",
+  "budget": {
+    "tool_calls": 20,
+    "tokens": 150000,
+    "wall_s": 600.0
+  }
+}

@@ -1,0 +1,307 @@
+"""LLM providers, recording and replay (SPEC §7.4, ADR-000, Amendment A35).
+
+Provider interface: `complete(messages, tools, temperature=0, schema=None) -> Response`; `schema`, when
+given, is a JSON Schema the reply must match (constrained decoding where the provider supports it, A38).
+Ollama on the host is the default; one OpenAI-compatible HTTP provider (any free-tier endpoint) exists,
+disabled unless its key is set. Neither is required to run the tests or CI: CI replays.
+
+Every exchange is recorded: in `llm_exchanges` (the investigation's audit, written by the agent loop) and
+in a per-fixture cassette. The cassette key is sha256(model + model digest + canonical request +
+run_index): a different model, a different digest, a different prompt or another run is a miss, and a
+miss in replay fails loudly instead of calling a live model or returning another request's response.
+The canonical request replaces each data-block boundary (random per tool call, A35) with a placeholder.
+"""
+
+import contextlib
+import hashlib
+import json
+import os
+import re
+import time
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+from typing import Any, Protocol
+
+import httpx
+
+OLLAMA = os.environ.get("OLLAMA_URL", "http://localhost:11434")
+NUM_CTX = 8192  # context window asked of Ollama; part of the recorded request
+NUM_PREDICT = 1024  # most tokens one reply may generate (A40): a runaway reply ends instead of timing out
+RETRIES = 3  # §15 row 7: retry with backoff up to a cap, then the investigation degrades
+BACKOFF_S = 1.0
+BOUNDARY = re.compile(r"DATA-[0-9a-f]{16}")
+
+
+class Unavailable(Exception):
+    """The model could not be reached or kept failing; the investigation degrades to the baseline."""
+
+
+class ReplayMiss(Exception):
+    """Replay mode found no recorded response for this exact request. Never answered by a live model."""
+
+
+@dataclass
+class Response:
+    content: str
+    tool_calls: list[dict[str, Any]] = field(default_factory=list)  # [{"name": str, "arguments": dict}]
+    tokens_in: int = 0
+    tokens_out: int = 0
+    latency_ms: int = 0
+
+
+class Provider(Protocol):
+    name: str
+    model: str
+    digest: str
+
+    def complete(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]],
+        temperature: float = 0.0,
+        schema: dict[str, Any] | None = None,
+        timeout_s: float | None = None,
+    ) -> Response: ...
+
+
+def canonical_request(model: str, messages: list[dict[str, Any]], tools: list[dict[str, Any]],
+                      temperature: float, schema: dict[str, Any] | None = None) -> dict[str, Any]:  # fmt: skip
+    req = {
+        "model": model,
+        "messages": messages,
+        "tools": tools,
+        "temperature": temperature,
+        "num_ctx": NUM_CTX,
+        "num_predict": NUM_PREDICT,
+    }
+    return req | ({"format": schema} if schema is not None else {})
+
+
+def request_hash(model: str, digest: str, request: dict[str, Any], run_index: int) -> str:
+    body = BOUNDARY.sub("DATA-<boundary>", json.dumps(request, sort_keys=True, separators=(",", ":")))
+    return hashlib.sha256(f"{model}\n{digest}\n{body}\n{run_index}".encode()).hexdigest()
+
+
+def _post(url: str, body: dict[str, Any], headers: dict[str, str], timeout: float,
+          retries: int = RETRIES) -> dict[str, Any]:  # fmt: skip
+    """POST with retries and exponential backoff on connection errors, 429 and 5xx; a 429's Retry-After
+    is honoured (at most 60 s), so a free tier's per-minute cap slows a run instead of failing it."""
+    last: Exception | None = None
+    for attempt in range(retries):
+        try:
+            r = httpx.post(url, json=body, headers=headers, timeout=timeout)
+            if r.status_code == 429 or r.status_code >= 500:
+                raise httpx.HTTPStatusError(f"HTTP {r.status_code}: {r.text[:200]}", request=r.request, response=r)
+            r.raise_for_status()
+            return dict(r.json())
+        except (httpx.TransportError, httpx.HTTPStatusError) as e:
+            last = e
+            if isinstance(e, httpx.TimeoutException):
+                break  # a slow model is not retried: the caller's time is what ran out
+            if isinstance(e, httpx.HTTPStatusError) and e.response.status_code < 500 and e.response.status_code != 429:
+                break  # a 4xx other than 429 will not get better
+            if attempt + 1 < retries:
+                wait = BACKOFF_S * 2**attempt
+                if isinstance(e, httpx.HTTPStatusError) and e.response.status_code == 429:
+                    try:
+                        wait = max(wait, min(60.0, float(e.response.headers.get("retry-after", 10))))
+                    except ValueError:
+                        wait = max(wait, 10.0)
+                time.sleep(wait)
+    raise Unavailable(f"{url}: {type(last).__name__}: {last}")
+
+
+class Ollama:
+    name = "ollama"
+
+    def __init__(self, model: str, timeout_s: float = 300.0):
+        self.model, self.timeout_s = model, timeout_s
+        self.digest = ollama_digest(model)
+
+    def complete(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]],
+                 temperature: float = 0.0, schema: dict[str, Any] | None = None,
+                 timeout_s: float | None = None) -> Response:  # fmt: skip
+        body: dict[str, Any] = {"model": self.model, "messages": messages, "stream": False,
+                                "options": {"temperature": temperature, "seed": 0, "num_ctx": NUM_CTX,
+                                            "num_predict": NUM_PREDICT}}  # fmt: skip
+        if tools:
+            body["tools"] = tools
+        if schema is not None:
+            body["format"] = schema
+        t0 = time.monotonic()
+        out = _post(f"{OLLAMA}/api/chat", body, {}, min(self.timeout_s, timeout_s or self.timeout_s))
+        msg = out.get("message", {})
+        calls = [{"name": c["function"]["name"], "arguments": c["function"].get("arguments") or {}}
+                 for c in msg.get("tool_calls") or []]  # fmt: skip
+        return Response(str(msg.get("content", "")), calls, int(out.get("prompt_eval_count", 0)),
+                        int(out.get("eval_count", 0)), int((time.monotonic() - t0) * 1000))  # fmt: skip
+
+
+def ollama_digest(model: str) -> str:
+    try:
+        tags = httpx.get(f"{OLLAMA}/api/tags", timeout=10).json()["models"]
+    except (httpx.TransportError, ValueError) as e:
+        raise Unavailable(f"Ollama at {OLLAMA}: {e}") from e
+    for m in tags:
+        if m["name"] == model or m["name"] == f"{model}:latest":
+            return str(m["digest"])
+    raise Unavailable(f"{model} is not pulled in Ollama (ollama pull {model})")
+
+
+def ollama_unload(model: str) -> None:
+    """Free the model's memory now instead of after Ollama's keep-alive (5 min)."""
+    with contextlib.suppress(httpx.TransportError):
+        httpx.post(f"{OLLAMA}/api/generate", json={"model": model, "keep_alive": 0}, timeout=60)
+
+
+def openai_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The loop's (Ollama-style) history in OpenAI chat format: assistant tool calls get ids and JSON-string
+    arguments, and each tool message names the call it answers, in order."""
+    out: list[dict[str, Any]] = []
+    pending: list[str] = []
+    for i, m in enumerate(messages):
+        if m["role"] == "assistant" and m.get("tool_calls"):
+            ids = [f"call_{i}_{j}" for j in range(len(m["tool_calls"]))]
+            pending = list(ids)
+            out.append({"role": "assistant", "content": m.get("content") or None, "tool_calls": [
+                {"id": cid, "type": "function", "function": {"name": c["function"]["name"],
+                 "arguments": json.dumps(c["function"].get("arguments") or {})},
+                 **({"extra_content": c["extra_content"]} if "extra_content" in c else {})}
+                for cid, c in zip(ids, m["tool_calls"], strict=True)]})  # fmt: skip
+        elif m["role"] == "tool":
+            out.append({"role": "tool", "tool_call_id": pending.pop(0) if pending else "call_unknown",
+                        "content": m.get("content") or ""})  # fmt: skip
+        else:
+            out.append({"role": m["role"], "content": m.get("content") or ""})
+    return out
+
+
+class OpenAICompatible:
+    """An optional hosted model (any OpenAI-compatible chat endpoint with a free tier), enabled only when
+    LLM_API_KEY is set (LLM_BASE_URL names the endpoint). Never the default; when used, its results are
+    labelled with the model and endpoint."""
+
+    name = "openai_compatible"
+
+    def __init__(self, model: str, base_url: str | None = None, timeout_s: float = 120.0):
+        key = os.environ.get("LLM_API_KEY")
+        if not key:
+            raise Unavailable("LLM_API_KEY is not set: the hosted provider is disabled")
+        self.model, self.timeout_s = model, timeout_s
+        self.base_url = base_url or os.environ.get("LLM_BASE_URL", "")
+        self.digest = f"hosted:{self.base_url}"  # a hosted model has no digest; its name and endpoint stand in
+        self._headers = {"Authorization": f"Bearer {key}"}  # never logged or recorded
+        self.min_interval_s = float(os.environ.get("LLM_MIN_INTERVAL_S", "0"))  # a free tier's requests/minute
+        self._last = 0.0
+
+    def complete(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]],
+                 temperature: float = 0.0, schema: dict[str, Any] | None = None,
+                 timeout_s: float | None = None) -> Response:  # fmt: skip
+        body: dict[str, Any] = {
+            "model": self.model,
+            "messages": openai_messages(messages),
+            "temperature": temperature,
+            "max_tokens": NUM_PREDICT,
+        }
+        if tools:
+            body["tools"] = tools
+        if schema is not None:
+            body["response_format"] = {"type": "json_schema", "json_schema": {"name": "answer", "schema": schema}}
+        t0 = time.monotonic()
+        limit = min(self.timeout_s, timeout_s or self.timeout_s)
+        if (pause := self.min_interval_s - (time.monotonic() - self._last)) > 0:
+            time.sleep(pause)
+        self._last = time.monotonic()
+        try:
+            out = _post(f"{self.base_url}/chat/completions", body, self._headers, limit, retries=6)
+        except Unavailable:
+            if schema is None:
+                raise
+            body["response_format"] = {"type": "json_object"}  # an endpoint without JSON Schema support
+            out = _post(f"{self.base_url}/chat/completions", body, self._headers, limit, retries=6)
+        self._last = time.monotonic()
+        msg = out["choices"][0]["message"]
+        calls = []
+        for c in msg.get("tool_calls") or []:
+            try:
+                args = json.loads(c["function"].get("arguments") or "{}")
+            except json.JSONDecodeError:
+                args = {"_unparsed": c["function"].get("arguments")}
+            extra = {"extra_content": c["extra_content"]} if "extra_content" in c else {}  # e.g. Gemini's
+            calls.append({"name": c["function"]["name"], "arguments": args, **extra})  # thought_signature
+        usage = out.get("usage", {})
+        return Response(str(msg.get("content") or ""), calls, int(usage.get("prompt_tokens", 0)),
+                        int(usage.get("completion_tokens", 0)), int((time.monotonic() - t0) * 1000))  # fmt: skip
+
+
+class Cassette:
+    """Recorded responses for one fixture and one model: {key: {run_index, seq, response}}."""
+
+    def __init__(self, path: Path, model: str, digest: str):
+        self.path, self.model, self.digest = path, model, digest
+        self.entries: dict[str, dict[str, Any]] = {}
+        if path.exists():
+            data = json.loads(path.read_text())
+            if (data["model"], data["digest"]) != (model, digest):
+                raise ReplayMiss(f"{path} was recorded with {data['model']}@{data['digest'][:12]}, "
+                                 f"not {model}@{digest[:12]}")  # fmt: skip
+            self.entries = data["entries"]
+
+    def save(self) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        body = {"model": self.model, "digest": self.digest, "entries": dict(sorted(self.entries.items()))}
+        self.path.write_text(json.dumps(body, indent=1, sort_keys=True) + "\n")
+
+
+def cassette_header(path: Path) -> tuple[str, str]:
+    data = json.loads(path.read_text())
+    return str(data["model"]), str(data["digest"])
+
+
+Sink = Callable[[str, int, str, dict[str, Any], Response], None]  # (provider, seq, hash, request, response)
+
+
+class Recorded:
+    """Wraps a provider for one investigation run. mode "live": call the inner provider (no cassette);
+    "record": call it and store each response under its key; "replay": answer only from the cassette,
+    and raise ReplayMiss otherwise. Every exchange goes to `sink` (the agent's llm_exchanges writer)
+    before the response is returned, so a crash right after a model call loses nothing."""
+
+    def __init__(self, cassette: Cassette | None, run_index: int, mode: str, inner: Provider | None = None,
+                 sink: Sink | None = None):  # fmt: skip
+        if mode not in ("live", "record", "replay"):
+            raise ValueError(mode)
+        if mode != "replay" and inner is None:
+            raise ValueError(f"{mode} mode needs a live provider")
+        if mode != "live" and cassette is None:
+            raise ValueError(f"{mode} mode needs a cassette")
+        self.cassette, self.run_index, self.mode, self.inner, self.sink = cassette, run_index, mode, inner, sink
+        self.name = inner.name if inner else "replay"
+        src: Any = cassette if cassette is not None else inner
+        self.model, self.digest = str(src.model), str(src.digest)
+        self.seq = 0
+        self.exchanges: list[tuple[str, dict[str, Any], Response]] = []
+
+    def complete(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]],
+                 temperature: float = 0.0, schema: dict[str, Any] | None = None,
+                 timeout_s: float | None = None) -> Response:  # fmt: skip
+        request = canonical_request(self.model, messages, tools, temperature, schema)
+        key = request_hash(self.model, self.digest, request, self.run_index)
+        self.seq += 1
+        hit = self.cassette.entries.get(key) if self.cassette is not None and self.mode != "live" else None
+        if hit is not None:
+            resp = Response(**hit["response"])
+        elif self.mode == "replay":
+            where = self.cassette.path if self.cassette else "-"
+            raise ReplayMiss(f"no recorded response for request {key[:12]} (run {self.run_index}, exchange "
+                             f"{self.seq}, {self.model}@{self.digest[:12]}) in {where}")  # fmt: skip
+        else:
+            assert self.inner is not None
+            resp = self.inner.complete(messages, tools, temperature, schema, timeout_s)
+            if self.cassette is not None:
+                self.cassette.entries[key] = {"run_index": self.run_index, "seq": self.seq, "response": asdict(resp)}
+        if self.sink is not None:
+            self.sink(self.name, self.seq, key, request, resp)
+        self.exchanges.append((key, request, resp))
+        return resp

@@ -1,0 +1,37 @@
+killed Ollama 150 s into the eval, after 2 committed exchanges of af3a24ff-c71e-4861-ac1b-3b47087ca3f5
+{
+ "investigation": "af3a24ff-c71e-4861-ac1b-3b47087ca3f5",
+ "status": "degraded_baseline",
+ "shown_ranker": "baseline",
+ "outcome": "ROOT_CAUSE_IDENTIFIED",
+ "degraded": "llm_unavailable",
+ "detail": "llm_unavailable: http://localhost:11434/api/chat: ConnectError: [WinError 10061] No connection could be made because the target machine actively refused it",
+ "rows": {
+  "tool_calls": 30,
+  "llm_exchanges": 2,
+  "hypotheses": 3
+ },
+ "tool_calls_by_ranker": {
+  "agent": 4,
+  "baseline": 26
+ },
+ "baseline_hypotheses": [
+  [
+   "inventory",
+   "pool_exhaustion",
+   "passed"
+  ],
+  [
+   "payments",
+   "other",
+   "passed"
+  ],
+  [
+   "orders",
+   "other",
+   "passed"
+  ]
+ ],
+ "agent": 2
+}
+Ollama restarted

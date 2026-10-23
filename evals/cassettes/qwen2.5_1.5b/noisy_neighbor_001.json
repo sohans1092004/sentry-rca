@@ -1,0 +1,53 @@
+{
+ "digest": "65ec06548149b04c096a120e4a6da9d4017ea809c91734ea5631e89f96ddc57b",
+ "entries": {
+  "3584840cf2780c221a3d57d9aba7c34021e192b3d784210e5bfa9b3ec84b62f4": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"gateway\", \"cause_kind\": \"slow_query\", \"score\": 1.0, \"claims\": [{\"type\": \"metric_change\", \"cites\": [{\"tool_call_seq\": 20, \"rows\": \"all\"}]}]}]}",
+    "latency_ms": 16015,
+    "tokens_in": 2095,
+    "tokens_out": 78,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 3
+  },
+  "4c99c3476a671fd30c325a681854957135b2ee171ba4a4c489e0eb2d3f4253fb": {
+   "response": {
+    "content": "",
+    "latency_ms": 10390,
+    "tokens_in": 1690,
+    "tokens_out": 89,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T10:56:53.490Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-20T10:31:33.506Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  },
+  "b7a67253bba16e8d523cbfe8c55c0af41b9afa974892b0cd83c20fe3059bc30c": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"gateway\", \"cause_kind\": \"slow_query\", \"claims\": [{\"tool_call_seq\": 20, \"rows\": \"all\"}]}, {\"rank\": 2, \"causal_role\": \"downstream_symptom\", \"cause_service\": \"inventory\", \"cause_kind\": \"slow_query\", \"claims\": [{\"tool_call_seq\": 20, \"rows\": \"all\"}]}]}",
+    "latency_ms": 15484,
+    "tokens_in": 2463,
+    "tokens_out": 109,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 2
+  }
+ },
+ "model": "qwen2.5:1.5b"
+}

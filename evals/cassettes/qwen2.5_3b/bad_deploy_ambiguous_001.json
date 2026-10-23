@@ -1,0 +1,116 @@
+{
+ "digest": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+ "entries": {
+  "02228f24af238e4f78aa3868b5bbab435ca2ea84329eec6381261f70c0c1c295": {
+   "response": {
+    "content": "",
+    "latency_ms": 61266,
+    "tokens_in": 2710,
+    "tokens_out": 401,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "error",
+       "end": "2026-10-20T04:30:29.335Z",
+       "limit": 10,
+       "service": "gateway",
+       "start": "2026-10-20T04:05:09.349Z"
+      },
+      "name": "query_logs"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T04:30:29.335Z",
+       "labels": {
+        "service": "gateway"
+       },
+       "metric": "http.server.request.duration.mean",
+       "start": "2026-10-20T04:05:09.349Z"
+      },
+      "name": "query_metrics"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T04:30:29.335Z",
+       "limit": 10,
+       "min_duration_ms": 100,
+       "service": "gateway",
+       "start": "2026-10-20T04:05:09.349Z"
+      },
+      "name": "query_traces"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T04:30:29.335Z",
+       "service": "gateway"
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T04:30:29.335Z",
+       "service": "inventory"
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "query": "gateway"
+      },
+      "name": "search_runbooks"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 2
+  },
+  "a3db705fb40cdb10f93a39c4e3398f3f535d2a1d7f875605b502295562da968f": {
+   "response": {
+    "content": "{\n  \"hypotheses\": [\n    {\n      \"rank\": 1,\n      \"causal_role\": \"candidate_root_cause\",\n      \"cause_service\": \"gateway\",\n      \"cause_kind\": \"noisy_neighbor\",\n      \"score\": 0.608874,\n      \"claims\": [\n        {\n          \"type\": \"runbook_match\",\n          \"supporting_context\": [\n            {\n              \"doc_id\": \"a11d01c8-f26e-5db0-80e6-fdce51d7cdc0\",\n              \"similarity\": 0.608874,\n              \"postmortem\": \"Postmortem: noisy neighbor incident (noisy_neighbor_002)\"\n            }\n          ]\n        }\n      ],\n      \"narrative\": \"The gateway service is experiencing a noisy neighbor incident, indicated by a runbook related to this issue.\"\n    },\n    {\n      \"rank\": 2,\n      \"causal_role\": \"candidate_root_cause\",\n      \"cause_service\": \"inventory\",\n      \"cause_kind\": \"noisy_neighbor\",\n      \"score\": 0.604051,\n      \"claims\": [\n        {\n          \"type\": \"runbook_match\",\n          \"supporting_context\": [\n            {\n              \"doc_id\": \"908ed4f3-243f-5eab-9906-252bc7ac20b3\",\n              \"similarity\": 0.604051,\n              \"postmortem\": \"Postmortem: noisy neighbor incident (noisy_neighbor_001)\"\n            }\n          ]\n        }\n      ],\n      \"narrative\": \"The noisy neighbor incident is likely caused by a slow or unresponsive service in the inventory service.\"\n    }\n  ]\n}",
+    "latency_ms": 115703,
+    "tokens_in": 5627,
+    "tokens_out": 393,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 3
+  },
+  "ab59eac9a86453bd1d425f3b0b0f222d4cd0d4fdfb63f172217f1c3bd73eb847": {
+   "response": {
+    "content": "",
+    "latency_ms": 11561,
+    "tokens_in": 1690,
+    "tokens_out": 89,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T04:30:29.335Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-20T04:05:09.349Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  },
+  "bdaa321933d97e1fad351ccace0204a48a3a5de3823e50cf348c73726ac45d9e": {
+   "response": {
+    "content": "{\n  \"hypotheses\": [\n    {\n      \"rank\": 1,\n      \"causal_role\": \"candidate_root_cause\",\n      \"cause_service\": \"gateway\",\n      \"cause_kind\": \"noisy_neighbor\",\n      \"score\": 0.608874,\n      \"claims\": [\n        {\n          \"type\": \"runbook_match\",\n          \"cites\": [\n            {\n              \"tool_call_seq\": 33,\n              \"rows\": \"all\"\n            }\n          ]\n        }\n      ],\n      \"narrative\": \"The gateway service is experiencing a noisy neighbor incident, indicated by a runbook related to this issue.\"\n    },\n    {\n      \"rank\": 2,\n      \"causal_role\": \"candidate_root_cause\",\n      \"cause_service\": \"inventory\",\n      \"cause_kind\": \"noisy_neighbor\",\n      \"score\": 0.604051,\n      \"claims\": [\n        {\n          \"type\": \"runbook_match\",\n          \"cites\": [\n            {\n              \"tool_call_seq\": 33,\n              \"rows\": \"all\"\n            }\n          ]\n        }\n      ],\n      \"narrative\": \"The noisy neighbor incident is likely caused by a slow or unresponsive service in the inventory service.\"\n    }\n  ]\n}",
+    "latency_ms": 132875,
+    "tokens_in": 5551,
+    "tokens_out": 273,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 4
+  }
+ },
+ "model": "qwen2.5:3b"
+}

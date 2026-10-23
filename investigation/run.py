@@ -38,6 +38,6 @@ def run_ranker(
     layer = ToolLayer(store, backend, runbooks, investigation_id, scope, ranker)
     hypotheses = rank(scope, layer.call, runbook_search=runbooks is not None)
     calls = store.calls(investigation_id)
-    results = [verifier.verify(h, calls, ranker, scope.excluded()) for h in hypotheses]
+    results = [verifier.verify(h, calls, ranker, scope.excluded(), scope.services) for h in hypotheses]
     verified = [h for h, v in zip(hypotheses, results, strict=True) if v.passed]
     return RankerResult(hypotheses, results, outcome.decide(verified), layer.issued)

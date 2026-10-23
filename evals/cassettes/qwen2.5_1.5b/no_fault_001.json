@@ -1,0 +1,53 @@
+{
+ "digest": "65ec06548149b04c096a120e4a6da9d4017ea809c91734ea5631e89f96ddc57b",
+ "entries": {
+  "10c3df6a9ca9fd4a1f1de3b3a877eddfab491cd0c1bffb554c32bcd9a935227a": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"downstream_symptom\", \"cause_service\": \"inventory\", \"cause_kind\": \"slow_query\", \"score\": 0.0, \"claims\": [{\"type\": \"log_pattern\", \"cites\": [{\"tool_call_seq\": 2, \"rows\": \"all\"}, {\"tool_call_seq\": 3, \"rows\": \"all\"}, {\"tool_call_seq\": 4, \"rows\": \"all\"}, {\"tool_call_seq\": 5, \"rows\": \"all\"}], \"service\": \"inventory\", \"window\": [\">=2026-10-19T18:31:33.373Z\", \"2026-10-19T18:46:23.753Z\"], \"pattern\": \"latency_ms\", \"min_count\": 3, \"min_ratio\": 2.0}, {\"type\": \"metric_change\", \"cites\": [{\"tool_call_seq\": 6, \"rows\": \"all\"}, {\"tool_call_seq\": 7, \"rows\": \"all\"}, {\"tool_call_seq\": 8, \"rows\": \"all\"}, {\"tool_call_seq\": 9, \"rows\": \"all\"}], \"service\": \"gateway\", \"metric\": \"latency_ms\", \"window\": [\">=2026-10-19T18:31:33.373Z\", \"2026-10-19T18:46:23.753Z\"], \"direction\": \"up\", \"min_magnitude\": 0.5}], \"narrative\": \"The inventory service is slow, which is a downstream symptom of the gateway service.\"}, {\"rank\": 2, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"gateway\", \"cause_kind\": \"slow_query\", \"score\": 0.0, \"claims\": [{\"type\": \"log_pattern\", \"cites\": [{\"tool_call_seq\": 1, \"rows\": \"all\"}, {\"tool_call_seq\": 6, \"rows\": \"all\"}, {\"tool_call_seq\": 7, \"rows\": \"all\"}, {\"tool_call_seq\": 8, \"rows\": \"all\"}, {\"tool_call_seq\": 9, \"rows\": \"all\"}], \"service\": \"gateway\", \"window\": [\">=2026-10-19T18:31:33.373Z\", \"2026-10-19T18:46:23.753Z\"], \"pattern\": \"latency_ms\", \"min_count\": 3, \"min_ratio\": 2.0}, {\"type\": \"metric_change\", \"cites\": [{\"tool_call_seq\": 2, \"rows\": \"all\"}, {\"tool_call_seq\": 3, \"rows\": \"all\"}, {\"tool_call_seq\": 4, \"rows\": \"all\"}, {\"tool_call_seq\": 5, \"rows\": \"all\"}], \"service\": \"inventory\", \"metric\": \"latency_ms\", \"window\": [\">=2026-10-19T18:31:33.373Z\", \"2026-10-19T18:46:23.753Z\"], \"direction\": \"up\", \"min_magnitude\": 0.5}, {\"type\": \"trace_dependency\", \"cites\": [{\"tool_call_seq\": 1, \"rows\": \"all\"}, {\"tool_call_seq\": 6, \"rows\": \"all\"}, {\"tool_call_seq\": 7, \"rows\": \"all\"}, {\"tool_call_seq\": 8, \"rows\": \"all\"}, {\"tool_call_seq\": 9, \"rows\": \"all\"}], \"parent_service\": \"inventory\", \"child_service\": \"gateway\", \"trace_ids\": [\"e99ace5a3f871e1f\"], \"min_latency_share\": 0.5}]}]}",
+    "latency_ms": 57795,
+    "tokens_in": 2150,
+    "tokens_out": 877,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 3
+  },
+  "9428e1c5f27be36c6e51eb4208e4a6d4eda30b7aecb75d7ed6fba15cc13f5aef": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"downstream_symptom\", \"cause_service\": \"inventory\", \"cause_kind\": \"slow_query\", \"claims\": [{\"tool_call_seq\": 2, \"rows\": \"all\"}, {\"tool_call_seq\": 3, \"rows\": \"all\"}, {\"tool_call_seq\": 4, \"rows\": \"all\"}, {\"tool_call_seq\": 5, \"rows\": \"all\"}]}, {\"rank\": 2, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"gateway\", \"cause_kind\": \"slow_query\", \"claims\": [{\"tool_call_seq\": 1, \"rows\": \"all\"}, {\"tool_call_seq\": 6, \"rows\": \"all\"}, {\"tool_call_seq\": 7, \"rows\": \"all\"}, {\"tool_call_seq\": 8, \"rows\": \"all\"}, {\"tool_call_seq\": 9, \"rows\": \"all\"}]}]}",
+    "latency_ms": 19015,
+    "tokens_in": 2422,
+    "tokens_out": 205,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 2
+  },
+  "d423cf382113daa227444842a8d8bcaa1ea6e07c051497d4f232cff82cf8b0ab": {
+   "response": {
+    "content": "",
+    "latency_ms": 10750,
+    "tokens_in": 1690,
+    "tokens_out": 89,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-19T18:55:23.364Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-19T18:31:33.373Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  }
+ },
+ "model": "qwen2.5:1.5b"
+}

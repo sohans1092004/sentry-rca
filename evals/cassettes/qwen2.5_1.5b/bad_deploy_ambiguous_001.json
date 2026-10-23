@@ -1,0 +1,53 @@
+{
+ "digest": "65ec06548149b04c096a120e4a6da9d4017ea809c91734ea5631e89f96ddc57b",
+ "entries": {
+  "171d7f3511cd5d85ac8e63ed8383fdda2a771f41498e8cba3d892657e0b4a5ca": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"inventory\", \"cause_kind\": \"slow_query\", \"score\": 0.9, \"claims\": [{\"type\": \"metric_change\", \"cites\": [{\"tool_call_seq\": 27, \"rows\": \"all\"}], \"service\": \"inventory\", \"metric\": \"http.server.request.duration.mean\", \"window\": [\">2026-10-20T04:05:09.349Z\", \"2026-10-20T04:30:29.335Z\"], \"direction\": \"up\", \"min_magnitude\": 0.5}, {\"type\": \"trace_dependency\", \"cites\": [{\"tool_call_seq\": 27, \"rows\": \"all\"}], \"parent_service\": \"inventory\", \"child_service\": \"orders\", \"trace_ids\": [\"2026-10-20T04:19:40.726Z\", \"2026-10-20T04:19:57.726Z\"], \"min_latency_share\": 0.5}]}, {\"rank\": 2, \"causal_role\": \"downstream_symptom\", \"cause_service\": \"payments\", \"cause_kind\": \"slow_query\", \"score\": 0.8, \"claims\": [{\"type\": \"metric_change\", \"cites\": [{\"tool_call_seq\": 27, \"rows\": \"all\"}], \"service\": \"payments\", \"metric\": \"http.server.request.duration.mean\", \"window\": [\">2026-10-20T04:05:09.349Z\", \"2026-10-20T04:30:29.335Z\"], \"direction\": \"up\", \"min_magnitude\": 0.5}, {\"type\": \"trace_dependency\", \"cites\": [{\"tool_call_seq\": 27, \"rows\": \"all\"}], \"parent_service\": \"inventory\", \"child_service\": \"payments\", \"trace_ids\": [\"2026-10-20T04:19:40.726Z\", \"2026-10-20T04:19:57.726Z\"], \"min_latency_share\": 0.5}]}]}",
+    "latency_ms": 46016,
+    "tokens_in": 2786,
+    "tokens_out": 539,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 3
+  },
+  "54e36333f4e76c457b8a35ce1d06e7720f7ef46e9dbbc5522c5e2d2f0da5b67a": {
+   "response": {
+    "content": "",
+    "latency_ms": 6719,
+    "tokens_in": 1690,
+    "tokens_out": 89,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T04:30:29.335Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-20T04:05:09.349Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  },
+  "5d31bea90412d5f76e6f9257f04a336020d2ca478f6778354b6ef1fe41b3ef25": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"inventory\", \"cause_kind\": \"slow_query\", \"score\": 0.9, \"claims\": [{\"type\": \"metric_change\", \"service\": \"inventory\", \"metric\": \"http.server.request.duration.mean\", \"window\": [2026-10-20T04:05:09.349Z, 2026-10-20T04:30:29.335Z], \"direction\": \"up\", \"min_magnitude\": 0.5, \"cites\": [{\"tool_call_seq\": 27, \"rows\": \"all\"}]}, {\"type\": \"trace_dependency\", \"parent_service\": \"inventory\", \"child_service\": \"orders\", \"trace_ids\": [\"2026-10-20T04:19:40.726Z\", \"2026-10-20T04:19:57.726Z\"], \"min_latency_share\": 0.5, \"cites\": [{\"tool_call_seq\": 27, \"rows\": \"all\"}]}]}, {\"rank\": 2, \"causal_role\": \"downstream_symptom\", \"cause_service\": \"payments\", \"cause_kind\": \"slow_query\", \"score\": 0.8, \"claims\": [{\"type\": \"metric_change\", \"service\": \"payments\", \"metric\": \"http.server.request.duration.mean\", \"window\": [2026-10-20T04:05:09.349Z, 2026-10-20T04:30:29.335Z], \"direction\": \"up\", \"min_magnitude\": 0.5, \"cites\": [{\"tool_call_seq\": 27, \"rows\": \"all\"}]}, {\"type\": \"trace_dependency\", \"parent_service\": \"inventory\", \"child_service\": \"payments\", \"trace_ids\": [\"2026-10-20T04:19:40.726Z\", \"2026-10-20T04:19:57.726Z\"], \"min_latency_share\": 0.5, \"cites\": [{\"tool_call_seq\": 27, \"rows\": \"all\"}]}]}}]",
+    "latency_ms": 40610,
+    "tokens_in": 2710,
+    "tokens_out": 538,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 2
+  }
+ },
+ "model": "qwen2.5:1.5b"
+}

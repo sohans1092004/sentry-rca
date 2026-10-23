@@ -2,6 +2,7 @@
 
 rca show <investigation_id>          scope, tool calls, hypotheses with per-claim results, outcome
 rca eval [--n 5] [--split dev|test|all] [fixture ...]   baseline eval, dev and test apart, §12.5 gate
+rca eval --ranker agent --model M --llm record|replay   agent eval (Phase 3); test only at agent-frozen
 rca runbooks load [--live]           embed (replay, or record with --live) and load the corpus
 rca runbooks verify-embeddings       re-embed with the live model; report drift
 rca fixtures fetch                   download and verify the fixture datasets
@@ -10,6 +11,7 @@ rca fixtures fetch                   download and verify the fixture datasets
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 import uuid
@@ -23,6 +25,36 @@ from common import config, db
 ROOT = Path(__file__).resolve().parent.parent
 APP_DSN = os.environ.get("APP_PG_DSN", "postgresql://sentry_app:sentry_app@localhost:5434/sentry")
 ACCEPTED = ROOT / "evals" / "accepted.json"
+ACCEPTED_AGENT = ROOT / "evals" / "accepted_agent.json"
+CASSETTES = ROOT / "evals" / "cassettes"
+
+
+def _agent_for(args: argparse.Namespace) -> tuple[Any, dict[str, Any]]:
+    """(agent_for, cassettes): one cassette per fixture, one Recorded provider per run (§7.4, A35)."""
+    from investigation import llm
+    from investigation.agent import AgentConfig, Budget
+
+    budget = Budget(args.max_tool_calls, args.max_tokens, args.wall_s)
+    inner: Any = None
+    if args.llm == "record":
+        inner = llm.Ollama(args.model) if args.provider == "ollama" else llm.OpenAICompatible(args.model)
+    slug = args.model.replace(":", "_").replace("/", "_")
+    folder = CASSETTES / (f"{slug}-{args.tag}" if args.tag else slug)  # a tag keeps one experiment's cassettes apart
+    cassettes: dict[str, Any] = {}
+
+    def agent_for(fid: str, i: int, clean: bool) -> AgentConfig:
+        if fid not in cassettes:
+            path = folder / f"{fid}.json"
+            if inner is not None:
+                cassettes[fid] = llm.Cassette(path, inner.model, inner.digest)
+            elif not path.exists():
+                raise llm.ReplayMiss(f"no cassette {path} for {args.model}: record it locally with --llm record")
+            else:
+                cassettes[fid] = llm.Cassette(path, *llm.cassette_header(path))
+        cas = cassettes[fid]
+        return AgentConfig(lambda sink: llm.Recorded(cas, i, args.llm, inner, sink=sink), budget)
+
+    return agent_for, cassettes
 
 
 def show(conn: psycopg.Connection[Any], inv_id: str) -> str:
@@ -90,30 +122,82 @@ def _eval(args: argparse.Namespace) -> int:
     labels = {d.parent.name: json.loads((d / "label.json").read_text()) for d in datasets}
     split = {fid: lab.get("split", "dev") for fid, lab in labels.items()}
     datasets = [d for d in datasets if args.split in ("all", split[d.parent.name])]
+    # a live agent run on test fixtures needs the freeze; replaying recorded exchanges (CI) runs no model
+    if args.ranker == "agent" and args.llm == "record" and any(split[d.parent.name] == "test" for d in datasets):
+        tags = subprocess.run(["git", "tag", "--points-at", "HEAD"], capture_output=True, text=True, cwd=ROOT).stdout
+        if "agent-frozen" not in tags.split():
+            sys.exit("refused: the agent runs on test fixtures only at the agent-frozen tag (Phase 3 discipline)")
+    agent_for, cassettes = _agent_for(args) if args.ranker == "agent" else (None, {})
     dev_labels = {fid: lab for fid, lab in labels.items() if split[fid] == "dev"}  # only dev has postmortems
     run_id = str(uuid.uuid4())
     conn = psycopg.connect(APP_DSN, autocommit=True)
     admin = db.clickhouse("default")
-    runbooks = PgRunbookIndex(conn, Cassette()) if not args.no_runbooks else None
+    embeddings = Cassette(live=args.ranker == "agent" and args.llm == "record")  # the agent's own queries
+    runbooks = PgRunbookIndex(conn, embeddings) if not args.no_runbooks else None
     by_split: dict[str, list[Any]] = {}
+    # agent evals: tool-call re-execution on Parquet (A26) runs after the model is unloaded (memory)
+    deferred: list[Any] | None = [] if args.ranker == "agent" else None
+    workdir = ROOT / "runs" / f"eval-work-{run_id[:8]}"
+    unload = None
+    if args.ranker == "agent" and args.provider == "ollama" and args.llm == "record":
+        from investigation.llm import ollama_unload
+
+        def unload() -> None:
+            ollama_unload(args.model)
+
     for d in datasets:
         fid = d.parent.name
         print(f"{fid} ({split[fid]}) ...", flush=True)
         excluded = harness.related_postmortems(labels[fid], dev_labels)
         by_split.setdefault(split[fid], []).append(harness.eval_fixture(
-            d, conn, admin, (config.CH_HOST, config.CH_PORT), run_id, args.n, runbooks, excluded=excluded))  # fmt: skip
+            d, conn, admin, (config.CH_HOST, config.CH_PORT), run_id, args.n, runbooks, excluded=excluded,
+            agent_for=agent_for, deferred=deferred, workdir=workdir, before_load=unload))  # fmt: skip
+        if args.ranker == "agent" and args.llm == "record":  # saved per fixture: an interrupted eval keeps it
+            cassettes[fid].save()
+            embeddings.save()
+    if deferred is not None:
+        from investigation import llm
+
+        if args.provider == "ollama" and args.llm == "record":
+            llm.ollama_unload(args.model)
+        print(f"backend agreement: {len(deferred)} groups of investigations ...", flush=True)
+        for inv_ids, dataset, res in deferred:
+            harness.backend_agreement(conn, inv_ids, dataset, res)
+        shutil.rmtree(workdir, ignore_errors=True)
     summaries: dict[str, Any] = {}
     for name, res in by_split.items():
         summaries[name] = harness.summarise(res)
         ids = [r.investigation_id for fr in res for r in fr.runs]
-        summaries[name]["rejection_by_claim_type"] = harness.rejection_rates(conn, ids)
+        summaries[name]["rejection_by_claim_type"] = harness.rejection_rates(conn, ids, args.ranker)
+        if args.ranker == "agent":
+            base = harness.as_baseline(res)
+            summaries[name]["agent"] = harness.agent_stats(res)
+            summaries[name]["baseline_same_investigations"] = harness.summarise(base)
+            summaries[name]["paired"] = harness.paired(res, base)
+            summaries[name]["rejections_agent"] = harness.rejection_reasons(conn, ids, "agent")
+            summaries[name]["rejections_baseline"] = harness.rejection_reasons(conn, ids, "baseline")
     results = [fr for res in by_split.values() for fr in res]
-    summary: dict[str, Any] = {"splits": summaries, "baseline_sha256": harness.baseline_sha256()}
+    summary: dict[str, Any] = {"splits": summaries, "baseline_sha256": harness.baseline_sha256(),
+                               "ranker": args.ranker}  # fmt: skip
+    if args.ranker == "agent":
+        summary |= {
+            "model": args.model,
+            "llm": args.llm,
+            "provider": args.provider,
+            "budget": {"tool_calls": args.max_tool_calls, "tokens": args.max_tokens, "wall_s": args.wall_s},
+        }
     sha = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=ROOT).stdout.strip()
     with psycopg.connect(config.PG_DSN, autocommit=True) as owner:  # eval_runs: written by the owner role
         owner.execute(
             "INSERT INTO eval_runs (id, git_sha, ranker, n_runs, mode, summary) VALUES (%s, %s, %s, %s, %s, %s)",
-            (run_id, sha or "unknown", "baseline", args.n, "replay", json.dumps(summary, default=str)),
+            (
+                run_id,
+                sha or "unknown",
+                args.ranker,
+                args.n,
+                "live" if args.llm == "record" else "replay",
+                json.dumps(summary, default=str),
+            ),
         )
         for fr in results:
             for i, r in enumerate(fr.runs):
@@ -141,9 +225,13 @@ def _eval(args: argparse.Namespace) -> int:
                         ),  # fmt: skip
                     ),
                 )
-    out = Path(args.out or ROOT / "runs" / f"eval-{run_id[:8]}.json")
+    slug = args.model.replace(":", "_").replace("/", "_")
+    out = Path(args.out or ROOT / "runs" / (f"eval-{run_id[:8]}.json" if args.ranker == "baseline"
+                                            else f"eval-agent-{slug}-{run_id[:8]}.json"))  # fmt: skip
     out.parent.mkdir(exist_ok=True)
     out.write_text(json.dumps({"eval_run_id": run_id, "git_sha": sha, **summary}, indent=2, default=str))
+    if args.ranker == "agent":  # the agent is gated against its own accepted eval, not the baseline's
+        return _agent_gate(args, summaries)
     accepted = json.loads(ACCEPTED.read_text()) if ACCEPTED.exists() else None
     if accepted is not None and "splits" not in accepted:
         accepted = None  # a Phase 2 (v2, unsplit) acceptance is not comparable with v3 dev and test
@@ -171,6 +259,46 @@ def _eval(args: argparse.Namespace) -> int:
     return 1 if blocked else 0
 
 
+AGENT_KEYS = (
+    "fixtures",
+    "n_runs",
+    "top1",
+    "top3",
+    "top1_exact",
+    "top1_service",
+    "confusion",
+    "gold_rejected",
+    "out_of_scope_allowed",
+    "injection_influence",
+    "backend_mismatches",
+    "agent",
+    "clean",
+    "confounded",
+)
+
+
+def _agent_gate(args: argparse.Namespace, summaries: dict[str, Any]) -> int:
+    from evals import harness
+
+    accepted = json.loads(ACCEPTED_AGENT.read_text()) if ACCEPTED_AGENT.exists() else None
+    blocked: list[str] = []
+    for name, s in summaries.items():
+        prior = (accepted or {}).get("splits", {}).get(name)
+        blocked += [f"{name}: {r}" for r in harness.gate(s, prior)]
+        print(f"=== {name} (agent {args.model}, the result shown)")
+        print(json.dumps({k: s[k] for k in AGENT_KEYS if k in s}, indent=2, default=str))
+        base = s["baseline_same_investigations"]
+        print(f"=== {name}: baseline in the same investigations")
+        print(json.dumps({k: base[k] for k in ("top1", "top3", "confusion")}, indent=2))
+        tallies = {k: v for k, v in s["paired"].items() if k != "per_fixture"}
+        print(f"=== {name}: paired by fixture", json.dumps(tallies))
+    if args.accept and not blocked:
+        new = {"splits": {**(accepted or {}).get("splits", {}), **summaries}, "model": args.model}
+        ACCEPTED_AGENT.write_text(json.dumps(new, indent=2, default=str) + "\n")
+    print("gate:", "PASS" if not blocked else "BLOCKED: " + "; ".join(blocked))
+    return 1 if blocked else 0
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="rca")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -183,6 +311,14 @@ def main() -> None:
     e.add_argument("--out")
     e.add_argument("--accept", action="store_true", help="record this eval as the accepted baseline for the gate")
     e.add_argument("--no-runbooks", action="store_true")
+    e.add_argument("--ranker", choices=["baseline", "agent"], default="baseline")
+    e.add_argument("--model", default="qwen2.5:3b")
+    e.add_argument("--llm", choices=["record", "replay"], default="replay", help="record calls the live model")
+    e.add_argument("--provider", choices=["ollama", "hosted"], default="ollama")
+    e.add_argument("--max-tool-calls", type=int, default=20)
+    e.add_argument("--max-tokens", type=int, default=60_000)
+    e.add_argument("--wall-s", type=float, default=120.0)
+    e.add_argument("--tag", default="", help="cassette folder suffix, e.g. a dev iteration name")
     r = sub.add_parser("runbooks")
     r.add_argument("action", choices=["load", "verify-embeddings"])
     r.add_argument("--live", action="store_true")

@@ -1,11 +1,14 @@
-"""Investigation orchestrator (SPEC §7.1; Phase 2: baseline only).
+"""Investigation orchestrator (SPEC §7.1).
 
 Steps, each committed before the next, so a restart resumes instead of starting over:
   1. investigation row, inserted idempotently on (incident_id, trigger_id) (§6, §15 row 4);
   2. scope, computed once and stored (§5.2);
-  3. tool calls and snapshots (the tool layer reuses persisted calls on resume, §15 row 12);
-  4. hypotheses + claims + citations, verified, in one transaction (append-only tables);
-  5. the ranker's result and the investigation's status and outcome.
+  3. baseline: tool calls and snapshots (the tool layer reuses persisted calls on resume, §15 row 12),
+     then hypotheses + claims + citations, verified, in one transaction (append-only tables);
+  4. agent (Phase 3), when configured: its tool calls and LLM exchanges, then its hypotheses, verified;
+  5. the investigation's status (complete or degraded_baseline) and the outcome shown.
+Resuming the agent mid-loop is Phase 4 (resumable investigations): a restart re-runs only what the
+baseline has not committed.
 
     python -m investigation.orchestrator        # consume incidents.opened
 """
@@ -14,13 +17,15 @@ import json
 import os
 import time
 import uuid
+from dataclasses import asdict
 from datetime import UTC, datetime
 from typing import Any
 
 import psycopg
 
-from investigation import baseline
+from investigation import baseline, llm
 from investigation import scope as scope_mod
+from investigation.agent import Agent, AgentConfig, Degraded
 from investigation.backend import Backend
 from investigation.run import Ranker, RankerResult, run_ranker
 from investigation.tools import CallRecord, PgStore, RunbookIndex
@@ -82,11 +87,15 @@ def _scope(
 
 
 def _persist_hypotheses(
-    conn: psycopg.Connection[Any], inv_id: str, result: RankerResult, calls: dict[int, CallRecord]
+    conn: psycopg.Connection[Any],
+    inv_id: str,
+    result: RankerResult,
+    calls: dict[int, CallRecord],
+    ranker: str = RANKER,
 ) -> None:
     """Step 4, in one transaction; skipped when a previous run already committed it."""
     done = conn.execute(
-        "SELECT 1 FROM hypotheses WHERE investigation_id = %s AND ranker = %s LIMIT 1", (inv_id, RANKER)
+        "SELECT 1 FROM hypotheses WHERE investigation_id = %s AND ranker = %s LIMIT 1", (inv_id, ranker)
     ).fetchone()
     if done:
         return
@@ -99,7 +108,7 @@ def _persist_hypotheses(
                 (
                     hid,
                     inv_id,
-                    RANKER,
+                    ranker,
                     h["rank"],
                     h["causal_role"],
                     h["cause_service"],
@@ -147,32 +156,78 @@ def investigate(
     excluded_fixture: str | None = None,
     excluded_postmortems: tuple[str, ...] = (),
     rank: Ranker = baseline.rank,
+    agent: AgentConfig | None = None,
 ) -> str:
+    """Baseline first, always (§7.1 step 2), so a verified fallback exists; then the agent, if configured.
+    The agent's answer is shown when it completes; when it degrades (model unavailable, unusable output,
+    budget) the baseline's is, with status degraded_baseline. A replay miss is not a degradation: it
+    raises, so CI fails loudly."""
     t0 = time.monotonic()
+    state = conn.execute("SELECT status, outcome FROM investigations WHERE id = %s", (inv_id,)).fetchone()
+    if state and state[0] in ("complete", "degraded_baseline"):
+        return str(state[1])
+    sc = _scope(conn, backend, inv_id, clamp, excluded_fixture, excluded_postmortems)
+    store = PgStore(conn)
     done = conn.execute(
         "SELECT outcome FROM investigation_results WHERE investigation_id = %s AND ranker = %s", (inv_id, RANKER)
     ).fetchone()
+    budget: dict[str, Any] = {}
     if done:
-        return str(done[0])
-    sc = _scope(conn, backend, inv_id, clamp, excluded_fixture, excluded_postmortems)
-    store = PgStore(conn)
-    result = run_ranker(store, backend, runbooks, inv_id, sc, RANKER, rank)
-    _crash_point("before_hypotheses")
-    _persist_hypotheses(conn, inv_id, result, store.calls(inv_id))
-    _crash_point("after_hypotheses")
-    budget = {"tool_calls": result.tool_calls, "wall_ms": int((time.monotonic() - t0) * 1000)}
-    with conn.transaction():
+        base_outcome = str(done[0])
+    else:
+        result = run_ranker(store, backend, runbooks, inv_id, sc, RANKER, rank)
+        _crash_point("before_hypotheses")
+        _persist_hypotheses(conn, inv_id, result, store.calls(inv_id))
+        _crash_point("after_hypotheses")
+        conn.execute("INSERT INTO investigation_results (investigation_id, ranker, outcome) VALUES (%s, %s, %s) "
+                     "ON CONFLICT DO NOTHING", (inv_id, RANKER, result.outcome))  # fmt: skip
+        base_outcome = result.outcome
+        budget |= {"tool_calls": result.tool_calls, "baseline_verified": len(result.verified)}
+    budget["baseline_ms"] = int((time.monotonic() - t0) * 1000)
+    shown, outcome, status = RANKER, base_outcome, "complete"
+    if agent is not None:
+        incident = conn.execute(
+            "SELECT n.service, n.first_anomaly_at FROM investigations i JOIN incidents n ON n.id = i.incident_id "
+            "WHERE i.id = %s", (inv_id,)).fetchone()  # fmt: skip
+        ag = Agent(agent.provider(_exchange_sink(conn, inv_id)), agent.budget,
+                   incident={"service": incident[0], "first_anomaly_at": incident[1]} if incident else None,
+                   calls=lambda: store.calls(inv_id))  # fmt: skip
+        try:
+            ares = run_ranker(store, backend, runbooks, inv_id, sc, "agent", ag)
+        except Degraded as e:
+            status, budget["degraded"], budget["degraded_detail"] = "degraded_baseline", e.reason, str(e)[:500]
+        else:
+            _persist_hypotheses(conn, inv_id, ares, store.calls(inv_id), "agent")
+            conn.execute("INSERT INTO investigation_results (investigation_id, ranker, outcome) VALUES (%s, %s, %s) "
+                         "ON CONFLICT DO NOTHING", (inv_id, "agent", ares.outcome))  # fmt: skip
+            shown, outcome = "agent", ares.outcome
+            budget["agent_verified"] = len(ares.verified)
+        r = ag.run
+        budget["agent"] = {"tool_calls": r.tool_calls, "llm_calls": r.llm_calls, "tokens_in": r.tokens_in,
+                           "tokens_out": r.tokens_out, "parse_failures": r.parse_failures, "repairs": r.repairs,
+                           "wall_ms": r.wall_ms, "turns": r.turns}  # fmt: skip
+        budget["agent_ms"] = int((time.monotonic() - t0) * 1000)
+    budget["wall_ms"] = int((time.monotonic() - t0) * 1000)
+    conn.execute(
+        "UPDATE investigations SET status = %s, outcome = %s, ranker = %s, budget_used = %s, completed_at = %s "
+        "WHERE id = %s",
+        (status, outcome, shown, json.dumps(budget), datetime.now(UTC), inv_id),
+    )
+    return outcome
+
+
+def _exchange_sink(conn: psycopg.Connection[Any], inv_id: str) -> llm.Sink:
+    """Each model exchange is committed to llm_exchanges before its response is used (§7.1)."""
+
+    def sink(provider: str, seq: int, key: str, request: dict[str, Any], resp: llm.Response) -> None:
         conn.execute(
-            "INSERT INTO investigation_results (investigation_id, ranker, outcome) VALUES (%s, %s, %s) "
-            "ON CONFLICT DO NOTHING",
-            (inv_id, RANKER, result.outcome),
-        )
-        conn.execute(
-            "UPDATE investigations SET status = 'complete', outcome = %s, ranker = %s, budget_used = %s, "
-            "completed_at = %s WHERE id = %s",
-            (result.outcome, RANKER, json.dumps(budget), datetime.now(UTC), inv_id),
-        )
-    return result.outcome
+            "INSERT INTO llm_exchanges (id, investigation_id, seq, provider, model, request_hash, request, response, "
+            "tokens_in, tokens_out, latency_ms) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            (str(uuid.uuid4()), inv_id, seq, provider, request["model"], key, json.dumps(request),
+             json.dumps(asdict(resp)), resp.tokens_in, resp.tokens_out, resp.latency_ms),
+        )  # fmt: skip
+
+    return sink
 
 
 def acquire_slot(conn: psycopg.Connection[Any], wait_s: float = 0.5) -> int:

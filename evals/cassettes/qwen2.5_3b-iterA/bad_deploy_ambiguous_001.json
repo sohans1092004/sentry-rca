@@ -1,0 +1,109 @@
+{
+ "digest": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+ "entries": {
+  "3e35ac005bd7d807abc3a0b6070fa4d41fd5d77e867ac9af4044dd00021f0e43": {
+   "response": {
+    "content": "",
+    "latency_ms": 56437,
+    "tokens_in": 2709,
+    "tokens_out": 350,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "error",
+       "end": "2026-10-20T04:30:29.335Z",
+       "limit": 10,
+       "service": "gateway",
+       "start": "2026-10-20T04:05:09.349Z"
+      },
+      "name": "query_logs"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T04:30:29.335Z",
+       "labels": {
+        "service": "gateway"
+       },
+       "metric": "http.server.request.duration.mean",
+       "start": "2026-10-20T04:05:09.349Z"
+      },
+      "name": "query_metrics"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T04:30:29.335Z",
+       "limit": 10,
+       "min_duration_ms": 100,
+       "service": "gateway",
+       "start": "2026-10-20T04:05:09.349Z"
+      },
+      "name": "query_traces"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T04:30:29.335Z",
+       "service": "gateway"
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "query": "gateway"
+      },
+      "name": "search_runbooks"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 2
+  },
+  "8ac98cb20075ac37513dd6ad9f0abd6780d665713ed03bd122ddd9160670d6d9": {
+   "response": {
+    "content": "{\n  \"hypotheses\": [\n    {\n      \"rank\": 2,\n      \"causal_role\": \"downstream_symptom\",\n      \"cause_service\": \"inventory\",\n      \"cause_kind\": \"other\",\n      \"score\": 0.85,\n      \"claims\": [\n        {\n          \"type\": \"deploy_precedes_onset\",\n          \"deploy_id\": \"93d1e91e-27e3-495c-8e8d-8583296eeb5d\",\n          \"service\": \"inventory\",\n          \"onset_ts\": \"2026-10-20T04:20:01.700Z\",\n          \"cites\": [\n            {\n              \"tool_call_seq\": 7,\n              \"rows\": \"all\"\n            }\n          ]\n        }\n      ],\n      \"narrative\": \"The latency spike in the gateway service is likely caused by a recent deploy of the inventory service, which caused the gateway's error rate to spike.\"\n    }\n  ]\n}",
+    "latency_ms": 38359,
+    "tokens_in": 6216,
+    "tokens_out": 228,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 4
+  },
+  "ab59eac9a86453bd1d425f3b0b0f222d4cd0d4fdfb63f172217f1c3bd73eb847": {
+   "response": {
+    "content": "",
+    "latency_ms": 11500,
+    "tokens_in": 1690,
+    "tokens_out": 89,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T04:30:29.335Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-20T04:05:09.349Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  },
+  "ec4195e8226b4aeae0404e455f038f34e8817e53dfd89b74c7147534bf9a964c": {
+   "response": {
+    "content": "{\n  \"hypotheses\": [\n    {\n      \"rank\": 1,\n      \"causal_role\": \"candidate_root_cause\",\n      \"cause_service\": \"gateway\",\n      \"cause_kind\": \"other\",\n      \"score\": 0.95,\n      \"claims\": [\n        {\n          \"type\": \"deploy_precedes_onset\",\n          \"deploy_id\": \"93d1e91e-27e3-495c-8e8d-8583296eeb5d\",\n          \"service\": \"inventory\",\n          \"onset_ts\": \"2026-10-20T04:20:01.700Z\",\n          \"cites\": [\n            {\n              \"tool_call_seq\": 7,\n              \"rows\": \"all\"\n            }\n          ]\n        },\n        {\n          \"type\": \"metric_change\",\n          \"service\": \"gateway\",\n          \"metric\": \"http.server.request.duration.mean\",\n          \"window\": [\"2026-10-20T04:20:01.009Z\", \"2026-10-20T04:20:06.014Z\"],\n          \"direction\": \"up\",\n          \"min_magnitude\": 0.5,\n          \"cites\": [\n            {\n              \"tool_call_seq\": 3,\n              \"rows\": \"all\"\n            }\n          ]\n        }\n      ],\n      \"narrative\": \"The gateway service experienced a latency spike due to a recent deploy of the inventory service, which caused the gateway's error rate to spike.\"\n    },\n    {\n      \"rank\": 2,\n      \"causal_role\": \"downstream_symptom\",\n      \"cause_service\": \"inventory\",\n      \"cause_kind\": \"other\",\n      \"score\": 0.85,\n      \"claims\": [\n        {\n          \"type\": \"deploy_precedes_onset\",\n          \"deploy_id\": \"93d1e91e-27e3-495c-8e8d-8583296eeb5d\",\n          \"service\": \"inventory\",\n          \"onset_ts\": \"2026-10-20T04:20:01.700Z\",\n          \"cites\": [\n            {\n              \"tool_call_seq\": 7,\n              \"rows\": \"all\"\n            }\n          ]\n        }\n      ],\n      \"narrative\": \"The latency spike in the gateway service is likely caused by a recent deploy of the inventory service, which caused the gateway's error rate to spike.\"\n    }\n  ]\n}",
+    "latency_ms": 137875,
+    "tokens_in": 5536,
+    "tokens_out": 574,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 3
+  }
+ },
+ "model": "qwen2.5:3b"
+}

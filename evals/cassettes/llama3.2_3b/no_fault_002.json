@@ -1,0 +1,493 @@
+{
+ "digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+ "entries": {
+  "0073b34c376a037e36d3ceef806afe4c55ad6f04c340ffb3b0aba8f7e12607b6": {
+   "response": {
+    "content": "",
+    "latency_ms": 7047,
+    "tokens_in": 1943,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 11
+  },
+  "10223afe2455636827a83c9a9249ad8dbb3d2e66822da19f5725c051d5d64b71": {
+   "response": {
+    "content": "",
+    "latency_ms": 9187,
+    "tokens_in": 1277,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 2
+  },
+  "2246cf75c527c64695ef9ecc0d72387a896c11ba0bb01001e0d891901d549550": {
+   "response": {
+    "content": "",
+    "latency_ms": 6391,
+    "tokens_in": 1499,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 5
+  },
+  "2a894bcc05f4c6782f6cd7b2af19b7bd6e708f72e1dfa9f8c1565d4bbb64e51e": {
+   "response": {
+    "content": "",
+    "latency_ms": 7000,
+    "tokens_in": 2387,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 17
+  },
+  "38b10d883a0b5ae440f69f014d516622d44f67bb9d394935623e66159fe13660": {
+   "response": {
+    "content": "",
+    "latency_ms": 6375,
+    "tokens_in": 1425,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 4
+  },
+  "3d506460f9e351ec57f1b3ea793279bd2597ded5f529c51bbfde7d9262a8a0c6": {
+   "response": {
+    "content": "",
+    "latency_ms": 7235,
+    "tokens_in": 2017,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 12
+  },
+  "523f8a251d41a10455205844fc2b5df76bae352f28cc6f057a2849de5c1df518": {
+   "response": {
+    "content": "",
+    "latency_ms": 7765,
+    "tokens_in": 2313,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 16
+  },
+  "62eb92694d3e41901275d59dcd557a9de242fa8dd241b1afed397a2e3cbac6cb": {
+   "response": {
+    "content": "",
+    "latency_ms": 7592,
+    "tokens_in": 2461,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 18
+  },
+  "64fc84e890d779a1706de1ae5a7fae223bbcd07af94c1f713899afe95c30758c": {
+   "response": {
+    "content": "",
+    "latency_ms": 7250,
+    "tokens_in": 1795,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 9
+  },
+  "7b700ad932d2228bb207a7d9a8c9563b2f4a65b4356b327157b8bb75fa53492e": {
+   "response": {
+    "content": "",
+    "latency_ms": 6578,
+    "tokens_in": 1647,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 7
+  },
+  "8952a33f372749d61d23df2ff24cbe9638059a87acf7a2ae0038310a7d3ee6ae": {
+   "response": {
+    "content": "",
+    "latency_ms": 7671,
+    "tokens_in": 2609,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 20
+  },
+  "9098b5880eedde8c606943914bdefdbbd0a4dcb0cc5498f220f8690a5cceac0e": {
+   "response": {
+    "content": "",
+    "latency_ms": 7171,
+    "tokens_in": 1869,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 10
+  },
+  "a66f12fe69ad330b63d1abcd758891962b383fc177764d2e2f3b23e568f80c5b": {
+   "response": {
+    "content": "",
+    "latency_ms": 6920,
+    "tokens_in": 2165,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 14
+  },
+  "bfacfbec4df2cbc7c30a7205425f27c06a5c4e7a118a30a79b5bf2a1bd5e7ab8": {
+   "response": {
+    "content": "",
+    "latency_ms": 18217,
+    "tokens_in": 1701,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": "['gateway', 'inventory', 'orders', 'payments']",
+       "start": "2026-10-20T02:41:09.539Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  },
+  "e27daf231d953cbaed8953bbb3704d81764dc694a363c760b343285302ad92b4": {
+   "response": {
+    "content": "",
+    "latency_ms": 7140,
+    "tokens_in": 2535,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 19
+  },
+  "e2c959c3168c65c460fb94169b3c43374d5795938368acff4bfdf693024921d2": {
+   "response": {
+    "content": "",
+    "latency_ms": 6734,
+    "tokens_in": 1721,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 8
+  },
+  "e42358e2b7eee4b4e647090ef457ddd3c1b7b654da7a7f88f5e58077bd73754e": {
+   "response": {
+    "content": "",
+    "latency_ms": 6344,
+    "tokens_in": 1351,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 3
+  },
+  "eeebb6e5eaddfead53b0efe0b7f28c3e192afcbd0c80ff6c58af676461c3d45a": {
+   "response": {
+    "content": "",
+    "latency_ms": 7031,
+    "tokens_in": 2239,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 15
+  },
+  "f0cb90381fb8d73f8e356c4c312741fa933ba90bd0c55ab5f1ee4215b023c781": {
+   "response": {
+    "content": "",
+    "latency_ms": 7000,
+    "tokens_in": 2091,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 13
+  },
+  "f0cebdb728a7c58e9dfe16158bf60da52f39f6ecff6a70f8c33a11ca4590472c": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"gateway\", \"cause_kind\": \"other\", \"score\": 0.0, \"claims\": [{\"type\": \"log_pattern\", \"cites\": [{\"tool_call_seq\": 24, \"rows\": \"all\"}]}], \"narrative\": \"Gateway anomaly\"}]}",
+    "latency_ms": 39687,
+    "tokens_in": 2677,
+    "tokens_out": 85,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 21
+  },
+  "ffd73393ef18105aedefbe13c70dab3b5f6f8e1f4bbbb7153f185508e7a15cbf": {
+   "response": {
+    "content": "",
+    "latency_ms": 6937,
+    "tokens_in": 1573,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:05:49.528Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 6
+  }
+ },
+ "model": "llama3.2:3b"
+}

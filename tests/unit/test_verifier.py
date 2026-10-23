@@ -284,3 +284,20 @@ def test_the_verifier_does_not_depend_on_gold():
     imported = {n.module for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)}
     imported |= {a.name for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
     assert not any(m and m.startswith("recorder") for m in imported), imported
+
+
+def test_a_root_cause_must_be_in_scope_and_have_evidence_about_itself():
+    """A36: a candidate_root_cause names the service its evidence is about, inside the scope. Honest
+    evidence about inventory cannot be relabelled as a cause in another service, in scope or not."""
+    p = points()
+    calls = {1: call(1, "query_metrics", p)}
+    scope = ("gateway", "inventory", "orders", "payments")
+    assert verify(hypothesis(metric_claim(p, mm=1.0)), calls, "baseline", services=scope).passed
+    outside = verify({**hypothesis(metric_claim(p, mm=1.0)), "cause_service": "dns"}, calls, "baseline",
+                     services=scope)  # fmt: skip
+    assert not outside.passed and "outside the investigation scope" in outside.reason
+    other = verify({**hypothesis(metric_claim(p, mm=1.0)), "cause_service": "orders"}, calls, "baseline",
+                   services=scope)  # fmt: skip
+    assert not other.passed and "no claim is about the cause_service 'orders'" in other.reason
+    symptom = {**hypothesis(metric_claim(p, mm=1.0), role="downstream_symptom"), "cause_service": "orders"}
+    assert verify(symptom, calls, "baseline", services=scope).passed  # a symptom names no cause

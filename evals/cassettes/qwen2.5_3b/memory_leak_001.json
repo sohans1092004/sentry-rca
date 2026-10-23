@@ -1,0 +1,99 @@
+{
+ "digest": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+ "entries": {
+  "462e3ab68e41e71a335e5682854b26020816b55c3b0c6535c5bdc4b1a7ca1fe6": {
+   "response": {
+    "content": "{\n  \"hypotheses\": [\n    {\n      \"rank\": 1,\n      \"causal_role\": \"candidate_root_cause\",\n      \"cause_service\": \"gateway\",\n      \"cause_kind\": \"slow_query\",\n      \"score\": 0.598636,\n      \"claims\": [\n        {\n          \"type\": \"metric_change\",\n          \"service\": \"gateway\",\n          \"metric\": \"http.server.request.duration.mean\",\n          \"window\": [\"2026-10-20T08:56:08.682Z\", \"2026-10-20T09:19:13.672Z\"],\n          \"direction\": \"up\",\n          \"min_magnitude\": 0.5,\n          \"cites\": [\n            {\n              \"tool_call_seq\": 23,\n              \"rows\": \"all\"\n            }\n          ]\n        }\n      ],\n      \"narrative\": \"The gateway service experienced a slow query incident, indicated by a significant increase in request duration metrics.\"\n    },\n    {\n      \"rank\": 2,\n      \"causal_role\": \"downstream_symptom\",\n      \"cause_service\": \"orders\",\n      \"cause_kind\": \"slow_query\",\n      \"score\": 0.598636,\n      \"claims\": [\n        {\n          \"type\": \"metric_change\",\n          \"service\": \"gateway\",\n          \"metric\": \"http.server.request.duration.mean\",\n          \"window\": [\"2026-10-20T08:56:08.682Z\", \"2026-10-20T09:19:13.672Z\"],\n          \"direction\": \"up\",\n          \"min_magnitude\": 0.5,\n          \"cites\": [\n            {\n              \"tool_call_seq\": 23,\n              \"rows\": \"all\"\n            }\n          ]\n        }\n      ],\n      \"narrative\": \"The slow query incident in the gateway service likely caused a downstream symptom in the orders service.\"\n    }\n  ]\n}",
+    "latency_ms": 93531,
+    "tokens_in": 5503,
+    "tokens_out": 451,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 3
+  },
+  "70ea9a847a6f673ee6b8c64e66c96d9367e2f1f787a448abd7e7a727d34193c9": {
+   "response": {
+    "content": "",
+    "latency_ms": 41343,
+    "tokens_in": 2502,
+    "tokens_out": 379,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "ERROR",
+       "end": "2026-10-20T09:19:13.672Z",
+       "limit": 10,
+       "service": "gateway",
+       "start": "2026-10-20T08:56:08.682Z"
+      },
+      "name": "query_logs"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T09:19:13.672Z",
+       "labels": {
+        "service": "gateway"
+       },
+       "metric": "http.server.request.duration.mean",
+       "start": "2026-10-20T08:56:08.682Z"
+      },
+      "name": "query_metrics"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T09:19:13.672Z",
+       "limit": 10,
+       "min_duration_ms": 100,
+       "service": "gateway",
+       "start": "2026-10-20T08:56:08.682Z"
+      },
+      "name": "query_traces"
+     },
+     {
+      "arguments": {
+       "end": "2026-10-20T09:19:13.672Z",
+       "service": "gateway",
+       "start": "2026-10-20T08:56:08.682Z"
+      },
+      "name": "get_recent_deploys"
+     },
+     {
+      "arguments": {
+       "query": "gateway"
+      },
+      "name": "search_runbooks"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 2
+  },
+  "abf8fd3dba03fa55f4eba000723bb33dcf7aacd7c71738f9d9af4a4f30446234": {
+   "response": {
+    "content": "",
+    "latency_ms": 16280,
+    "tokens_in": 1690,
+    "tokens_out": 89,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T09:19:13.672Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-20T08:56:08.682Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  }
+ },
+ "model": "qwen2.5:3b"
+}

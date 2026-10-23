@@ -1,0 +1,83 @@
+{
+ "digest": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+ "entries": {
+  "84c820e36be333fcb95c2aadd25c82589b73186b8930ad743efc99da9583027b": {
+   "response": {
+    "content": "",
+    "latency_ms": 34171,
+    "tokens_in": 1690,
+    "tokens_out": 89,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T10:07:08.548Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-20T09:41:23.558Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  },
+  "ab9acf3967e422c93c9bcde35c67899052d3680ebef537a4eb8343e4b5731461": {
+   "response": {
+    "content": "",
+    "latency_ms": 63092,
+    "tokens_in": 2920,
+    "tokens_out": 372,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "ERROR",
+       "end": "2026-10-20T10:07:08.548Z",
+       "limit": 1000,
+       "service": "gateway",
+       "start": "2026-10-20T09:41:23.558Z"
+      },
+      "name": "query_logs"
+     },
+     {
+      "arguments": {
+       "contains": "ERROR",
+       "end": "2026-10-20T10:07:08.548Z",
+       "limit": 1000,
+       "service": "inventory",
+       "start": "2026-10-20T09:41:23.558Z"
+      },
+      "name": "query_logs"
+     },
+     {
+      "arguments": {
+       "contains": "ERROR",
+       "end": "2026-10-20T10:07:08.548Z",
+       "limit": 1000,
+       "service": "orders",
+       "start": "2026-10-20T09:41:23.558Z"
+      },
+      "name": "query_logs"
+     },
+     {
+      "arguments": {
+       "contains": "ERROR",
+       "end": "2026-10-20T10:07:08.548Z",
+       "limit": 1000,
+       "service": "payments",
+       "start": "2026-10-20T09:41:23.558Z"
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 2
+  }
+ },
+ "model": "qwen2.5:3b"
+}

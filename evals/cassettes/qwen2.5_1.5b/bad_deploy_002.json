@@ -1,0 +1,53 @@
+{
+ "digest": "65ec06548149b04c096a120e4a6da9d4017ea809c91734ea5631e89f96ddc57b",
+ "entries": {
+  "34957dcd2cc54830028f3ce8fd3ef8d6316714e6a9b1853e094ad5badfb782c6": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"inventory\", \"cause_kind\": \"slow_query\", \"claims\": [{\"tool_call_seq\": 1, \"rows\": \"11\"}, {\"tool_call_seq\": 2, \"rows\": \"11\"}, {\"tool_call_seq\": 3, \"rows\": \"11\"}, {\"tool_call_seq\": 4, \"rows\": \"11\"}, {\"tool_call_seq\": 5, \"rows\": \"11\"}, {\"tool_call_seq\": 6, \"rows\": \"11\"}, {\"tool_call_seq\": 7, \"rows\": \"11\"}, {\"tool_call_seq\": 8, \"rows\": \"11\"}, {\"tool_call_seq\": 9, \"rows\": \"11\"}, {\"tool_call_seq\": 10, \"rows\": \"11\"}, {\"tool_call_seq\": 11, \"rows\": \"11\"}], \"narrative\": \"The slow query in the inventory service caused the error rate in the orders service to spike, leading to the slow query in the payments service.\"}, {\"rank\": 2, \"causal_role\": \"downstream_symptom\", \"cause_service\": \"gateway\", \"cause_kind\": \"slow_query\", \"claims\": [{\"tool_call_seq\": 10, \"rows\": \"11\"}, {\"tool_call_seq\": 11, \"rows\": \"11\"}], \"narrative\": \"The slow query in the gateway service caused the latency in the payments service to spike.\"}]}",
+    "latency_ms": 28422,
+    "tokens_in": 2612,
+    "tokens_out": 337,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 2
+  },
+  "eb30f1c1e061fdf5e910c5d19eacd22c8c3e8e462f3a02a0c1f82d1c9c653451": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"inventory\", \"cause_kind\": \"slow_query\", \"score\": 1.0, \"claims\": [{\"type\": \"log_pattern\", \"cites\": [{\"tool_call_seq\": 1, \"rows\": \"all\"}, {\"tool_call_seq\": 2, \"rows\": \"all\"}, {\"tool_call_seq\": 3, \"rows\": \"all\"}, {\"tool_call_seq\": 4, \"rows\": \"all\"}, {\"tool_call_seq\": 5, \"rows\": \"all\"}, {\"tool_call_seq\": 6, \"rows\": \"all\"}, {\"tool_call_seq\": 7, \"rows\": \"all\"}, {\"tool_call_seq\": 8, \"rows\": \"all\"}, {\"tool_call_seq\": 9, \"rows\": \"all\"}, {\"tool_call_seq\": 10, \"rows\": \"all\"}, {\"tool_call_seq\": 11, \"rows\": \"all\"}], \"service\": \"inventory\", \"window\": [\">=2026-10-20T03:25:29.437Z\", \"2026-10-20T03:49:54.427Z\"], \"pattern\": \"error_rate > 0.05\", \"min_count\": 1, \"min_ratio\": 2.0}, {\"type\": \"metric_change\", \"cites\": [{\"tool_call_seq\": 10, \"rows\": \"all\"}, {\"tool_call_seq\": 11, \"rows\": \"all\"}], \"service\": \"gateway\", \"metric\": \"error_rate\", \"window\": [\">=2026-10-20T03:25:29.437Z\", \"2026-10-20T03:49:54.427Z\"], \"direction\": \"up\", \"min_magnitude\": 0.5}], \"narrative\": \"The slow query in the inventory service caused the error rate in the orders service to spike, leading to the slow query in the payments service.\"}, {\"rank\": 2, \"causal_role\": \"downstream_symptom\", \"cause_service\": \"gateway\", \"cause_kind\": \"slow_query\", \"score\": 0.0, \"claims\": [{\"type\": \"log_pattern\", \"cites\": [{\"tool_call_seq\": 10, \"rows\": \"all\"}, {\"tool_call_seq\": 11, \"rows\": \"all\"}], \"service\": \"gateway\", \"window\": [\">=2026-10-20T03:25:29.437Z\", \"2026-10-20T03:49:54.427Z\"], \"pattern\": \"latency_ms > 54.6913\", \"min_count\": 1, \"min_ratio\": 2.0}, {\"type\": \"metric_change\", \"cites\": [{\"tool_call_seq\": 10, \"rows\": \"all\"}, {\"tool_call_seq\": 11, \"rows\": \"all\"}], \"service\": \"gateway\", \"metric\": \"latency_ms\", \"window\": [\">=2026-10-20T03:25:29.437Z\", \"2026-10-20T03:49:54.427Z\"], \"direction\": \"up\", \"min_magnitude\": 0.5}], \"narrative\": \"The slow query in the gateway service caused the latency in the payments service to spike.\"}]}",
+    "latency_ms": 57640,
+    "tokens_in": 2472,
+    "tokens_out": 807,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 3
+  },
+  "f6e659e3cc689d909684599c9d49403202ebf3aceb7d4db84a1b6f7b80dced40": {
+   "response": {
+    "content": "",
+    "latency_ms": 10938,
+    "tokens_in": 1690,
+    "tokens_out": 89,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T03:49:54.427Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-20T03:25:29.437Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  }
+ },
+ "model": "qwen2.5:1.5b"
+}

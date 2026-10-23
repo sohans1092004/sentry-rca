@@ -110,8 +110,10 @@ GUARDS: dict[str, dict] = {
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from guards_phase2 import GUARDS_PHASE2  # noqa: E402
+from guards_phase3 import GUARDS_PHASE3  # noqa: E402
 
 GUARDS.update(GUARDS_PHASE2)
+GUARDS.update(GUARDS_PHASE3)
 
 
 def _apply(text: str, edit: tuple, where: str) -> str:

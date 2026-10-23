@@ -1,0 +1,97 @@
+{
+ "digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+ "entries": {
+  "300ebe27dd7cbd89a4191cc629645bca97e7c838ff7e36a16f7fdcacfa69fa50": {
+   "response": {
+    "content": "",
+    "latency_ms": 18311,
+    "tokens_in": 1701,
+    "tokens_out": 69,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-19T13:56:00.867Z",
+       "services": "['gateway', 'inventory', 'orders', 'payments']",
+       "start": "2026-10-19T13:30:25.880Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  },
+  "3b80fb1622fb76f53a0b6b8a6a1c78fcc54f5754f23ef9e928c190f8a1cc20ec": {
+   "response": {
+    "content": "",
+    "latency_ms": 8735,
+    "tokens_in": 1277,
+    "tokens_out": 43,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-19T13:56:00.867Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ]
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 2
+  },
+  "6af565d85ad73c362b0c406d639f2fa9e61cf7b45679e8ad8d60e6add84e8c63": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"gateway\", \"cause_kind\": \"other\", \"score\": 0.0, \"claims\": [{\"type\": \"log_pattern\", \"cites\": [{\"tool_call_seq\": 29, \"rows\": \"all\"}]}], \"narrative\": \"Gateway error rate anomaly\"}]}",
+    "latency_ms": 30672,
+    "tokens_in": 2254,
+    "tokens_out": 87,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 5
+  },
+  "bd1a906e4ff18dc25ab1ac8cfe3fd2d63cf08721f8445e74d40b5709fed55024": {
+   "response": {
+    "content": "{\"name\": \"log_pattern\", \"parameters\": {\"service\": \"gateway\", \"window\": {\"start\": \"2026-10-19T13:30:25.880Z\", \"end\": \"2026-10-19T13:56:00.867Z\"}, \"pattern\": \"error_rate\", \"min_count\": 1, \"min_ratio\": 2.0, \"cites\": [{\"tool_call_seq\": 29, \"rows\": \"all\"}]}}",
+    "latency_ms": 24047,
+    "tokens_in": 2131,
+    "tokens_out": 103,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 4
+  },
+  "e36cfbe0e54aeb561d0c31edf12b936fcc2f355035f365e6b85f1db219e4749a": {
+   "response": {
+    "content": "",
+    "latency_ms": 7500,
+    "tokens_in": 1351,
+    "tokens_out": 60,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-19T13:56:00.867Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-19T13:30:25.880Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 3
+  }
+ },
+ "model": "llama3.2:3b"
+}

@@ -1,0 +1,53 @@
+{
+ "digest": "65ec06548149b04c096a120e4a6da9d4017ea809c91734ea5631e89f96ddc57b",
+ "entries": {
+  "34d5ce621e171a694747a0c34515b1a33f52bbdc9de323386b50ed41f1d8acbd": {
+   "response": {
+    "content": "{\"name\": \"query_logs\", \"arguments\": {\"service\": \"gateway\", \"start\": \"2026-10-20T06:17:44.051Z\", \"end\": \"2026-10-20T06:42:24.039Z\", \"severity\": \"ERROR\", \"trace_id\": \"all\", \"min_count\": 1, \"min_ratio\": 2.0}}\n",
+    "latency_ms": 18452,
+    "tokens_in": 2831,
+    "tokens_out": 106,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 2
+  },
+  "5db2582a1a0c503159e94a4d2f492eaf3cd5d6f296c5817a088be89e385105d4": {
+   "response": {
+    "content": "{\"hypotheses\": [{\"rank\": 1, \"causal_role\": \"candidate_root_cause\", \"cause_service\": \"gateway\", \"cause_kind\": \"slow_query\", \"score\": 0.9, \"claims\": [{\"type\": \"log_pattern\", \"cites\": [{\"tool_call_seq\": 27, \"rows\": \"all\"}], \"service\": \"gateway\", \"window\": [\">=2026-10-20T06:17:44.051Z\", \"2026-10-20T06:42:24.039Z\"], \"pattern\": \"ERROR\", \"min_count\": 1, \"min_ratio\": 2.0}, {\"type\": \"metric_change\", \"cites\": [{\"tool_call_seq\": 27, \"rows\": \"all\"}], \"service\": \"gateway\", \"metric\": \"latency_ms\", \"window\": [\">=2026-10-20T06:17:44.051Z\", \"2026-10-20T06:42:24.039Z\"], \"direction\": \"up\", \"min_magnitude\": 0.5}]}, {\"rank\": 2, \"causal_role\": \"downstream_symptom\", \"cause_service\": \"inventory\", \"cause_kind\": \"slow_query\", \"score\": 0.8, \"claims\": [{\"type\": \"log_pattern\", \"cites\": [{\"tool_call_seq\": 27, \"rows\": \"all\"}], \"service\": \"inventory\", \"window\": [\">=2026-10-20T06:17:44.051Z\", \"2026-10-20T06:42:24.039Z\"], \"pattern\": \"ERROR\", \"min_count\": 1, \"min_ratio\": 2.0}, {\"type\": \"metric_change\", \"cites\": [{\"tool_call_seq\": 27, \"rows\": \"all\"}], \"service\": \"inventory\", \"metric\": \"latency_ms\", \"window\": [\">=2026-10-20T06:17:44.051Z\", \"2026-10-20T06:42:24.039Z\"], \"direction\": \"up\", \"min_magnitude\": 0.5}]}]}",
+    "latency_ms": 42452,
+    "tokens_in": 2461,
+    "tokens_out": 547,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 3
+  },
+  "d98e74598dd1645233b38f18984e10cfb99a29c3cc08b0cea73c1d98f344cc2e": {
+   "response": {
+    "content": "",
+    "latency_ms": 10905,
+    "tokens_in": 1690,
+    "tokens_out": 89,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T06:42:24.039Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-20T06:17:44.051Z"
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  }
+ },
+ "model": "qwen2.5:1.5b"
+}
