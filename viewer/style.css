@@ -58,7 +58,7 @@ p.lead { font-size: 17px; max-width: 70ch; }
 .mono { font-family: var(--mono); font-size: 13px; overflow-wrap: anywhere; }
 
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
-.note { border-left: 4px solid var(--warn); background: var(--warn-bg); padding: 10px 14px; border-radius: 4px; max-width: 80ch; }
+.note { border: 1px solid var(--warn); background: var(--warn-bg); padding: 10px 14px; border-radius: 6px; max-width: 80ch; }
 .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .cols > * { min-width: 0; }
 @media (max-width: 760px) { .cols { grid-template-columns: 1fr; } }

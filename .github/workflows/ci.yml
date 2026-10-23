@@ -10,11 +10,13 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
+        with: { fetch-depth: 0 } # the docs cite code at older commits
       - uses: astral-sh/setup-uv@v7
         with: { version: "0.12.16" }
       - run: uv sync --frozen
       - run: uv run ruff check .
       - run: uv run ruff format --check .
+      - run: uv run python docs/tools/refs.py check # every file:line, commit and test name in the two docs
 
   types:
     runs-on: ubuntu-24.04

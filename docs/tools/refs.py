@@ -98,12 +98,12 @@ def find(lines: list[str], anchor: str, start: int, rel: str) -> int:
 
 def build() -> None:
     refs: dict[str, dict[str, str]] = {}
+    cache: dict[str, list[str]] = {}  # file lines, shared by both documents
     for name in OUTPUTS:
         parts = SRC / name[:-3]  # a long document is a directory of parts, joined in name order
         if not parts.is_dir():
             continue
         text = "\n".join(p.read_text(encoding="utf-8") for p in sorted(parts.glob("*.md")))
-        cache: dict[str, list[str]] = {}
 
         def resolve(m: re.Match[str]) -> str:
             target, anchor_spec = m.group(1).strip(), m.group(2)
@@ -199,7 +199,9 @@ def check() -> None:
                 bad.append(f"{name}: missing file {m.group(1)}")
         for m in re.finditer(r"`([0-9a-f]{7,40})`", text):
             shas += 1
-            r = subprocess.run(["git", "-C", str(ROOT), "cat-file", "-e", m.group(1) + "^{commit}"], capture_output=True)
+            r = subprocess.run(
+                ["git", "-C", str(ROOT), "cat-file", "-e", m.group(1) + "^{commit}"], capture_output=True
+            )
             if r.returncode != 0:
                 bad.append(f"{name}: commit {m.group(1)} not found")
         for m in re.finditer(r"`(test_[a-z0-9_]+)`", text):

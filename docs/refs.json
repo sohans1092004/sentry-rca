@@ -1,0 +1,182 @@
+{
+ "6482a38f2e1441e84f56a324728b3c4cb9682395:services/demo_db.py#L70": {
+  "anchor": "pool acquire timeout after"
+ },
+ "6482a38f2e1441e84f56a324728b3c4cb9682395:services/demo_db.py#L80": {
+  "anchor": "slow query %s took over"
+ },
+ "6482a38f2e1441e84f56a324728b3c4cb9682395:services/faults.py#L14": {
+  "anchor": "log = logging.getLogger(\"faults\")"
+ },
+ "6482a38f2e1441e84f56a324728b3c4cb9682395:services/faults.py#L94": {
+  "anchor": "KeyError 'currency'"
+ },
+ "7fb7ac45dccecbda8a7233c3aca9f93d28a8eead:investigation/baseline.py#L30": {
+  "anchor": "\"pool acquire timeout\": \"pool_exhaustion\","
+ },
+ "7fb7ac45dccecbda8a7233c3aca9f93d28a8eead:investigation/baseline.py#L32": {
+  "anchor": "\"provider charge failed\": \"dependency_outage\","
+ },
+ "alerting/engine.py#L174": {
+  "anchor": "def tick(self, now: datetime)"
+ },
+ "alerting/rules.py#L21": {
+  "anchor": "def outside_incidents("
+ },
+ "alerting/rules.py#L46": {
+  "anchor": "def robust_z("
+ },
+ "common/kinds.py#L7": {
+  "anchor": "CAUSE_KINDS"
+ },
+ "common/migrations/postgres/0004_investigation.sql#L5": {
+  "anchor": "CREATE TABLE investigations ("
+ },
+ "evals/harness.py#L469": {
+  "anchor": "def paired("
+ },
+ "evals/harness.py#L493": {
+  "anchor": "def sign_test("
+ },
+ "injector/scenarios.py#L29": {
+  "anchor": "TEST_ONLY = "
+ },
+ "injector/scenarios.py#L51": {
+  "anchor": "SAMPLING = "
+ },
+ "investigation/agent.py#L172": {
+  "anchor": "def context_message("
+ },
+ "investigation/agent.py#L183": {
+  "anchor": "def new_boundary("
+ },
+ "investigation/agent.py#L243": {
+  "anchor": "def render_result("
+ },
+ "investigation/agent.py#L306": {
+  "anchor": "def parse_output("
+ },
+ "investigation/agent.py#L373": {
+  "anchor": "def resolve_cites("
+ },
+ "investigation/agent.py#L429": {
+  "anchor": "def _compact("
+ },
+ "investigation/agent.py#L442": {
+  "anchor": "def _ask("
+ },
+ "investigation/agent.py#L474": {
+  "anchor": "def _loop("
+ },
+ "investigation/agent.py#L542": {
+  "anchor": "def _rejections("
+ },
+ "investigation/agent.py#L72": {
+  "anchor": "SYSTEM = f"
+ },
+ "investigation/baseline.py#L169": {
+  "anchor": "def rank("
+ },
+ "investigation/baseline.py#L29": {
+  "anchor": "PATTERNS = "
+ },
+ "investigation/cli.py#L128": {
+  "anchor": "if \"agent-frozen\" not in tags.split():"
+ },
+ "investigation/llm.py#L265": {
+  "anchor": "class Recorded:"
+ },
+ "investigation/llm.py#L81": {
+  "anchor": "def request_hash("
+ },
+ "investigation/orchestrator.py#L149": {
+  "anchor": "def investigate("
+ },
+ "investigation/orchestrator.py#L197": {
+  "anchor": "except Degraded as e:"
+ },
+ "investigation/orchestrator.py#L219": {
+  "anchor": "def _exchange_sink("
+ },
+ "investigation/orchestrator.py#L34": {
+  "anchor": "MAX_CONCURRENT = 2"
+ },
+ "investigation/outcome.py#L8": {
+  "anchor": "def decide("
+ },
+ "investigation/scope.py#L62": {
+  "anchor": "def allowed_services("
+ },
+ "investigation/snapshots.py#L18": {
+  "anchor": "MAX_BYTES = "
+ },
+ "investigation/snapshots.py#L44": {
+  "anchor": "def build("
+ },
+ "investigation/timeline.py#L59": {
+  "anchor": "def onset("
+ },
+ "investigation/tools.py#L25": {
+  "anchor": "_CONTROL = "
+ },
+ "investigation/tools.py#L36": {
+  "anchor": "TENANT_ARGS = "
+ },
+ "investigation/tools.py#L95": {
+  "anchor": "def prepare("
+ },
+ "investigation/verifier.py#L101": {
+  "anchor": "def _metric_change("
+ },
+ "investigation/verifier.py#L123": {
+  "anchor": "def _log_pattern("
+ },
+ "investigation/verifier.py#L169": {
+  "anchor": "def _trace_dependency("
+ },
+ "investigation/verifier.py#L188": {
+  "anchor": "def _deploy_precedes_onset("
+ },
+ "investigation/verifier.py#L203": {
+  "anchor": "def _runbook_match("
+ },
+ "investigation/verifier.py#L249": {
+  "anchor": "def verify("
+ },
+ "investigation/verifier.py#L74": {
+  "anchor": "def _cited("
+ },
+ "investigation/verifier.py#L98": {
+  "anchor": "return out, rows, context"
+ },
+ "processors/runner.py#L131": {
+  "anchor": "consumer.commit(asynchronous=False)"
+ },
+ "processors/runner.py#L82": {
+  "anchor": "def take_batch("
+ },
+ "tests/viewer/test_viewer_xss.py#L128": {
+  "anchor": "def assert_inert("
+ },
+ "tools/export_viewer.py#L141": {
+  "anchor": "def investigation("
+ },
+ "tools/export_viewer.py#L26": {
+  "anchor": "SHOWCASE = "
+ },
+ "tools/guard_checks.py#L145": {
+  "anchor": "def check(name: str)"
+ },
+ "tools/guards_phase4.py#L7": {
+  "anchor": "GUARDS_PHASE4"
+ },
+ "tools/secret_scan.py#L17": {
+  "anchor": "PATTERNS = "
+ },
+ "tools/secret_scan.py#L34": {
+  "anchor": "def scan("
+ },
+ "viewer/app.js#L8": {
+  "anchor": "function text(v)"
+ }
+}
