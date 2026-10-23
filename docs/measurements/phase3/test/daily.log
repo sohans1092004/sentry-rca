@@ -1,0 +1,10 @@
+2026-10-22T12:35:03.5703790+05:30 stage 1: iteration C dev pass
+2026-10-22T13:29:06.3316692+05:30 stage 1: dev pass finished (memory floor hit: False); 2026-10-22T13:29:06.0750798+05:30 selection done
+2026-10-22T13:29:06.3387021+05:30 stage 1: injection check
+2026-10-22T14:05:20.4803461+05:30 stage 1: injection check exit 0
+2026-10-22T14:05:20.5786310+05:30 stage 1 complete
+2026-10-23T12:35:04.6957540+05:30 stage 2: frozen agent on TEST, N=1, once
+2026-10-23T16:41:05.0402656+05:30 stage 2 attempt 1 was terminated externally after 13 of 16 fixtures (task result 0xC000013A, last fixture start 13:08:04, no investigation row for noisy_neighbor_t01); stale lock removed; completing the run (user's decision): finished fixtures replay from the cassette
+2026-10-23T16:41:05.6147798+05:30 stage 2: frozen agent on TEST, N=1, once
+2026-10-23T16:55:59.2606664+05:30 stage 2: test exit 0
+2026-10-23T16:55:59.2672251+05:30 stage 2 complete

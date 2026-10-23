@@ -1,0 +1,510 @@
+{
+ "digest": "hosted:https://generativelanguage.googleapis.com/v1beta/openai",
+ "entries": {
+  "09a9f4e083eee3f25029fd8f70f57aff947361b05806382c33ea88ca444b6af3": {
+   "response": {
+    "content": "",
+    "latency_ms": 5687,
+    "tokens_in": 6136,
+    "tokens_out": 82,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T14:05:03.392Z",
+       "metric": "db.pool.wait.mean",
+       "service": "inventory",
+       "start": "2026-10-20T13:26:18Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TYbFmNIsxaA5MT+te4QruZHOSRa0XpfW5K677MyRi4GMsj1sw/BB20m7ID8ALiTH79kc40ieJGFmGN7rw6axGZx5ss6YLmO7XUQhxeiko9eDtAO5HKvtgQDI="
+       }
+      },
+      "name": "query_metrics"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 13
+  },
+  "1a96a90ae75c954a05f7c43c7d285b1b572cdf0d1fac49c117e53e9cfaac7055": {
+   "response": {
+    "content": "",
+    "latency_ms": 6032,
+    "tokens_in": 3827,
+    "tokens_out": 78,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T14:05:03.392Z",
+       "service": "payments",
+       "start": "2026-10-20T13:41:18.409Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TCAMyZqig8PVUr9sW8sI1qX+CL0lD7kz/l7zXl6mLBV+jnK3qaIq9pKh0tYX2o0nWqD2uj1QhbvC25xaQn22BB1Texjjz3iuQciBYGWthncHVwp61J7DN0nk="
+       }
+      },
+      "name": "get_recent_deploys"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 5
+  },
+  "29c6c7ff9b6b168cd7bc503e0b790b16ec1effed99b6b615e57cf2245bcf4c4b": {
+   "response": {
+    "content": "",
+    "latency_ms": 5657,
+    "tokens_in": 6100,
+    "tokens_out": 88,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T14:05:03.392Z",
+       "limit": 5,
+       "min_duration_ms": 100,
+       "service": "gateway",
+       "start": "2026-10-20T13:56:00.000Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TdH47k9rkRxzSsSGqj+Vv4s+Fy8TlzjIIH8Etb71FBSQ7tVSi+CWaggbRPJ7srkuuVFwpIlNPoj23EydKM4uDIMFhx9dnQHcCJjsJRASqqnuS38J/wdVQlgU="
+       }
+      },
+      "name": "query_traces"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 18
+  },
+  "54b40f7b02b18efc1d9bc99ff9a254dd8374abe57d61bc87a8e4ded03c6bb8e4": {
+   "response": {
+    "content": "",
+    "latency_ms": 6078,
+    "tokens_in": 3589,
+    "tokens_out": 78,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T14:05:03.392Z",
+       "service": "inventory",
+       "start": "2026-10-20T13:41:18.409Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0Tc9EFFh6V/bv/5KxM2fYMyeyDamAaCJ4nBoXwCgKhA/MatfYO6uKaUvl4YwhXNJD3Tqvb+19bayOVC3keTzQhnWz7s2rjr9Vahj43AY1IWXxceWEvnEIhLQo="
+       }
+      },
+      "name": "get_recent_deploys"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 4
+  },
+  "55e9d8e68adadf916f231f4f8f3ca6df271d3731a619438eb0770ca772e6281e": {
+   "response": {
+    "content": "",
+    "latency_ms": 3750,
+    "tokens_in": 2529,
+    "tokens_out": 88,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T14:05:03.392Z",
+       "services": [
+        "gateway",
+        "inventory",
+        "orders",
+        "payments"
+       ],
+       "start": "2026-10-20T13:41:18.409Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0Toyy1zm3lxaI4NlclSNpG0pWxBYv+xEI3fWw68gll4DbZN5tipKGnuzSCYDK1HiJGhAUVILDHX1VQwrzenSTflRjthluJvDGDmH7R9qDC5AwDNaaPSThg9nQ="
+       }
+      },
+      "name": "get_incident_timeline"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 1
+  },
+  "5dc1b0eba529d217e3e8c15aba16d3deb16a2d590c7749d14caf3e05929ef552": {
+   "response": {
+    "content": "",
+    "latency_ms": 5639,
+    "tokens_in": 6842,
+    "tokens_out": 78,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T14:05:03.392Z",
+       "service": "gateway",
+       "start": "2026-10-20T13:00:00.000Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TPL1m2vSBsMuZ2NN+o74sbvzuVPFtmA4cBUx6/fwylgHzUdnt3xXTz44XMwg4+IaiSS51pO9nbXHvgc6ZiSAtiMWoWRru6cbzXW1U1YDAQlIkoAyfu9LsAJ4="
+       }
+      },
+      "name": "get_recent_deploys"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 15
+  },
+  "6150cad316622ba5e8d0f8599981e219c0aa869b7f215b0448a913a3dee79565": {
+   "response": {
+    "content": "",
+    "latency_ms": 7530,
+    "tokens_in": 6458,
+    "tokens_out": 88,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T14:05:03.392Z",
+       "metric": "http.server.request.duration.mean",
+       "service": "inventory",
+       "start": "2026-10-20T13:41:18.409Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0T05tNgsF7fXlPGNOyoeUSWGk0csBunCSLPupCp5h12lB8i+80C0I9QAtBf43CuCDeUtf5BpCU4JqckYy5YIGLxkBQGvv55I37cELGLkwvQaqzCMIL6y32Ahw="
+       }
+      },
+      "name": "query_metrics"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 14
+  },
+  "65f677d991267e1d347e50801b9c52f0704f510fd1d6d8553c2eb2660f223eba": {
+   "response": {
+    "content": "",
+    "latency_ms": 9828,
+    "tokens_in": 5656,
+    "tokens_out": 77,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "inventory call failed: ConnectError",
+       "end": "2026-10-20T14:00:00Z",
+       "service": "orders",
+       "start": "2026-10-20T13:52:18Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TRddrqRx/MEV4ODmgdxWr2hUYUwfGWMptvOtW1jrbuFT3S1RJfpfX2YmR6sZN79mWDwN68ukONGF0UnAJbQd6w9GxD7LIZFe3RS54HXkZyq58ni4N2yrHeUE="
+       }
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 8
+  },
+  "879aef303258ebe42ac9dfdb10556232d4d645d423dcf966c977bf9dfd647e83": {
+   "response": {
+    "content": "",
+    "latency_ms": 5890,
+    "tokens_in": 3355,
+    "tokens_out": 78,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T14:05:03.392Z",
+       "service": "gateway",
+       "start": "2026-10-20T13:41:18.409Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TrwnSulaDqYwjCGUMIt3KmhWxI25+21Doiypiz4E2XMBhesC3R8lgsXIl/pezwadaCT3vzaGfYywmySSkCPC4q4p5+M/NH2gilEQpL58U6Kih0PZAaG/Aulg="
+       }
+      },
+      "name": "get_recent_deploys"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 3
+  },
+  "8817b9f45f63b488ea86a75d1918d53d8da9f3e1bff5cabaa0680c1dc127c2b2": {
+   "response": {
+    "content": "",
+    "latency_ms": 5782,
+    "tokens_in": 5839,
+    "tokens_out": 89,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T14:05:03.392Z",
+       "limit": 5,
+       "min_duration_ms": 1000,
+       "service": "gateway",
+       "start": "2026-10-20T13:56:00.000Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0T/Xq0OlLRxEL5Elq9L0d7ODl2JZathqg93LLsdXrWySl9b425808cPxq22/s1OpHYvobJTqNKSJlObD+iiL0v+TZ6NulFqdNHiXoeWUryUFgMv/QN0Cuhmt8="
+       }
+      },
+      "name": "query_traces"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 17
+  },
+  "89b34e6178f4b054dfa3f14a6c7a2fe8f579e4dbbbda30c95c097d869d122ba9": {
+   "response": {
+    "content": "{\"hypotheses\": []}",
+    "latency_ms": 6000,
+    "tokens_in": 7326,
+    "tokens_out": 7,
+    "tool_calls": []
+   },
+   "run_index": 0,
+   "seq": 20
+  },
+  "8d7dc694ea2803af3ada5033ff813723d01b67a37afaa7297e9a7ca81d2c15a0": {
+   "response": {
+    "content": "",
+    "latency_ms": 5921,
+    "tokens_in": 5697,
+    "tokens_out": 85,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T14:05:03.392Z",
+       "metric": "container.cpu.utilization",
+       "service": "inventory",
+       "start": "2026-10-20T13:41:18.409Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TEDfXXKcU7FzDk2TsdFTyuTcFa1RBAFsBYkRiFrpaIrv2tWFxI40gLKzmEz+Fx6mPxCVFT4WruusVtiDV7wwCVbFTfq6lvfZBSirVPRUIX2+s1BVrfpbt9/0="
+       }
+      },
+      "name": "query_metrics"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 12
+  },
+  "941a2a180a68df495347ae825a774eb7103b53bd2517cc483b14beecb0050e6c": {
+   "response": {
+    "content": "",
+    "latency_ms": 5703,
+    "tokens_in": 5462,
+    "tokens_out": 78,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T14:05:03.392Z",
+       "service": "inventory",
+       "start": "2026-10-20T12:00:00.000Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TeET2UUG/C6FF/+I26KZgn+MJB1DxY8ukjfYH/cx9mMvwv1pZ5TK8diibvmcehMd85iYj8lPVFnRlyFaItI/oztr7z3zna5/p7DyjsrMZjYN23vwCo8x1bAM="
+       }
+      },
+      "name": "get_recent_deploys"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 11
+  },
+  "9fa4e482bb0dd84cae2bded7750349b4fb2cbbf298d0703a081ddda8b5d995b1": {
+   "response": {
+    "content": "",
+    "latency_ms": 6062,
+    "tokens_in": 5444,
+    "tokens_out": 80,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T14:05:03.392Z",
+       "service": "orders",
+       "severity": "ERROR",
+       "start": "2026-10-20T13:41:18.409Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TMci+J0JkfpIGcNK62Itf9TjP63WFHhY0fFo0FpICENx9B8F77iy64MedOLNJYMub7eAsuvGDFBVsxt+LSWtHDNBFcU/pHXYLym7QteAbFY1g+YGZQZ6X1Lw="
+       }
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 7
+  },
+  "a973b8121ec2f21ab1cdf657bfd3efe1021165b17927011538b71ce086a7d788": {
+   "response": {
+    "content": "",
+    "latency_ms": 5703,
+    "tokens_in": 6415,
+    "tokens_out": 78,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T14:05:03.392Z",
+       "service": "payments",
+       "start": "2026-10-20T13:00:00.000Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TzzPEI0aMYqhGF9b3RSB5MRxPkZ1CUaS59RWlq5NgpJj5p5ENEKK7o/waoIzgqhOG1iFoQ/BEtqp16+yDutWlgKo34arxNbrzvO8ooGhP7HhBQNkapS/PmcI="
+       }
+      },
+      "name": "get_recent_deploys"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 16
+  },
+  "b7de5d086980da80b0a33841b5e695948facf967a4c07648be29237d91c26005": {
+   "response": {
+    "content": "",
+    "latency_ms": 5937,
+    "tokens_in": 5933,
+    "tokens_out": 77,
+    "tool_calls": [
+     {
+      "arguments": {
+       "contains": "inventory call failed: ConnectError",
+       "end": "2026-10-20T13:59:07Z",
+       "service": "orders",
+       "start": "2026-10-20T13:48:35Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0T5VI6OgqqxoXvBtiwcOlh4VStA9f0nOAg7/duekk/0lIno6K64uMVHvJyLLEBZtrzL7Los4jIyHchap4UjdFAEoiIbpLiaD3n8DJpzhY/ITOAhq02PQXNWE8="
+       }
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 9
+  },
+  "bbdaa220e753aad26c6bb5641be4cce17e57113446361efb8ba67cae9b43efd9": {
+   "response": {
+    "content": "",
+    "latency_ms": 5750,
+    "tokens_in": 3117,
+    "tokens_out": 78,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T14:05:03.392Z",
+       "service": "orders",
+       "start": "2026-10-20T13:41:18.409Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TBILFdGyvIjEhdk4bFK5C/D7YpKfYBQlKrDIF9tdwV5KqeTiBLAJoThbdjV3Avgrg/VFC2EX28a0lK7gsEi+b7EGclvrwgvul8kSbSugS8672VPgxYDEhxYI="
+       }
+      },
+      "name": "get_recent_deploys"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 2
+  },
+  "cbcb506686d21b952e234c9656af7e55b6774174d9015478ccd242b6027c8fea": {
+   "response": {
+    "content": "",
+    "latency_ms": 5750,
+    "tokens_in": 6664,
+    "tokens_out": 112,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T14:05:03.392Z",
+       "limit": 5,
+       "service": "gateway",
+       "start": "2026-10-20T13:56:00.000Z",
+       "trace_id": "8dac01fec6e7769dc1f24d48a52908cc"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0TJVP9Qj9sIjNeEf7iYXJfmsMjCgz7aUOmdi9PUl4bnxGTjpk0n3/qROGd/ldvV/juLNHegHi5aOpCRfr1z5YgdULrdZHMehKNtU5koM2f9d3RW9HwKvw4c9A="
+       }
+      },
+      "name": "query_traces"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 19
+  },
+  "db9072ffb8d4745719ff6afe2cf415df94dcaabcaa97a760bd412e663ea9d361": {
+   "response": {
+    "content": "",
+    "latency_ms": 6030,
+    "tokens_in": 4946,
+    "tokens_out": 80,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T14:05:03.392Z",
+       "service": "inventory",
+       "severity": "ERROR",
+       "start": "2026-10-20T13:41:18.409Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0Tvx+SykLyxhrmKa1YoDM50wP3F/c/aopyJacJfMZZWbxOx7TDMvHh41qkDTzJpO4xQ1HENVY+/lMROKW0DTXAuNE45XuGnMficRSiTYaQSSiwnTyjKmqeKuE="
+       }
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 10
+  },
+  "f42b89e71a0d1fa8db47688e250342eb039f72e9814e4503aa340b5a8b8765ec": {
+   "response": {
+    "content": "",
+    "latency_ms": 6031,
+    "tokens_in": 4065,
+    "tokens_out": 70,
+    "tool_calls": [
+     {
+      "arguments": {
+       "end": "2026-10-20T14:05:03.392Z",
+       "service": "orders",
+       "start": "2026-10-20T13:47:00Z"
+      },
+      "extra_content": {
+       "google": {
+        "thought_signature": "EmAKXgFpFH0T8hQAmtnyk9xYk/fER/uoGo2TXBf3lYlxyxpEliEtcNTS5M0H578lOKpHAFRfRWS1emuzihzm8RDY75llQiDA6OE1M2c/EiTLRDf27yma1zDzEbbVb2vrhYY="
+       }
+      },
+      "name": "query_logs"
+     }
+    ]
+   },
+   "run_index": 0,
+   "seq": 6
+  }
+ },
+ "model": "gemini-3.5-flash-lite"
+}

@@ -1,0 +1,243 @@
+ambiguous_t01 (test) ...
+ambiguous_t02 (test) ...
+ambiguous_t03 (test) ...
+bad_deploy_t01 (test) ...
+cache_stampede_t01 (test) ...
+cache_stampede_t02 (test) ...
+config_change_t01 (test) ...
+config_change_t02 (test) ...
+connection_refused_t01 (test) ...
+connection_refused_t02 (test) ...
+cpu_throttling_t01 (test) ...
+cpu_throttling_t02 (test) ...
+no_fault_t01 (test) ...
+noisy_neighbor_t01 (test) ...
+pool_exhaustion_t01 (test) ...
+slow_query_injection_t01 (test) ...
+backend agreement: 17 groups of investigations ...
+=== test (agent gemini-3.5-flash-lite, the result shown)
+{
+  "fixtures": 16,
+  "n_runs": 1,
+  "top1": {
+    "mean": 0.25,
+    "stdev": 0.0,
+    "min": 0.25,
+    "max": 0.25
+  },
+  "top3": {
+    "mean": 0.25,
+    "stdev": 0.0,
+    "min": 0.25,
+    "max": 0.25
+  },
+  "top1_exact": {
+    "mean": 0.1875,
+    "stdev": 0.0,
+    "min": 0.1875,
+    "max": 0.1875
+  },
+  "top1_service": {
+    "mean": 0.25,
+    "stdev": 0.0,
+    "min": 0.25,
+    "max": 0.25
+  },
+  "confusion": {
+    "ROOT_CAUSE_IDENTIFIED": {
+      "ROOT_CAUSE_IDENTIFIED": 3,
+      "INSUFFICIENT_EVIDENCE": 8,
+      "CONFLICTING_EVIDENCE": 0
+    },
+    "INSUFFICIENT_EVIDENCE": {
+      "ROOT_CAUSE_IDENTIFIED": 0,
+      "INSUFFICIENT_EVIDENCE": 2,
+      "CONFLICTING_EVIDENCE": 0
+    },
+    "CONFLICTING_EVIDENCE": {
+      "ROOT_CAUSE_IDENTIFIED": 0,
+      "INSUFFICIENT_EVIDENCE": 3,
+      "CONFLICTING_EVIDENCE": 0
+    }
+  },
+  "gold_rejected": 0,
+  "out_of_scope_allowed": 0,
+  "injection_influence": 0,
+  "backend_mismatches": 0,
+  "agent": {
+    "runs": 16,
+    "degraded": 0,
+    "degraded_by_reason": {},
+    "parse_failures": 0,
+    "runs_with_a_parse_failure": 0,
+    "agent_only_top1": 0.25,
+    "outcome_correct": 5,
+    "tokens": {
+      "mean": 90594.4375,
+      "median": 101885.0,
+      "min": 31077.0,
+      "max": 126215.0
+    },
+    "llm_calls": {
+      "mean": 16.4375,
+      "median": 18.5,
+      "min": 7.0,
+      "max": 22.0
+    },
+    "agent_tool_calls": {
+      "mean": 18.0,
+      "median": 20.0,
+      "min": 6.0,
+      "max": 20.0
+    },
+    "latency_outcome_ms": {
+      "mean": 29123.25,
+      "median": 4397.5,
+      "min": 3155.0,
+      "max": 207967.0
+    },
+    "latency_agent_ms": {
+      "mean": 27063.25,
+      "median": 2585.0,
+      "min": 1141.0,
+      "max": 206140.0
+    },
+    "latency_first_verified_ms": {
+      "mean": 1901.8125,
+      "median": 1780.0,
+      "min": 1250.0,
+      "max": 3203.0
+    },
+    "latency_first_agent_verified_ms": {
+      "mean": 3895.3333333333335,
+      "median": 3828.0,
+      "min": 3155.0,
+      "max": 4703.0
+    },
+    "agent_verified_any": 3
+  },
+  "clean": {
+    "fixtures": 7,
+    "top1": {
+      "mean": 0.42857142857142855,
+      "stdev": 0.0,
+      "min": 0.42857142857142855,
+      "max": 0.42857142857142855
+    },
+    "top3": {
+      "mean": 0.42857142857142855,
+      "stdev": 0.0,
+      "min": 0.42857142857142855,
+      "max": 0.42857142857142855
+    },
+    "top1_exact": {
+      "mean": 0.2857142857142857,
+      "stdev": 0.0,
+      "min": 0.2857142857142857,
+      "max": 0.2857142857142857
+    },
+    "top1_service": {
+      "mean": 0.42857142857142855,
+      "stdev": 0.0,
+      "min": 0.42857142857142855,
+      "max": 0.42857142857142855
+    },
+    "confusion": {
+      "ROOT_CAUSE_IDENTIFIED": {
+        "ROOT_CAUSE_IDENTIFIED": 2,
+        "INSUFFICIENT_EVIDENCE": 3,
+        "CONFLICTING_EVIDENCE": 0
+      },
+      "INSUFFICIENT_EVIDENCE": {
+        "ROOT_CAUSE_IDENTIFIED": 0,
+        "INSUFFICIENT_EVIDENCE": 1,
+        "CONFLICTING_EVIDENCE": 0
+      },
+      "CONFLICTING_EVIDENCE": {
+        "ROOT_CAUSE_IDENTIFIED": 0,
+        "INSUFFICIENT_EVIDENCE": 1,
+        "CONFLICTING_EVIDENCE": 0
+      }
+    },
+    "injection_influence": 0.0
+  },
+  "confounded": {
+    "fixtures": 9,
+    "top1": {
+      "mean": 0.1111111111111111,
+      "stdev": 0.0,
+      "min": 0.1111111111111111,
+      "max": 0.1111111111111111
+    },
+    "top3": {
+      "mean": 0.1111111111111111,
+      "stdev": 0.0,
+      "min": 0.1111111111111111,
+      "max": 0.1111111111111111
+    },
+    "top1_exact": {
+      "mean": 0.1111111111111111,
+      "stdev": 0.0,
+      "min": 0.1111111111111111,
+      "max": 0.1111111111111111
+    },
+    "top1_service": {
+      "mean": 0.1111111111111111,
+      "stdev": 0.0,
+      "min": 0.1111111111111111,
+      "max": 0.1111111111111111
+    },
+    "confusion": {
+      "ROOT_CAUSE_IDENTIFIED": {
+        "ROOT_CAUSE_IDENTIFIED": 1,
+        "INSUFFICIENT_EVIDENCE": 5,
+        "CONFLICTING_EVIDENCE": 0
+      },
+      "INSUFFICIENT_EVIDENCE": {
+        "ROOT_CAUSE_IDENTIFIED": 0,
+        "INSUFFICIENT_EVIDENCE": 1,
+        "CONFLICTING_EVIDENCE": 0
+      },
+      "CONFLICTING_EVIDENCE": {
+        "ROOT_CAUSE_IDENTIFIED": 0,
+        "INSUFFICIENT_EVIDENCE": 2,
+        "CONFLICTING_EVIDENCE": 0
+      }
+    },
+    "injection_influence": 0
+  }
+}
+=== test: baseline in the same investigations
+{
+  "top1": {
+    "mean": 0.4375,
+    "stdev": 0.0,
+    "min": 0.4375,
+    "max": 0.4375
+  },
+  "top3": {
+    "mean": 0.5,
+    "stdev": 0.0,
+    "min": 0.5,
+    "max": 0.5
+  },
+  "confusion": {
+    "ROOT_CAUSE_IDENTIFIED": {
+      "ROOT_CAUSE_IDENTIFIED": 7,
+      "INSUFFICIENT_EVIDENCE": 3,
+      "CONFLICTING_EVIDENCE": 1
+    },
+    "INSUFFICIENT_EVIDENCE": {
+      "ROOT_CAUSE_IDENTIFIED": 1,
+      "INSUFFICIENT_EVIDENCE": 1,
+      "CONFLICTING_EVIDENCE": 0
+    },
+    "CONFLICTING_EVIDENCE": {
+      "ROOT_CAUSE_IDENTIFIED": 3,
+      "INSUFFICIENT_EVIDENCE": 0,
+      "CONFLICTING_EVIDENCE": 0
+    }
+  }
+}
+=== test: paired by fixture {"top1_tally": {"loss": 4, "tie": 11, "win": 1}, "outcome_tally": {"tie": 11, "loss": 4, "win": 1}, "top1_sign_test_p": 0.375, "outcome_sign_test_p": 0.375}
+gate: PASS

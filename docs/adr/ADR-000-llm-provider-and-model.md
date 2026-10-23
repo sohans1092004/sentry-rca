@@ -2,7 +2,8 @@
 
 **Status:** Accepted (Phase 3), revised twice: the local choice was corrected (see *Correction*), and the
 evaluated agent moved to a free-tier hosted model by the user's decision when no local model produced a
-verified hypothesis (see *Hosted model*). Raw numbers: `docs/measurements/phase3/`.
+verified hypothesis (see *Hosted model*). On test the frozen agent lost to the baseline (see *Test
+result*). Raw numbers: `docs/measurements/phase3/`.
 
 ## Context
 
@@ -134,6 +135,21 @@ The baseline in the same investigations scores top-1 0.842 (16/19), as it did in
     terms, or the local model.
 - **Replay:** the model has no digest. Its name and endpoint stand in for one in the replay key. The
   provider can change the model behind the name, so recorded cassettes, not a re-run, are the reference.
+
+## Test result (frozen agent, once)
+
+**The agent loses to the baseline on test.** Frozen iteration C on `gemini-3.5-flash-lite`, test N=1,
+16 fixtures: top-1 judged 0.250 against the baseline's 0.438; paired by fixture 1 win, 4 losses, 11 ties,
+which meets the pre-registered loss condition (losses − wins ≥ 3 and a lower mean). It lost on dev as
+well (2 / 12 / 5). Reasons, from the data:
+- it abstains: "insufficient evidence" on 8 of 11 root-cause test fixtures;
+- 11 of 16 test runs used all 20 tool calls and answered on the forced final turn;
+- it never answered CONFLICTING_EVIDENCE (0 of 6 such runs on dev and test);
+- confounded fixtures: top-1 0.111, against 0.429 on clean ones.
+
+At N=1, with identical dev runs changing their top answer in 4 of 6 pairs, the size of the loss is not
+established; its direction is the same on dev, on test and at every iteration. No other version was run
+on test. Full tables: `docs/report-phase3.md`; raw: `docs/measurements/phase3/test/`.
 
 ## Memory notes
 

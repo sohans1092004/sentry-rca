@@ -4,10 +4,15 @@ An incident-investigation platform where an AI agent proposes root causes, but e
 is checked against real telemetry by deterministic code, and its accuracy is measured against a
 non-AI baseline. Specification: [`docs/SPEC.md`](docs/SPEC.md) (v3, with an Amendments log).
 
-**Status: Phase 1** (telemetry pipeline, alerting, failure injector, fixture recorder). There is no
-AI, no LLM and no investigation code yet; those are Phases 2–3. Measured so far: ingestion ceiling
-~100k events/s, alert-to-incident 12–20 s for step faults, 1.8 GB RSS with demo traffic
-([`docs/measurements/phase1.md`](docs/measurements/phase1.md)).
+**Status: Phase 3 done.** The telemetry pipeline, alerting and failure injector (Phase 1), the
+deterministic verifier and non-AI baseline (Phases 2–2.5), and the LLM agent (Phase 3) are built.
+
+**The agent does not beat the baseline.** On the held-out test fixtures, run once under a
+pre-registered plan, the frozen agent (gemini-3.5-flash-lite, free tier) scored top-1 0.250 against the
+baseline's 0.438: 1 fixture won, 4 lost, 11 tied, a loss under the plan's rule. Local 1.5B–3B models
+never produced a verified hypothesis. Every claim either ranker makes is still checked by the verifier;
+no gold claim was rejected and no out-of-scope evidence was allowed.
+Report: [`docs/report-phase3.md`](docs/report-phase3.md).
 
 ## What runs
 
@@ -54,6 +59,10 @@ uv run python tools/guard_checks.py   # remove each safety guard, watch its test
 
 - [`docs/walkthrough-phase1.md`](docs/walkthrough-phase1.md): one span from a service to a ClickHouse
   row; one injected failure to an incident and an `incidents.opened` message.
+- [`docs/walkthrough-phase2.md`](docs/walkthrough-phase2.md), [`docs/walkthrough-phase3.md`](docs/walkthrough-phase3.md):
+  one investigation by the baseline, then by the agent, from trigger to verified outcome.
+- [`docs/report-phase3.md`](docs/report-phase3.md), [`docs/analysis-plan-phase3.md`](docs/analysis-plan-phase3.md):
+  the agent against the baseline on dev and test.
 - [`docs/measurements/phase1.md`](docs/measurements/phase1.md): every number with its command.
 - [`docs/adr/`](docs/adr/): ADR-001 (one ClickHouse store), ADR-003 (Redpanda), ADR-004 (rule-based alerting).
 - `fixtures/<id>/v1/`: label, injection record and manifest of each recorded fixture (Parquet stays
