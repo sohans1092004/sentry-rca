@@ -169,3 +169,27 @@ on test. Full tables: `docs/report-phase3.md`; raw: `docs/measurements/phase3/te
   budget defaults are re-measured on the chosen model in a SPEC amendment.
 - A larger local model needs more RAM or a GPU. A hosted model needs a key and a network, and gives up
   the bit-exact local replay of the model digest. The interface allows either.
+
+## Future work, not built: a hybrid, where the model works on the baseline's candidates
+
+The test result points away from "the model investigates" and towards "the model helps with what the
+baseline found". The agent's losses were mostly abstentions: it ran out of tool calls (11 of 16 test runs
+used all 20), it could not assemble claims the verifier accepts (4 of 6 test hypotheses verified, 3 of 11
+root-cause fixtures answered), and it never proposed two competing causes. The baseline finds and
+verifies candidates in about 2 s, but its weighting is a fixed heuristic with known blind spots
+(ADR-006: trace dominance on ambiguous pairs; a harmless deploy blamed on noisy_neighbor).
+
+The direction, recorded here and not built (A44):
+- **Re-rank, don't search.** The model gets the baseline's verified hypotheses, with their claims and the
+  evidence snapshots they cite, and returns an order, or "conflicting" for a pair. It may not add a cause.
+  Every hypothesis it ranks was already verified, so the verifier's guarantee is unchanged, and the
+  outcome rules (§7.5) still decide the outcome from the verified set.
+- **Explain, labelled.** The model writes the narrative for the top candidates, shown as unverified
+  explanation, as now.
+- **Measure it the same way.** A new frozen version, a pre-registered plan, dev only until frozen, then
+  test once, paired by fixture against the frozen baseline. The four reasons above are hypotheses for why
+  it might help, not results.
+
+What would make it fail: if the baseline's candidate set misses the cause, re-ranking cannot help. On test,
+config_change_t01, connection_refused_t01 and cpu_throttling_t02 have no verified root-cause candidate
+from either ranker, and the baseline's top-3 (0.500) is a rough ceiling for any re-ranking of its list.

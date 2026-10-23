@@ -1,0 +1,17 @@
+$ uv run python tools/leak_history.py
+== v2: 19 datasets; lines per scenario
+  'pool acquire timeout': {'pool_exhaustion': 198}
+  'slow query': {'slow_query': 2164}
+  'provider charge failed': {'bad_deploy': 823, 'dependency_outage': 3117}
+  'deploy finished': {'bad_deploy': 3, 'slow_query': 1}
+  "KeyError 'currency'": {'bad_deploy': 164}
+  'connection pool resized': {'pool_exhaustion': 6}
+  lines whose code.file.path is faults.py: {'bad_deploy': 167, 'dependency_outage': 72, 'slow_query': 86}
+== v3: 35 datasets; lines per scenario
+  'pool acquire timeout': {}
+  'slow query': {}
+  'provider charge failed': {'bad_deploy': 1206, 'cache_stampede': 119, 'config_change': 84, 'connection_refused': 74, 'cpu_throttling': 84, 'dependency_outage': 4170, 'memory_leak': 88, 'no_fault': 148, 'noisy_neighbor': 121, 'pool_exhaustion': 132, 'slow_query': 139}
+  'deploy finished': {'bad_deploy': 7, 'config_change': 1, 'connection_refused': 1, 'cpu_throttling': 2, 'dependency_outage': 1, 'no_fault': 1, 'noisy_neighbor': 2, 'pool_exhaustion': 3, 'slow_query': 2}
+  "KeyError 'currency'": {}
+  'connection pool resized': {}
+  lines whose code.file.path is faults.py: {}
