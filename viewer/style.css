@@ -1,0 +1,96 @@
+:root {
+  --bg: #fbfaf8;
+  --panel: #ffffff;
+  --ink: #1d1d1b;
+  --muted: #5f5e5a;
+  --line: #e2e0da;
+  --accent: #2f5d8a;
+  --pass: #1f7a4d;
+  --pass-bg: #e6f4ec;
+  --fail: #a33a2b;
+  --fail-bg: #fbe9e5;
+  --warn: #8a5a00;
+  --warn-bg: #fdf3dc;
+  --hl: #fff4bf;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161615;
+    --panel: #1f1f1d;
+    --ink: #ecebe6;
+    --muted: #a7a59d;
+    --line: #3a3935;
+    --accent: #8db4dc;
+    --pass: #6fcf9a;
+    --pass-bg: #173326;
+    --fail: #f08b7a;
+    --fail-bg: #3a1f1a;
+    --warn: #e9c46a;
+    --warn-bg: #3a2f14;
+    --hl: #4a4116;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161615; --panel: #1f1f1d; --ink: #ecebe6; --muted: #a7a59d; --line: #3a3935; --accent: #8db4dc;
+  --pass: #6fcf9a; --pass-bg: #173326; --fail: #f08b7a; --fail-bg: #3a1f1a; --warn: #e9c46a; --warn-bg: #3a2f14;
+  --hl: #4a4116;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 64px; }
+header.site { border-bottom: 1px solid var(--line); background: var(--panel); }
+header.site nav { max-width: 1180px; margin: 0 auto; padding: 12px 16px; display: flex; gap: 20px; flex-wrap: wrap; }
+header.site a { color: var(--ink); text-decoration: none; font-weight: 600; }
+header.site a.here { color: var(--accent); }
+a { color: var(--accent); text-underline-offset: 3px; }
+h1 { font-size: 26px; margin: 8px 0 4px; overflow-wrap: anywhere; }
+h2 { font-size: 19px; margin: 32px 0 10px; }
+h3 { font-size: 16px; margin: 18px 0 8px; }
+p.lead { font-size: 17px; max-width: 70ch; }
+.muted { color: var(--muted); }
+.mono { font-family: var(--mono); font-size: 13px; overflow-wrap: anywhere; }
+
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+.note { border: 1px solid var(--warn); background: var(--warn-bg); padding: 10px 14px; border-radius: 6px; max-width: 80ch; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.cols > * { min-width: 0; }
+@media (max-width: 760px) { .cols { grid-template-columns: 1fr; } }
+
+.scroll { overflow-x: auto; max-width: 100%; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; color: var(--muted); white-space: nowrap; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr.cited td { background: var(--hl); }
+tr.planted td:first-child { box-shadow: inset 4px 0 0 var(--fail); }
+
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.badge.pass { color: var(--pass); background: var(--pass-bg); }
+.badge.fail { color: var(--fail); background: var(--fail-bg); }
+.badge.warn { color: var(--warn); background: var(--warn-bg); }
+.badge.plain { color: var(--muted); border: 1px solid var(--line); }
+
+.hyp { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; margin: 0 0 10px; background: var(--panel); }
+.hyp .title { font-weight: 600; }
+.claim { margin: 8px 0 0; padding: 8px 0 0; border-top: 1px dashed var(--line); }
+.claim .reason { color: var(--fail); }
+.narrative { margin: 8px 0 0; padding: 8px 10px; border: 1px dashed var(--muted); border-radius: 4px; }
+.narrative .label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--warn); }
+button.cite {
+  font: inherit; font-size: 13px; color: var(--accent); background: none; border: 1px solid var(--line);
+  border-radius: 4px; padding: 1px 8px; margin: 4px 6px 0 0; cursor: pointer;
+}
+button.cite:hover { border-color: var(--accent); }
+.evidence { margin-top: 16px; }
+.evidence pre, td pre { margin: 0; min-width: 18ch; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--mono); font-size: 12px; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+ul.showcase li { margin: 0 0 10px; }

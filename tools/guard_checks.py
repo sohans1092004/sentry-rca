@@ -111,9 +111,11 @@ GUARDS: dict[str, dict] = {
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from guards_phase2 import GUARDS_PHASE2  # noqa: E402
 from guards_phase3 import GUARDS_PHASE3  # noqa: E402
+from guards_phase4 import GUARDS_PHASE4  # noqa: E402
 
 GUARDS.update(GUARDS_PHASE2)
 GUARDS.update(GUARDS_PHASE3)
+GUARDS.update(GUARDS_PHASE4)
 
 
 def _apply(text: str, edit: tuple, where: str) -> str:
@@ -132,7 +134,7 @@ def _apply(text: str, edit: tuple, where: str) -> str:
 
 
 def pytest(tests: list[str]) -> tuple[int, str]:
-    cmd = ["uv", "run", "pytest", "-vv", "-p", "no:cacheprovider", *tests]
+    cmd = ["uv", "run", "--no-sync", "pytest", "-vv", "-p", "no:cacheprovider", *tests]
     p = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
     lines = (p.stdout + p.stderr).strip().splitlines()
     errors = [ln for ln in lines if ln.startswith("E ")][:8]  # the failing assertion, with its values

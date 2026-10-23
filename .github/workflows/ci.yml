@@ -10,11 +10,13 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
+        with: { fetch-depth: 0 } # the docs cite code at older commits
       - uses: astral-sh/setup-uv@v7
         with: { version: "0.12.16" }
       - run: uv sync --frozen
       - run: uv run ruff check .
       - run: uv run ruff format --check .
+      - run: uv run python docs/tools/refs.py check # every file:line, commit and test name in the two docs
 
   types:
     runs-on: ubuntu-24.04
@@ -35,6 +37,17 @@ jobs:
         with: { version: "0.12.16" }
       - run: uv sync --frozen
       - run: uv run pytest tests/unit -q
+
+  viewer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+        with: { version: "0.12.16" }
+      - run: uv sync --frozen
+      - run: uv run playwright install --with-deps chromium
+      - run: uv run pytest tests/viewer -q # a script payload in recorded telemetry never executes (SPEC §11)
 
   integration:
     runs-on: ubuntu-24.04
@@ -127,3 +140,19 @@ jobs:
       - uses: actions/upload-artifact@v6
         if: always()
         with: { name: agent-eval, path: agent-eval.json }
+      # the static viewer (A44): this replay's investigations, exported; only main publishes it
+      - run: uv run python tools/export_viewer.py agent-eval.json _site
+      - run: uv run python tools/secret_scan.py _site
+      - uses: actions/upload-pages-artifact@v4
+        with: { path: _site }
+
+  pages:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [lint, types, unit, viewer, integration, fixtures, baseline-eval, agent-replay]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions: { pages: write, id-token: write }
+    environment: { name: github-pages, url: "${{ steps.deploy.outputs.page_url }}" }
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

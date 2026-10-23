@@ -25,6 +25,7 @@ dependencies = [
 dev = [
     "hypothesis>=6.100",
     "mypy>=1.13",
+    "playwright>=1.48",
     "pytest>=8.3",
     "ruff>=0.8",
     "testcontainers[clickhouse,kafka,postgres]>=4.9",
